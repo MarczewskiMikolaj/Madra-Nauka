@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>{{ zestaw.nazwa }} - Fiszki</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sets.css') }}">
+    <style>
+        .card { max-width: 900px; text-align: left; }
+        .set-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(148,163,184,0.1);
+        }
+        .set-info h1 { margin: 0 0 8px; font-size: 28px; color: #f1f5f9; }
+        .set-meta { color: #94a3b8; font-size: 14px; }
+        .set-actions { display: flex; gap: 8px; }
+        .flashcards-list { margin-top: 20px; }
+        .flashcard-item {
+            background: rgba(30,41,59,0.8);
+            border: 1px solid rgba(148,163,184,0.1);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all .2s ease;
+        }
+        .flashcard-item:hover {
+            background: rgba(30,41,59,1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transform: translateY(-2px);
+        }
+        .flashcard-number {
+            display: inline-block;
+            background: rgba(59,130,246,0.15);
+            color: #60a5fa;
+            font-weight: 600;
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+        .flashcard-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .flashcard-side h4 {
+            font-size: 13px;
+            color: #94a3b8;
+            margin: 0 0 6px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        .flashcard-side p {
+            margin: 0;
+            font-size: 15px;
+            color: #f1f5f9;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #94a3b8;
+        }
+        .btn-group { display: flex; gap: 8px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="bg-blob a"></div>
+        <div class="bg-blob b"></div>
+
+        <div class="card">
+            <a href="{{ url_for('dashboard') }}" class="btn ghost" style="margin-bottom: 20px; width: fit-content;">← Powrót do panelu</a>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <div class="set-header">
+                <div class="set-info">
+                    <h1>{{ zestaw.nazwa }}</h1>
+                    <div class="set-meta">
+                        <span>{{ zestaw.karty|length }} fiszek</span>
+                        <span> • </span>
+                        <span>Utworzono: {{ zestaw.data_utworzenia[:10] }}</span>
+                    </div>
+                </div>
+                <div class="set-actions">
+                    <button onclick="openLearnModal()" class="btn primary" style="background: linear-gradient(90deg, #10b981, #059669);">🎯 Rozpocznij naukę</button>
+                    <button onclick="openTestModal()" class="btn ghost">📝 Test</button>
+                    <a href="{{ url_for('edit_set', set_id=zestaw.id) }}" class="btn ghost">Edytuj</a>
+                </div>
+            </div>
+
+            <div class="flashcards-list">
+                <h3 style="margin: 0 0 16px; font-size: 18px;">Wszystkie fiszki</h3>
+                
+                {% if zestaw.karty and zestaw.karty|length > 0 %}
+                    {% for karta in zestaw.karty %}
+                        <div class="flashcard-item">
+                            <span class="flashcard-number">Fiszka {{ loop.index }}</span>
+                            <div class="flashcard-content">
+                                <div class="flashcard-side">
+                                    <h4>Pytanie</h4>
+                                    <p>{{ karta.tekst or '(puste)' }}</p>
+                                </div>
+                                <div class="flashcard-side">
+                                    <h4>Odpowiedź</h4>
+                                    <p>{{ karta.odpowiedz or '(puste)' }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <p>Ten zestaw nie zawiera jeszcze żadnych fiszek.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Modal -->
+    <div id="testModal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin: 0 0 20px; font-size: 22px; color: #f1f5f9;">Wybierz liczbę pytań</h2>
+            
+            <div class="modal-options">
+                <label class="option-checkbox" onclick="selectTestOption(5)">
+                    <input type="radio" name="test_count" value="5" checked>
+                    <div class="option-info">
+                        <strong>5 pytań</strong>
+                        <span>Szybki test</span>
+                    </div>
+                </label>
+                
+                <label class="option-checkbox" onclick="selectTestOption(10)">
+                    <input type="radio" name="test_count" value="10">
+                    <div class="option-info">
+                        <strong>10 pytań</strong>
+                        <span>Średni test</span>
+                    </div>
+                </label>
+                
+                <label class="option-checkbox" onclick="selectTestOption(15)">
+                    <input type="radio" name="test_count" value="15">
+                    <div class="option-info">
+                        <strong>15 pytań</strong>
+                        <span>Długi test</span>
+                    </div>
+                </label>
+                
+                <label class="option-checkbox" onclick="selectTestOption(-1)">
+                    <input type="radio" name="test_count" value="-1">
+                    <div class="option-info">
+                        <strong>Wszystkie</strong>
+                        <span>Pełny test ze wszystkich fiszek</span>
+                    </div>
+                </label>
+            </div>
+            
+            <div class="modal-actions">
+                <button onclick="closeTestModal()" class="btn ghost">Anuluj</button>
+                <button onclick="startTest()" class="btn primary" style="background: linear-gradient(90deg, #6366f1, #4f46e5);">Rozpocznij test</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Learning Mode Modal -->
+    <div id="learnModal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin: 0 0 20px; font-size: 22px; color: #f1f5f9;">Wybierz opcje nauki</h2>
+            
+            <div class="modal-options">
+                <label class="option-checkbox">
+                    <input type="checkbox" id="randomOrder" checked>
+                    <div class="option-info">
+                        <strong>🔀 Losowa kolejność</strong>
+                        <span>Fiszki będą wyświetlane w losowej kolejności</span>
+                    </div>
+                </label>
+                
+                <label class="option-checkbox">
+                    <input type="checkbox" id="reviewMode">
+                    <div class="option-info">
+                        <strong>🔁 Tryb powtórki</strong>
+                        <span>Tylko fiszki oznaczone jako "nie rozumiem"</span>
+                    </div>
+                </label>
+            </div>
+            
+            <div class="modal-actions">
+                <button onclick="closeLearnModal()" class="btn ghost">Anuluj</button>
+                <button onclick="startLearning()" class="btn primary" style="background: linear-gradient(90deg, #10b981, #059669);">Rozpocznij</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: var(--surface);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 16px;
+            padding: 28px;
+            max-width: 480px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        .modal-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .option-checkbox {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 16px;
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .option-checkbox:hover {
+            background: rgba(30, 41, 59, 0.8);
+            border-color: rgba(148, 163, 184, 0.2);
+        }
+        .option-checkbox input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin: 2px 0 0 0;
+            cursor: pointer;
+            accent-color: #10b981;
+        }
+        .option-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .option-info strong {
+            color: #f1f5f9;
+            font-size: 15px;
+        }
+        .option-info span {
+            color: #94a3b8;
+            font-size: 13px;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .modal-actions .btn {
+            padding: 10px 20px;
+        }
+    </style>
+
+    <script>
+        let selectedTestCount = 5;
+        
+        function openLearnModal() {
+            document.getElementById('learnModal').classList.add('active');
+        }
+        
+        function closeLearnModal() {
+            document.getElementById('learnModal').classList.remove('active');
+        }
+        
+        function startLearning() {
+            const randomOrder = document.getElementById('randomOrder').checked;
+            const reviewMode = document.getElementById('reviewMode').checked;
+            
+            const params = new URLSearchParams();
+            if (randomOrder) params.append('random', '1');
+            if (reviewMode) params.append('review', '1');
+            
+            window.location.href = "{{ url_for('learn_set', set_id=zestaw.id) }}" + 
+                (params.toString() ? '?' + params.toString() : '');
+        }
+        
+        // Close modal on ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeLearnModal();
+            }
+        });
+        
+        // Close modal on backdrop click
+        document.getElementById('learnModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeLearnModal();
+            }
+        });
+        
+        // Test modal functions
+        function openTestModal() {
+            document.getElementById('testModal').classList.add('active');
+        }
+        
+        function closeTestModal() {
+            document.getElementById('testModal').classList.remove('active');
+        }
+        
+        function selectTestOption(count) {
+            selectedTestCount = count;
+        }
+        
+        function startTest() {
+            window.location.href = "{{ url_for('test_set', set_id=zestaw.id) }}" + `?count=${selectedTestCount}`;
+        }
+        
+        document.getElementById('testModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeTestModal();
+            }
+        });
+    </script>
+</body>
+</html>

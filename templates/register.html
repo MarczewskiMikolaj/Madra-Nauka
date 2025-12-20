@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Rejestracja - Fiszki</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+</head>
+<body>
+    <div class="app">
+        <div class="bg-blob a"></div>
+        <div class="bg-blob b"></div>
+        
+        <div class="card">
+            <h1>Utwórz konto</h1>
+            <p class="subtitle">Dołącz do nas i zacznij naukę z fiszkami</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('register') }}">
+                <div class="form-group">
+                    <label for="username">Nazwa użytkownika</label>
+                    <input type="text" id="username" name="username" required autofocus>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Hasło</label>
+                    <input type="password" id="password" name="password" required>
+                    <div class="password-hint">Co najmniej 6 znaków</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm_password">Potwierdź hasło</label>
+                    <input type="password" id="confirm_password" name="confirm_password" required>
+                </div>
+
+                <button type="submit" class="btn primary">Utwórz konto</button>
+            </form>
+
+            <div class="divider">
+                Masz już konto? <a href="{{ url_for('login') }}" class="link">Zaloguj się tutaj</a>
+            </div>
+
+            <div class="back-link">
+                <a href="{{ url_for('index') }}">← Powrót do strony głównej</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

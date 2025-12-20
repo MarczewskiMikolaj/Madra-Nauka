@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Podsumowanie - {{ zestaw.nazwa }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/learn.css') }}">
+</head>
+<body>
+    <div class="app">
+        <div class="bg-blob a"></div>
+        <div class="bg-blob b"></div>
+
+        <div class="card">
+            <h1>Podsumowanie nauki</h1>
+            <p class="subtitle">{{ zestaw.nazwa }}</p>
+
+            <div class="summary-container">
+                {% if total > 0 %}
+                    {% set solved = understood + not_understood %}
+                    {% if solved > 0 %}
+                        {% set percentage = (understood / solved * 100)|round|int %}
+                    {% else %}
+                        {% set percentage = 0 %}
+                    {% endif %}
+                    
+                    {% if solved == 0 %}
+                        <div class="summary-icon">🤔</div>
+                        <div class="congrats">Nie rozwiązałeś żadnej fiszki</div>
+                    {% elif percentage >= 80 %}
+                        <div class="summary-icon">🎉</div>
+                        <div class="congrats">Świetna robota!</div>
+                    {% elif percentage >= 50 %}
+                        <div class="summary-icon">👍</div>
+                        <div class="congrats">Dobra robota!</div>
+                    {% else %}
+                        <div class="summary-icon">💪</div>
+                        <div class="congrats">Ćwicz dalej!</div>
+                    {% endif %}
+
+                    {% if solved > 0 %}
+                        <div class="percentage">
+                            Zrozumiałeś {{ percentage }}% rozwiązanych fiszek
+                        </div>
+                    {% endif %}
+
+                    <div class="summary-stats">
+                        <div class="stat-box understood">
+                            <div class="stat-number green">{{ understood }}</div>
+                            <div class="stat-label">✅ Rozumiem</div>
+                        </div>
+                        <div class="stat-box not-understood">
+                            <div class="stat-number red">{{ not_understood }}</div>
+                            <div class="stat-label">❌ Nie rozumiem</div>
+                        </div>
+                        {% if unsolved > 0 %}
+                        <div class="stat-box">
+                            <div class="stat-number" style="color: #64748b;">{{ unsolved }}</div>
+                            <div class="stat-label">⏸️ Nierozwiązane</div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div style="margin-top: 16px; font-size: 14px; color: #64748b;">
+                        Rozwiązano {{ solved }} z {{ total }} fiszek
+                    </div>
+                {% else %}
+                    <div class="summary-icon">🤔</div>
+                    <p style="color: #64748b;">Brak wyników do wyświetlenia.</p>
+                {% endif %}
+            </div>
+
+            <div class="action-buttons">
+                <a href="{{ url_for('learn_set', set_id=zestaw.id) }}" class="btn primary">🔄 Powtórz naukę</a>
+                <a href="{{ url_for('dashboard') }}" class="btn ghost">← Zakończ naukę</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

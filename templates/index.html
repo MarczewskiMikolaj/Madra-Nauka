@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Fiszki - Ucz się mądrzej</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="app">
+        <div class="bg-blob a"></div>
+        <div class="bg-blob b"></div>
+        
+        <div class="card">
+            <h1>Fiszki</h1>
+            <p class="subtitle">Ucz się mądrzej z interaktywnymi fiszkami. Zaloguj się, aby rozpocząć swoją naukę.</p>
+            
+            <div class="actions">
+                <a href="{{ url_for('login') }}" class="btn primary">Zaloguj się</a>
+                <a href="{{ url_for('register') }}" class="btn ghost">Zarejestruj się</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Nowy zestaw - Fiszki</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sets.css') }}">
+    <style>
+        .card { max-width: 800px; text-align: left; }
+        .form-section { margin-bottom: 24px; }
+        .section-header { margin-bottom: 12px; }
+        .section-header h3 { font-size: 18px; margin: 0 0 4px; color: #f1f5f9; }
+        .section-desc { font-size: 13px; color: #94a3b8; }
+        .card-row { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr auto; 
+            gap: 12px; 
+            margin-bottom: 12px;
+            padding: 12px;
+            background: rgba(15,23,42,0.6);
+            border-radius: 8px;
+            border: 1px solid rgba(148,163,184,0.1);
+        }
+        .card-row input { width: 100%; }
+        .card-row .remove-btn {
+            padding: 8px 12px;
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            align-self: center;
+        }
+        .card-row .remove-btn:hover { background: rgba(239, 68, 68, 0.25); }
+        .add-card-btn {
+            background: rgba(59,130,246,0.15);
+            color: #60a5fa;
+            border: 1px solid rgba(59,130,246,0.3);
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            width: 100%;
+            margin-top: 8px;
+        }
+        .add-card-btn:hover { background: rgba(59,130,246,0.25); }
+        .form-actions { display: flex; gap: 12px; margin-top: 24px; }
+        .form-actions .btn { flex: 1; }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="bg-blob a"></div>
+        <div class="bg-blob b"></div>
+        <div class="card">
+            <h1>Utwórz nowy zestaw</h1>
+            <p class="subtitle">Dodaj nazwę zestawu oraz kilka fiszek naraz</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('create_set') }}" enctype="multipart/form-data">
+                <div class="form-section">
+                    <div class="form-group">
+                        <label for="nazwa">Nazwa zestawu</label>
+                        <input type="text" id="nazwa" name="nazwa" placeholder="Np. Angielski A1 - podstawy" required>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 12px;">
+                            <input type="checkbox" id="use_csv_import" style="width: auto; cursor: pointer;">
+                            <span>Importuj fiszki z pliku CSV</span>
+                        </label>
+                        <div id="csv_upload_section" style="display: none; margin-top: 12px;">
+                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">
+                                Plik CSV powinien zawierać dwie kolumny: pierwsza to pytanie, druga to odpowiedź
+                            </p>
+                            <input type="file" id="csv_file" name="csv_file" accept=".csv" style="display: none;">
+                            <button type="button" class="btn ghost" onclick="document.getElementById('csv_file').click()" style="margin-bottom: 8px;">
+                                Wybierz plik CSV
+                            </button>
+                            <div id="file_name" style="font-size: 0.85rem; color: var(--text-secondary);"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section" id="manual_cards_section">
+                    <div class="section-header">
+                        <h3>Fiszki</h3>
+                        <div class="section-desc">Dodaj pytania i odpowiedzi do swojego zestawu</div>
+                    </div>
+
+                    <div id="cards-container">
+                        <div class="card-row">
+                            <div class="form-group">
+                                <label>Pytanie</label>
+                                <input type="text" name="tekst[]" placeholder="Np. stolica Francji">
+                            </div>
+                            <div class="form-group">
+                                <label>Odpowiedź</label>
+                                <input type="text" name="odpowiedz[]" placeholder="Np. Paryż">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" id="add-card" class="add-card-btn">+ Dodaj kolejną fiszkę</button>
+                </div>
+
+                <div class="form-actions">
+                    <a href="{{ url_for('dashboard') }}" class="btn ghost">Anuluj</a>
+                    <button type="submit" class="btn primary">Zapisz zestaw</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <template id="card-template">
+        <div class="card-row">
+            <div class="form-group">
+                <label>Pytanie</label>
+                <input type="text" name="tekst[]" placeholder="Wpisz pytanie">
+            </div>
+            <div class="form-group">
+                <label>Odpowiedź</label>
+                <input type="text" name="odpowiedz[]" placeholder="Wpisz odpowiedź">
+            </div>
+            <button type="button" class="remove-btn">Usuń</button>
+        </div>
+    </template>
+
+    <script>
+        const addBtn = document.getElementById('add-card');
+        const container = document.getElementById('cards-container');
+        const tpl = document.getElementById('card-template');
+        const csvCheckbox = document.getElementById('use_csv_import');
+        const csvSection = document.getElementById('csv_upload_section');
+        const manualSection = document.getElementById('manual_cards_section');
+        const csvFileInput = document.getElementById('csv_file');
+        const fileNameDisplay = document.getElementById('file_name');
+        
+        // Toggle CSV upload section
+        csvCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                csvSection.style.display = 'block';
+                manualSection.style.display = 'none';
+            } else {
+                csvSection.style.display = 'none';
+                manualSection.style.display = 'block';
+            }
+        });
+
+        // Display selected file name
+        csvFileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                fileNameDisplay.textContent = 'Wybrany plik: ' + this.files[0].name;
+            } else {
+                fileNameDisplay.textContent = '';
+            }
+        });
+        
+        addBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            const clone = tpl.content.cloneNode(true);
+            const removeBtn = clone.querySelector('.remove-btn');
+            removeBtn.addEventListener('click', function() {
+                this.closest('.card-row').remove();
+            });
+            container.appendChild(clone);
+        });
+        
+        // Dodaj obsługę usuwania dla istniejących rzędów (jeśli będą)
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-btn')) {
+                const rows = container.querySelectorAll('.card-row');
+                if (rows.length > 1) {
+                    e.target.closest('.card-row').remove();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
