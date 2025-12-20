@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Panel - Fiszki</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sets.css') }}">
+    <style>
+        .card { max-width: 1200px; }
+        .set-item-container {
+            background: rgba(30,41,59,0.8);
+            border: 1px solid rgba(148,163,184,0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all .2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+        .set-item-container:hover {
+            background: rgba(30,41,59,1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            transform: translateY(-2px);
+        }
+        .set-info-section {
+            flex: 1;
+            min-width: 0;
+        }
+        .set-info-section .set-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #f1f5f9;
+            margin: 0 0 8px;
+        }
+        .set-info-section .set-meta {
+            font-size: 13px;
+            color: #94a3b8;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .set-actions-section {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 24px 0 16px;
+        }
+        .section-header h2 {
+            margin: 0;
+            font-size: 22px;
+            color: #f1f5f9;
+        }
+        .section-header .actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="bg-blob a"></div>
+        <div class="bg-blob b"></div>
+        
+        <div class="card">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <div class="welcome">
+                <h2>Witaj, {{ username }}! 👋</h2>
+                <p>Twoja platforma do nauki z fiszkami jest gotowa</p>
+            </div>
+
+            <div class="section-header">
+                <h2>Twoje zestawy</h2>
+                <div class="actions">
+                    <a href="{{ url_for('profile') }}" class="btn ghost">👤 Profil</a>
+                    <a href="{{ url_for('create_set') }}" class="btn primary">+ Nowy zestaw</a>
+                    <a href="{{ url_for('logout') }}" class="btn ghost">Wyloguj się</a>
+                </div>
+            </div>
+
+            {% if zestawy and zestawy|length > 0 %}
+                <div class="sets-container">
+                    {% for z in zestawy %}
+                        <div class="set-item-container">
+                            <div class="set-info-section">
+                                <div class="set-title">{{ z.nazwa }}</div>
+                                <div class="set-meta">
+                                    <span>{{ z.karty|length }} fiszek</span>
+                                    <span>•</span>
+                                    <span>{{ z.data_utworzenia[:10] }}</span>
+                                </div>
+                            </div>
+                            <div class="set-actions-section">
+                                <button onclick="openLearnModal('{{ z.id }}')" class="btn primary" style="background: linear-gradient(90deg, #10b981, #059669); white-space: nowrap;">
+                                    🎯 Ucz się
+                                </button>
+                                <button onclick="openTestModal('{{ z.id }}')" class="btn ghost" style="white-space: nowrap;">
+                                    📝 Test
+                                </button>
+                                <a href="{{ url_for('view_set', set_id=z.id) }}" class="btn ghost" style="white-space: nowrap;">
+                                    👁️ Zobacz
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p style="color:#64748b; margin-top: 18px; text-align: center;">Brak zestawów. Kliknij "+ Nowy zestaw", aby utworzyć pierwszy.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Test Modal -->
+    <div id="testModal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin: 0 0 20px; font-size: 22px; color: #f1f5f9;">Wybierz liczbę pytań</h2>
+            
+            <div class="modal-options">
+                <label class="option-checkbox" onclick="selectTestOption(5)">
+                    <input type="radio" name="test_count" value="5" checked>
+                    <div class="option-info">
+                        <strong>5 pytań</strong>
+                        <span>Szybki test</span>
+                    </div>
+                </label>
+                
+                <label class="option-checkbox" onclick="selectTestOption(10)">
+                    <input type="radio" name="test_count" value="10">
+                    <div class="option-info">
+                        <strong>10 pytań</strong>
+                        <span>Średni test</span>
+                    </div>
+                </label>
+                
+                <label class="option-checkbox" onclick="selectTestOption(15)">
+                    <input type="radio" name="test_count" value="15">
+                    <div class="option-info">
+                        <strong>15 pytań</strong>
+                        <span>Długi test</span>
+                    </div>
+                </label>
+                
+                <label class="option-checkbox" onclick="selectTestOption(-1)">
+                    <input type="radio" name="test_count" value="-1">
+                    <div class="option-info">
+                        <strong>Wszystkie</strong>
+                        <span>Pełny test ze wszystkich fiszek</span>
+                    </div>
+                </label>
+            </div>
+            
+            <div class="modal-actions">
+                <button onclick="closeTestModal()" class="btn ghost">Anuluj</button>
+                <button onclick="startTest()" class="btn primary" style="background: linear-gradient(90deg, #6366f1, #4f46e5);">Rozpocznij test</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Learning Mode Modal -->
+    <div id="learnModal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin: 0 0 20px; font-size: 22px; color: #f1f5f9;">Wybierz opcje nauki</h2>
+            
+            <div class="modal-options">
+                <label class="option-checkbox">
+                    <input type="checkbox" id="randomOrder" checked>
+                    <div class="option-info">
+                        <strong>🔀 Losowa kolejność</strong>
+                        <span>Fiszki będą wyświetlane w losowej kolejności</span>
+                    </div>
+                </label>
+                
+                <label class="option-checkbox">
+                    <input type="checkbox" id="reviewMode">
+                    <div class="option-info">
+                        <strong>🔁 Tryb powtórki</strong>
+                        <span>Tylko fiszki oznaczone jako "nie rozumiem"</span>
+                    </div>
+                </label>
+            </div>
+            
+            <div class="modal-actions">
+                <button onclick="closeLearnModal()" class="btn ghost">Anuluj</button>
+                <button onclick="startLearning()" class="btn primary" style="background: linear-gradient(90deg, #10b981, #059669);">Rozpocznij</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: var(--surface);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 16px;
+            padding: 28px;
+            max-width: 480px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        .modal-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .option-checkbox {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 16px;
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .option-checkbox:hover {
+            background: rgba(30, 41, 59, 0.8);
+            border-color: rgba(148, 163, 184, 0.2);
+        }
+        .option-checkbox input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin: 2px 0 0 0;
+            cursor: pointer;
+            accent-color: #10b981;
+        }
+        .option-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .option-info strong {
+            color: #f1f5f9;
+            font-size: 15px;
+        }
+        .option-info span {
+            color: #94a3b8;
+            font-size: 13px;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .modal-actions .btn {
+            padding: 10px 20px;
+        }
+    </style>
+
+    <script>
+        // Auto-hide flash messages
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.classList.add('fade-out');
+                    setTimeout(() => alert.remove(), 300);
+                }, 3000);
+            });
+        });
+
+        let currentSetId = null;
+        let selectedTestCount = 5;
+
+        function openLearnModal(setId) {
+            currentSetId = setId;
+            document.getElementById('learnModal').classList.add('active');
+        }
+        
+        function closeLearnModal() {
+            document.getElementById('learnModal').classList.remove('active');
+            currentSetId = null;
+        }
+        
+        function startLearning() {
+            if (!currentSetId) return;
+            
+            const randomOrder = document.getElementById('randomOrder').checked;
+            const reviewMode = document.getElementById('reviewMode').checked;
+            
+            const params = new URLSearchParams();
+            if (randomOrder) params.append('random', '1');
+            if (reviewMode) params.append('review', '1');
+            
+            window.location.href = `/zestawy/${currentSetId}/ucz-sie` + 
+                (params.toString() ? '?' + params.toString() : '');
+        }
+        
+        // Close modal on ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeLearnModal();
+            }
+        });
+        
+        // Close modal on backdrop click
+        document.getElementById('learnModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeLearnModal();
+            }
+        });
+        
+        // Test modal functions
+        function openTestModal(setId) {
+            currentSetId = setId;
+            document.getElementById('testModal').classList.add('active');
+        }
+        
+        function closeTestModal() {
+            document.getElementById('testModal').classList.remove('active');
+            currentSetId = null;
+        }
+        
+        function selectTestOption(count) {
+            selectedTestCount = count;
+        }
+        
+        function startTest() {
+            if (!currentSetId) return;
+            
+            window.location.href = `/zestawy/${currentSetId}/test?count=${selectedTestCount}`;
+        }
+        
+        document.getElementById('testModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeTestModal();
+            }
+        });
+    </script>
+</body>
+</html>

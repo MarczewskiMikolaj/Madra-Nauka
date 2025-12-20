@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Profil - {{ username }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <style>
+        .card { max-width: 1200px; text-align: left; }
+        
+        .profile-header {
+            text-align: center;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid rgba(148,163,184,0.1);
+        }
+        
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            margin: 0 auto 16px;
+            color: white;
+            font-weight: 700;
+        }
+        
+        .profile-name {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0 0 8px;
+            color: #f1f5f9;
+        }
+        
+        .profile-subtitle {
+            font-size: 14px;
+            color: #94a3b8;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        
+        .stat-card {
+            background: rgba(30,41,59,0.8);
+            border: 1px solid rgba(148,163,184,0.1);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            transition: all .3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+        
+        .stat-card.primary {
+            background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(147,197,253,0.1));
+            border-color: rgba(59,130,246,0.3);
+        }
+        
+        .stat-card.success {
+            background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(134,239,172,0.1));
+            border-color: rgba(16,185,129,0.3);
+        }
+        
+        .stat-card.warning {
+            background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(251,191,36,0.1));
+            border-color: rgba(245,158,11,0.3);
+        }
+        
+        .stat-icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: #f1f5f9;
+        }
+        
+        .stat-label {
+            font-size: 13px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 32px 0 16px;
+            color: #f1f5f9;
+        }
+        
+        .chart-container {
+            background: rgba(30,41,59,0.8);
+            border: 1px solid rgba(148,163,184,0.1);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .chart {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 200px;
+            gap: 8px;
+        }
+        
+        .chart-bar-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            height: 100%; /* Ensure percentage heights on bars are relative to chart height */
+            justify-content: flex-end; /* Anchor bars at bottom so they grow upward */
+        }
+        
+        .chart-bar {
+            width: 100%;
+            background: linear-gradient(180deg, #3b82f6, #2563eb);
+            border-radius: 6px 6px 0 0;
+            transition: all .3s ease;
+            position: relative;
+            min-height: 4px;
+        }
+        
+        .chart-bar:hover {
+            background: linear-gradient(180deg, #60a5fa, #3b82f6);
+            transform: scaleY(1.05);
+        }
+        
+        .chart-value {
+            position: absolute;
+            top: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            font-weight: 600;
+            color: #f1f5f9;
+            opacity: 0;
+            transition: opacity .3s ease;
+        }
+        
+        .chart-bar:hover .chart-value {
+            opacity: 1;
+        }
+        
+        .chart-label {
+            font-size: 11px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        
+        .favorite-set {
+            background: rgba(30,41,59,0.8);
+            border: 1px solid rgba(148,163,184,0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .favorite-set-content {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .favorite-icon {
+            font-size: 48px;
+        }
+        
+        .favorite-info h3 {
+            font-size: 20px;
+            margin: 0 0 8px;
+            color: #f1f5f9;
+        }
+        
+        .favorite-info p {
+            margin: 0;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #94a3b8;
+        }
+        
+        .back-button {
+            margin-top: 24px;
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .card {
+                max-width: 100%;
+                padding: 24px 16px;
+            }
+            
+            .profile-avatar {
+                width: 80px;
+                height: 80px;
+                font-size: 36px;
+            }
+            
+            .profile-name {
+                font-size: 22px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .stat-card {
+                padding: 14px;
+            }
+            
+            .stat-icon {
+                font-size: 28px;
+            }
+            
+            .stat-value {
+                font-size: 26px;
+            }
+            
+            .chart-container {
+                padding: 16px;
+            }
+            
+            .chart {
+                height: 180px;
+            }
+            
+            .favorite-set {
+                padding: 16px;
+            }
+        }
+        
+        @media (max-width: 430px) {
+            .profile-header {
+                margin-bottom: 24px;
+                padding-bottom: 16px;
+            }
+            
+            .profile-avatar {
+                width: 70px;
+                height: 70px;
+                font-size: 32px;
+            }
+            
+            .profile-name {
+                font-size: 20px;
+            }
+            
+            .profile-subtitle {
+                font-size: 13px;
+            }
+            
+            .stat-icon {
+                font-size: 24px;
+            }
+            
+            .stat-value {
+                font-size: 22px;
+            }
+            
+            .stat-label {
+                font-size: 11px;
+            }
+            
+            .section-title {
+                font-size: 16px;
+            }
+            
+            .chart {
+                height: 160px;
+            }
+            
+            .chart-label {
+                font-size: 10px;
+            }
+            
+            .favorite-icon {
+                font-size: 28px;
+            }
+            
+            .favorite-info h3 {
+                font-size: 16px;
+            }
+            
+            .favorite-info p {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="bg-blob a"></div>
+        <div class="bg-blob b"></div>
+        
+        <div class="card">
+            <a href="{{ url_for('dashboard') }}" class="btn ghost" style="margin-bottom: 20px; width: fit-content;">← Powrót do panelu</a>
+            
+            <div class="profile-header">
+                <div class="profile-avatar">{{ username[0].upper() }}</div>
+                <h1 class="profile-name">{{ username }}</h1>
+                <p class="profile-subtitle">Twój profil ucznia</p>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card primary">
+                    <div class="stat-icon">📚</div>
+                    <div class="stat-value">{{ total_sets }}</div>
+                    <div class="stat-label">Zestawów fiszek</div>
+                </div>
+                
+                <div class="stat-card success">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-value">{{ sets_solved_today }}</div>
+                    <div class="stat-label">Rozwiązanych dzisiaj</div>
+                </div>
+                
+                <div class="stat-card warning">
+                    <div class="stat-icon">🔥</div>
+                    <div class="stat-value">{{ chart_data|sum(attribute='count') }}</div>
+                    <div class="stat-label">Rozwiązań w tygodniu</div>
+                </div>
+            </div>
+            
+            <h2 class="section-title">📊 Aktywność w ostatnim tygodniu</h2>
+            <div class="chart-container">
+                <div class="chart">
+                    {% set max_count = chart_data|map(attribute='count')|max %}
+                    {% for day in chart_data %}
+                    <div class="chart-bar-container">
+                        {% if day.count > 0 %}
+                            {% set bar_height = 20 + ((day.count / (max_count if max_count > 0 else 1)) * 80) %}
+                        {% else %}
+                            {% set bar_height = 0 %}
+                        {% endif %}
+                        <div class="chart-bar" style="height: {{ bar_height|round }}%;">
+                            <span class="chart-value">{{ day.count }}</span>
+                        </div>
+                        <div class="chart-label">{{ day.day }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <h2 class="section-title">⭐ Najczęściej rozwiązywany zestaw</h2>
+            {% if most_solved_set %}
+            <div class="favorite-set">
+                <div class="favorite-set-content">
+                    <div class="favorite-icon">🏆</div>
+                    <div class="favorite-info">
+                        <h3>{{ most_solved_set.nazwa }}</h3>
+                        <p>Rozwiązywany {{ most_solved_count }} {{ 'raz' if most_solved_count == 1 else 'razy' if most_solved_count < 5 else 'razy' }}</p>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <p>Nie rozwiązałeś jeszcze żadnego zestawu fiszek.</p>
+                <p style="font-size: 12px; margin-top: 8px;">Rozpocznij naukę, aby zobaczyć tutaj statystyki!</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

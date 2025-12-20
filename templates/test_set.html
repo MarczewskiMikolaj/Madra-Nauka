@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Test: {{ zestaw.nazwa }} - Fiszki</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .app { padding: 12px 10px; }
+        .card {
+            max-width: 700px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px; /* override global 40px to reduce top spacing */
+        }
+        .test-header {
+            text-align: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(148,163,184,0.1);
+        }
+        .test-header h1 {
+            margin: 0 0 6px;
+            font-size: 22px;
+            color: #f1f5f9;
+        }
+        .test-header p {
+            color: #94a3b8;
+            font-size: 13px;
+        }
+        .progress-bar {
+            height: 6px;
+            background: rgba(148,163,184,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6366f1, #4f46e5);
+            transition: width 0.3s ease;
+        }
+        .question-container {
+            background: rgba(30,41,59,0.6);
+            border: 1px solid rgba(148,163,184,0.1);
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 12px;
+            flex: 1;
+            overflow: auto;
+        }
+        .question-number {
+            display: inline-block;
+            background: rgba(99, 102, 241, 0.15);
+            color: #818cf8;
+            font-weight: 600;
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+        }
+        .question-text {
+            font-size: 18px;
+            color: #f1f5f9;
+            margin-bottom: 16px;
+            font-weight: 500;
+            line-height: 1.45;
+        }
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .option-item {
+            display: flex;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.6);
+            border: 2px solid rgba(148,163,184,0.1);
+            border-radius: 10px;
+            padding: 12px 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .option-item:hover {
+            background: rgba(15, 23, 42, 0.9);
+            border-color: rgba(99, 102, 241, 0.4);
+            transform: translateX(2px);
+        }
+        .option-item input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 12px;
+            cursor: pointer;
+            accent-color: #6366f1;
+        }
+        .option-text {
+            flex: 1;
+            color: #e2e8f0;
+            font-size: 14px;
+        }
+        .submit-container {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 8px;
+        }
+        @media (max-width: 768px) {
+            .question-text {
+                font-size: 16px;
+            }
+            .option-item {
+                padding: 10px 12px;
+            }
+            .option-text {
+                font-size: 13px;
+            }
+            .question-container {
+                padding: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="bg-blob a"></div>
+        <div class="bg-blob b"></div>
+
+        <div class="card">
+            <a href="{{ url_for('dashboard') }}" class="btn ghost" style="margin-bottom: 8px; width: fit-content;">← Zakończ test</a>
+            
+            <div class="test-header">
+                <h1>📝 Test: {{ zestaw.nazwa }}</h1>
+                <p>Wybierz poprawną odpowiedź</p>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: {{ (question_index / total_questions * 100)|round }}%;"></div>
+            </div>
+
+            <form method="POST" style="display:flex; flex-direction: column; flex: 1;">
+                <div class="question-container">
+                    <span class="question-number">Pytanie {{ question.number }}/{{ total_questions }}</span>
+                    <div class="question-text">{{ question.question }}</div>
+                    
+                    <div class="options-container">
+                        {% for option in question.options %}
+                        <label class="option-item">
+                            <input type="radio" name="answer" value="{{ option }}" required>
+                            <span class="option-text">{{ option }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="submit-container" style="margin-top: auto;">
+                    {% if question_index >= total_questions - 1 %}
+                        <input type="hidden" name="end" value="1">
+                    {% endif %}
+                    <button type="submit" class="btn primary" style="background: linear-gradient(90deg, #6366f1, #4f46e5); min-width: 140px;">
+                        {% if question_index < total_questions - 1 %}
+                            Dalej →
+                        {% else %}
+                            ✓ Zakończ test
+                        {% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
