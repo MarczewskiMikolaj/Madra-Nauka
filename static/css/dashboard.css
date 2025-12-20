@@ -1,0 +1,195 @@
+/* Dashboard - clean & organized */
+
+.welcome {
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.welcome h2 {
+  margin-bottom: 4px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.section-header .actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Sets grid */
+.sets-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 16px;
+}
+
+.set-item-container {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.set-item-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.set-info-section {
+  margin-bottom: 16px;
+}
+
+.set-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+  display: block;
+  text-decoration: none;
+}
+
+.set-title:hover {
+  color: var(--primary);
+}
+
+.set-meta {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  display: flex;
+  gap: 12px;
+}
+
+.set-actions-section {
+  display: flex;
+  gap: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.set-actions-section .btn {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+}
+
+/* View set page */
+.flashcards-list {
+  margin-top: 24px;
+}
+
+.flashcard-item {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.flashcard-number {
+  display: inline-block;
+  background: var(--primary);
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+
+.flashcard-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.flashcard-side h4 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.flashcard-side p {
+  font-size: 0.95rem;
+  color: var(--text);
+  margin: 0;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .section-header .actions {
+    width: 100%;
+    flex-direction: column;
+  }
+  
+  .section-header .actions .btn {
+    width: 100%;
+  }
+  
+  .sets-container {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .set-item-container {
+    padding: 16px;
+  }
+  
+  .set-actions-section {
+    flex-direction: column;
+  }
+  
+  .set-actions-section .btn {
+    width: 100%;
+  }
+  
+  .flashcard-content {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 430px) {
+  .welcome {
+    padding: 16px;
+  }
+  
+  .welcome h2 {
+    font-size: 1.3rem;
+  }
+  
+  .set-title {
+    font-size: 1rem;
+  }
+  
+  .set-meta {
+    font-size: 0.8rem;
+    flex-wrap: wrap;
+  }
+}

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Nauka: {{ zestaw.nazwa }} - Fiszki</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/learn.css') }}">
+</head>
+<body>
+    <div class="app">
+        <div class="bg-blob a"></div>
+        <div class="bg-blob b"></div>
+
+        <div class="card">
+            <a href="{{ url_for('learn_summary', set_id=zestaw.id) }}" style="margin-bottom: 20px; display: inline-block;">← Zakończ naukę</a>
+            
+            <h1>{{ zestaw.nazwa }}</h1>
+            <p class="subtitle">Ucz się z fiszkami</p>
+
+            {% if zestaw.ostatnie_wyniki and current_index < zestaw.ostatnie_wyniki|length %}
+                {% set last_result = zestaw.ostatnie_wyniki[current_index] %}
+                {% if last_result == true %}
+                    <div style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); padding: 8px 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; color: #059669;">
+                        ✅ Ostatnio: <strong>Zrozumiałem</strong>
+                    </div>
+                {% elif last_result == false %}
+                    <div style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); padding: 8px 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; color: #b91c1c;">
+                        ❌ Ostatnio: <strong>Nie zrozumiałem</strong>
+                    </div>
+                {% endif %}
+            {% endif %}
+
+            <div class="progress-text">
+                Fiszka {{ current_index + 1 }} z {{ zestaw.karty|length }}
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: {{ ((current_index) / zestaw.karty|length * 100)|round }}%;"></div>
+            </div>
+
+            {% set current_card = zestaw.karty[current_index] %}
+
+            <div class="flashcard-container">
+                <div class="flashcard" id="flashcard" onclick="flipCard()">
+                    <div class="flashcard-face flashcard-front">
+                        <div class="flashcard-label">Pytanie</div>
+                        <div class="flashcard-content">
+                            {{ current_card.tekst }}
+                        </div>
+                        <div class="flashcard-hint">👆 Kliknij, aby zobaczyć odpowiedź</div>
+                    </div>
+                    <div class="flashcard-face flashcard-back">
+                        <div class="flashcard-label">Odpowiedź</div>
+                        <div class="flashcard-content">
+                            {{ current_card.odpowiedz }}
+                        </div>
+                        <div class="flashcard-hint">👆 Kliknij, aby wrócić do pytania</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons" id="action-buttons">
+                <form method="POST" action="{{ url_for('learn_card', set_id=zestaw.id, card_index=current_index) }}">
+                    <input type="hidden" name="understood" value="false">
+                    <button type="submit" class="btn-action btn-not-understood">✗</button>
+                </form>
+                <form method="POST" action="{{ url_for('learn_card', set_id=zestaw.id, card_index=current_index) }}">
+                    <input type="hidden" name="understood" value="true">
+                    <button type="submit" class="btn-action btn-understood">✓</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isFlipped = false;
+
+        function flipCard() {
+            const card = document.getElementById('flashcard');
+            
+            // Przełącz stan karty
+            if (!isFlipped) {
+                card.classList.add('flipped');
+                isFlipped = true;
+            } else {
+                // Obróć z powrotem na pytanie
+                card.classList.remove('flipped');
+                isFlipped = false;
+            }
+        }
+    </script>
+</body>
+</html>

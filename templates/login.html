@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Logowanie - Fiszki</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+</head>
+<body>
+    <div class="app">
+        <div class="bg-blob a"></div>
+        <div class="bg-blob b"></div>
+        
+        <div class="card">
+            <h1>Witaj ponownie</h1>
+            <p class="subtitle">Zaloguj się, aby uzyskać dostęp do swoich fiszek</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('login') }}">
+                <div class="form-group">
+                    <label for="username">Nazwa użytkownika</label>
+                    <input type="text" id="username" name="username" required autofocus>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Hasło</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+
+                <button type="submit" class="btn primary">Zaloguj się</button>
+            </form>
+
+            <div class="divider">
+                Nie masz konta? <a href="{{ url_for('register') }}" class="link">Zarejestruj się tutaj</a>
+            </div>
+
+            <div class="back-link">
+                <a href="{{ url_for('index') }}">← Powrót do strony głównej</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
