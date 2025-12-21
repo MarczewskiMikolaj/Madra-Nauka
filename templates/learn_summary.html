@@ -72,7 +72,7 @@
             </div>
 
             <div class="action-buttons">
-                <a href="{{ url_for('learn_set', set_id=zestaw.id) }}" class="btn primary">🔄 Powtórz naukę</a>
+                <a href="{{ url_for('learn_set', set_id=zestaw.id, random=(1 if last_mode.random else 0), review=(1 if last_mode.review else 0)) }}" class="btn primary">🔄 Powtórz naukę</a>
                 <a href="{{ url_for('dashboard') }}" class="btn ghost">← Zakończ naukę</a>
             </div>
         </div>

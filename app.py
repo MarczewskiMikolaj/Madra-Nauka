@@ -259,6 +259,61 @@ def dashboard():
     # Pokaż zestawy użytkownika na stronie głównej
     user_sets = [s for s in sets if s.get('autor') == session['username']]
 
+    # Wzbogacenie: oblicz procent opanowania (ostrzejsze kryteria)
+    enriched_sets = []
+    for s in user_sets:
+        karty = s.get('karty', []) or []
+        total_cards = len(karty)
+        mastered = 0
+        # Wyczyść błędną datę powtórki dla nowych zestawów bez aktywności
+        try:
+            if s.get('next_review_date'):
+                if not (s.get('days_completed') or []) and not (s.get('historia_nauki') or []):
+                    s['next_review_date'] = None
+        except Exception:
+            pass
+        if total_cards > 0:
+            for karta in karty:
+                stats = karta.get('statystyki') or {}
+                stats.setdefault('opanowana', False)
+                pokazane = stats.get('pokazane', 0)
+                procent = stats.get('procent_sukcesu', 0)
+                if stats.get('opanowana'):
+                    mastered += 1
+                elif pokazane >= 5 and procent >= 85:
+                    mastered += 1
+        # Fallback: wyznacz next_review_date jeśli brak, na podstawie ukończonych dni (days_completed)
+        try:
+            if not s.get('next_review_date'):
+                completed_days = set(s.get('days_completed') or [])
+                completed_count = len(completed_days)
+                if completed_count > 0:
+                    from datetime import timedelta as _td
+                    now_date = datetime.now(timezone.utc).date()
+                    if completed_count < 5:
+                        next_review = (now_date + _td(days=1)).isoformat()
+                    elif completed_count < 8:
+                        next_review = (now_date + _td(days=3)).isoformat()
+                    else:
+                        next_review = (now_date + _td(days=7)).isoformat()
+                    s['next_review_date'] = next_review
+        except Exception:
+            pass
+        mastery_percent = round((mastered / total_cards) * 100) if total_cards > 0 else 0
+        if mastery_percent <= 40:
+            mastery_class = 'low'
+        elif mastery_percent <= 75:
+            mastery_class = 'mid'
+        else:
+            mastery_class = 'high'
+        enriched_sets.append({
+            **s,
+            'mastery_percent': mastery_percent,
+            'mastered_count': mastered,
+            'total_cards': total_cards,
+            'mastery_class': mastery_class
+        })
+
     # Oblicz codzienny streak (kolejne dni z aktywnością, licząc od dziś)
     from datetime import timedelta
     activity_dates = set()
@@ -309,7 +364,16 @@ def dashboard():
     polish_months = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień']
     month_name_pl = polish_months[month - 1]
 
-    return render_template('dashboard.html', username=session['username'], zestawy=user_sets, daily_streak=streak, month_rows=month_rows, month_name=month_name_pl, year=year)
+    # Wyznacz zestawy do powtórki dzisiaj
+    today_str = datetime.now(timezone.utc).date().isoformat()
+    due_today_sets = []
+    for s in enriched_sets:
+        next_date = s.get('next_review_date')
+        is_new = not (s.get('days_completed') or []) and not (s.get('historia_nauki') or [])
+        if next_date == today_str or is_new:
+            due_today_sets.append(s)
+
+    return render_template('dashboard.html', username=session['username'], zestawy=enriched_sets, due_today_sets=due_today_sets, daily_streak=streak, month_rows=month_rows, month_name=month_name_pl, year=year)
 
 @app.route('/logout')
 def logout():
@@ -328,31 +392,25 @@ def profile():
     # Oblicz statystyki
     total_sets = len(user_sets)
     
-    # Zestawy rozwiązane dzisiaj
+    # Zestawy rozwiązane dzisiaj (liczy każdą sesję nauki, nie tylko unikalne dni)
     today = datetime.now(timezone.utc).date().isoformat()
-    sets_solved_today = 0
-    
-    # Statystyki tygodniowe (ostatnie 7 dni)
     from collections import defaultdict
-    weekly_stats = defaultdict(int)
-    set_solve_counts = defaultdict(int)
+    weekly_stats = defaultdict(int)  # liczba sesji nauki na dzień
+    set_solve_counts = defaultdict(int)  # liczba sesji nauki per zestaw
     
+    sets_solved_today = 0
     for zestaw in user_sets:
-        historia = zestaw.get('historia_nauki', [])
+        # Zlicz wszystkie sesje nauki (nie tylko unikalne dni)
+        historia = zestaw.get('historia_nauki', []) or []
         for wpis in historia:
             data = wpis.get('data')
             if data:
-                # Sprawdź czy dzisiaj
                 if data == today:
                     sets_solved_today += 1
-                
-                # Dodaj do statystyk tygodniowych
                 weekly_stats[data] += 1
-                
-                # Zlicz ile razy każdy zestaw był rozwiązywany
                 set_solve_counts[zestaw['id']] += 1
     
-    # Przygotuj dane dla wykresu tygodniowego (ostatnie 7 dni)
+    # Przygotuj dane dla wykresu tygodniowego (ostatnie 7 dni) - liczba sesji nauki
     from datetime import timedelta
     chart_data = []
     polish_days = ['Pon', 'Wt', 'Śr', 'Czw', 'Pt', 'Sob', 'Niedz']
@@ -375,8 +433,9 @@ def profile():
     from datetime import timedelta as _timedelta
     activity_dates = set()
     from collections import defaultdict
-    learn_counts_by_date = defaultdict(int)  # data -> łączna liczba rozwiązań (sesji nauki) tego dnia
+    learn_counts_by_date = defaultdict(int)  # data -> liczba sesji nauki danego dnia
     for zestaw in user_sets:
+        # Aktywność: sesje nauki i testy
         for wpis in zestaw.get('historia_nauki', []) or []:
             data = wpis.get('data')
             if data:
@@ -386,7 +445,6 @@ def profile():
             data = wpis.get('data')
             if data:
                 activity_dates.add(data)
-                # Testy nie są wliczane do licznika kalendarza, aby dopasować pole "Rozwiązanych dzisiaj"
     daily_streak = 0
     _day = datetime.now(timezone.utc).date()
     while _day.isoformat() in activity_dates:
@@ -479,7 +537,16 @@ def create_set():
                                     'pokazane': 0,
                                     'rozumiem': 0,
                                     'nie_rozumiem': 0,
-                                    'procent_sukcesu': 0
+                                    'procent_sukcesu': 0,
+                                    'streak_rozumiem': 0,
+                                    'streak_nie_rozumiem': 0,
+                                    'opanowana': False,
+                                    'sessions_ok_streak': 0,
+                                    'fail_streak_sessions': 0,
+                                    'last_seen_date': None,
+                                    'total_sessions_ok': 0,
+                                    'next_due': None,
+                                    'leech': False
                                 }
                             })
                 
@@ -507,7 +574,16 @@ def create_set():
                             'pokazane': 0,
                             'rozumiem': 0,
                             'nie_rozumiem': 0,
-                            'procent_sukcesu': 0
+                            'procent_sukcesu': 0,
+                            'streak_rozumiem': 0,
+                            'streak_nie_rozumiem': 0,
+                            'opanowana': False,
+                            'sessions_ok_streak': 0,
+                            'fail_streak_sessions': 0,
+                            'last_seen_date': None,
+                            'total_sessions_ok': 0,
+                            'next_due': None,
+                            'leech': False
                         }
                     })
 
@@ -549,8 +625,73 @@ def view_set(set_id):
     if zestaw.get('autor') != session['username']:
         flash('Nie masz dostępu do tego zestawu.', 'error')
         return redirect(url_for('zestawy'))
+
+    # Wyczyść błędną datę powtórki dla nowych zestawów bez aktywności
+    try:
+        if zestaw.get('next_review_date'):
+            if not (zestaw.get('days_completed') or []) and not (zestaw.get('historia_nauki') or []):
+                zestaw['next_review_date'] = None
+    except Exception:
+        pass
+
+    # Fallback: wyznacz next_review_date jeśli brak, na podstawie ukończonych dni (days_completed)
+    try:
+        if not zestaw.get('next_review_date'):
+            completed_days = set(zestaw.get('days_completed') or [])
+            completed_count = len(completed_days)
+            if completed_count > 0:
+                from datetime import timedelta as _td
+                now_date = datetime.now(timezone.utc).date()
+                if completed_count < 5:
+                    next_review = (now_date + _td(days=1)).isoformat()
+                elif completed_count < 8:
+                    next_review = (now_date + _td(days=3)).isoformat()
+                else:
+                    next_review = (now_date + _td(days=7)).isoformat()
+                zestaw['next_review_date'] = next_review
+    except Exception:
+        pass
+
+    # Uzupełnij brakujące statystyki i Top 5 najtrudniejszych fiszek (najniższy procent sukcesu, tylko karty z historią)
+    for karta in zestaw.get('karty', []) or []:
+        stats = karta.setdefault('statystyki', {})
+        stats.setdefault('pokazane', 0)
+        stats.setdefault('rozumiem', 0)
+        stats.setdefault('nie_rozumiem', 0)
+        stats.setdefault('procent_sukcesu', 0)
+        stats.setdefault('streak_rozumiem', 0)
+        stats.setdefault('streak_nie_rozumiem', 0)
+        stats.setdefault('opanowana', False)
+        stats.setdefault('sessions_ok_streak', 0)
+        stats.setdefault('fail_streak_sessions', 0)
+        stats.setdefault('last_seen_date', None)
+        stats.setdefault('total_sessions_ok', 0)
+        stats.setdefault('next_due', None)
+        stats.setdefault('leech', False)
+
+    top_difficult_cards = []
+    for idx, karta in enumerate(zestaw.get('karty', []), start=1):
+        stats = karta.get('statystyki') or {}
+        shown = stats.get('pokazane', 0)
+        if shown <= 0:
+            continue
+        success = stats.get('procent_sukcesu', 0)
+        top_difficult_cards.append({
+            'index': idx,
+            'tekst': karta.get('tekst', ''),
+            'odpowiedz': karta.get('odpowiedz', ''),
+            'pokazane': shown,
+            'procent_sukcesu': success
+        })
+
+    top_difficult_cards = sorted(top_difficult_cards, key=lambda c: (c['procent_sukcesu'], c['pokazane']))[:6]
     
-    return render_template('view_set.html', username=session['username'], zestaw=zestaw)
+    return render_template(
+        'view_set.html',
+        username=session['username'],
+        zestaw=zestaw,
+        top_difficult_cards=top_difficult_cards
+    )
 
 @app.route('/zestawy/<set_id>/edytuj', methods=['GET', 'POST'])
 def edit_set(set_id):
@@ -585,15 +726,37 @@ def edit_set(set_id):
                 if i < len(stare_karty) and stare_karty[i].get('tekst') == t:
                     stare_stats = stare_karty[i].get('statystyki')
                 
-                karty.append({
-                    'tekst': t,
-                    'odpowiedz': o,
-                    'statystyki': stare_stats if stare_stats else {
+                # Uzupełnij brakujące pola w starych statystykach
+                if not stare_stats:
+                    stare_stats = {
                         'pokazane': 0,
                         'rozumiem': 0,
                         'nie_rozumiem': 0,
-                        'procent_sukcesu': 0
+                        'procent_sukcesu': 0,
+                        'streak_rozumiem': 0,
+                        'streak_nie_rozumiem': 0,
+                        'opanowana': False,
+                        'sessions_ok_streak': 0,
+                        'fail_streak_sessions': 0,
+                        'last_seen_date': None,
+                        'total_sessions_ok': 0,
+                        'next_due': None,
+                        'leech': False
                     }
+                else:
+                    stare_stats.setdefault('streak_rozumiem', 0)
+                    stare_stats.setdefault('streak_nie_rozumiem', 0)
+                    stare_stats.setdefault('opanowana', False)
+                    stare_stats.setdefault('sessions_ok_streak', 0)
+                    stare_stats.setdefault('fail_streak_sessions', 0)
+                    stare_stats.setdefault('last_seen_date', None)
+                    stare_stats.setdefault('total_sessions_ok', 0)
+                    stare_stats.setdefault('next_due', None)
+                    stare_stats.setdefault('leech', False)
+                karty.append({
+                    'tekst': t,
+                    'odpowiedz': o,
+                    'statystyki': stare_stats
                 })
 
         if not nazwa:
@@ -656,37 +819,52 @@ def learn_set(set_id):
         flash('Ten zestaw nie zawiera żadnych fiszek.', 'error')
         return redirect(url_for('view_set', set_id=set_id))
     
-    # Pobierz opcje nauki
-    random_order = request.args.get('random') == '1'
+    # Pobierz opcje nauki (domyślnie losowa kolejność; random=0 wyłącza)
+    random_param = request.args.get('random')
+    random_order = False if random_param is None else random_param == '1'
     review_mode = request.args.get('review') == '1'
     
     # Przygotuj kolejność indeksów kart do nauki (przechowujemy tylko indeksy, nie całe karty)
+    import random, time
     total_cards = len(zestaw.get('karty', []))
     order = list(range(total_cards))
     
-    # Tryb powtórki - tylko fiszki oznaczone jako trudne na podstawie statystyk
+    # Tryb powtórki - tylko fiszki oznaczone jako trudne na podstawie statystyk i terminowości
     if review_mode:
-        # Znajdź karty z < 70% sukcesu LUB karty które nie mają jeszcze statystyk/były pokazane < 3 razy
+        # Znajdź karty:
+        # - Nieopanowane i (procent < 70 lub pokazane < 3)
+        # - Opanowane, ale termin powtórki (next_due <= dziś) lub długa nieaktywność (>14 dni)
         difficult_indices = []
         for i, karta in enumerate(zestaw['karty']):
             stats = karta.get('statystyki', {})
             pokazane = stats.get('pokazane', 0)
             procent = stats.get('procent_sukcesu', 0)
+            opanowana = stats.get('opanowana', False)
+            next_due = stats.get('next_due')
+            last_seen = stats.get('last_seen_date')
+            due = False
+            inactive = False
+            try:
+                if next_due:
+                    due = datetime.fromisoformat(next_due).date() <= datetime.now(timezone.utc).date()
+                if last_seen:
+                    inactive = (datetime.now(timezone.utc).date() - datetime.fromisoformat(last_seen).date()).days > 14
+            except Exception:
+                pass
             
-            # Karta jest trudna jeśli: ma < 70% sukcesu LUB była pokazana < 3 razy (niedostatecznie poznana)
-            if pokazane < 3 or procent < 70:
+            if (not opanowana and (pokazane < 3 or procent < 70)) or (opanowana and (due or inactive)):
                 difficult_indices.append(i)
         
         if difficult_indices:
             order = difficult_indices
         else:
-            flash('Brak trudnych fiszek do powtórki! Wszystkie fiszki mają ≥70% sukcesu. 🎉', 'success')
+            flash('Brak trudnych fiszek do powtórki! Wszystkie fiszki mają ≥70% sukcesu lub są opanowane (3× z rzędu). 🎉', 'success')
             return redirect(url_for('view_set', set_id=set_id))
     
     # Losowa kolejność
     if random_order:
-        import random
-        random.shuffle(order)
+        rng = random.Random(time.time_ns())  # świeże losowanie przy każdym uruchomieniu
+        rng.shuffle(order)
     
     # Zapisz przygotowaną kolejność i resetuj stan sesji nauki
     session[f'learn_{set_id}_order'] = order
@@ -699,7 +877,7 @@ def learn_set(set_id):
     zestaw_temp = zestaw.copy()
     zestaw_temp['karty'] = [zestaw['karty'][i] for i in order]
     
-    return render_template('learn_set.html', username=session['username'], zestaw=zestaw_temp, current_index=0)
+    return render_template('learn_set.html', username=session['username'], zestaw=zestaw_temp, current_index=0, order=order)
 
 @app.route('/zestawy/<set_id>/ucz-sie/<int:card_index>', methods=['GET', 'POST'])
 def learn_card(set_id, card_index):
@@ -746,20 +924,37 @@ def learn_card(set_id, card_index):
                     'pokazane': 0,
                     'rozumiem': 0,
                     'nie_rozumiem': 0,
-                    'procent_sukcesu': 0
+                    'procent_sukcesu': 0,
+                    'streak_rozumiem': 0,
+                    'streak_nie_rozumiem': 0,
+                    'opanowana': False
                 }
+            karta['statystyki'].setdefault('streak_rozumiem', 0)
+            karta['statystyki'].setdefault('streak_nie_rozumiem', 0)
+            karta['statystyki'].setdefault('opanowana', False)
             
             # Aktualizuj statystyki
             karta['statystyki']['pokazane'] += 1
             if understood:
                 karta['statystyki']['rozumiem'] += 1
+                karta['statystyki']['streak_rozumiem'] += 1
+                karta['statystyki']['streak_nie_rozumiem'] = 0
             else:
                 karta['statystyki']['nie_rozumiem'] += 1
+                karta['statystyki']['streak_rozumiem'] = 0
+                karta['statystyki']['streak_nie_rozumiem'] += 1
+                # Nie wyłączaj opanowania po pojedynczym błędzie; dopiero po 2 kolejnych
+                if karta['statystyki'].get('opanowana') and karta['statystyki']['streak_nie_rozumiem'] >= 2:
+                    karta['statystyki']['opanowana'] = False
             
             # Przelicz procent sukcesu
             total = karta['statystyki']['pokazane']
             if total > 0:
                 karta['statystyki']['procent_sukcesu'] = round((karta['statystyki']['rozumiem'] / total) * 100, 1)
+
+            # Oznacz jako opanowana po 3 kolejnych poprawnych
+            if karta['statystyki']['streak_rozumiem'] >= 3:
+                karta['statystyki']['opanowana'] = True
             
             # Zapisz zmiany do pliku
             save_sets(sets)
@@ -793,7 +988,8 @@ def learn_card(set_id, card_index):
     return render_template('learn_set.html', 
                          username=session['username'], 
                          zestaw=zestaw_temp, 
-                         current_index=card_index)
+                         current_index=card_index,
+                         order=order)
 
 @app.route('/zestawy/<set_id>/podsumowanie')
 def learn_summary(set_id):
@@ -809,32 +1005,123 @@ def learn_summary(set_id):
     # Pobierz wyniki
     results_key = f'learn_{set_id}_results'
     results = session.get(results_key, [])
+    order = session.get(f'learn_{set_id}_order') or list(range(len(zestaw.get('karty', []))))
+    last_mode = session.get(f'learn_{set_id}_mode', {'random': False, 'review': False})
     
     understood_count = sum(1 for r in results if r)
     not_understood_count = sum(1 for r in results if not r)
     solved_total = len(results)
     total_cards = len(zestaw.get('karty', []))
-    unsolved_count = total_cards - solved_total
+    unsolved_count = max(0, total_cards - solved_total)
     
-    # Zapisz wyniki do zestawu przed wyczyszczeniem sesji
+    # Zapisz wyniki do zestawu przed wyczyszczeniem sesji i zaktualizuj sesyjne statystyki
     if results:
-        # Uzupełnij wyniki o None dla nierozwiązanych fiszek
-        full_results = results + [None] * (total_cards - len(results))
+        # Odwzoruj wyniki na oryginalne indeksy kart (ważne przy losowej kolejności)
+        full_results = [None] * total_cards
+        for idx, res in enumerate(results):
+            orig_idx = order[idx] if idx < len(order) else idx
+            if 0 <= orig_idx < total_cards:
+                full_results[orig_idx] = res
         zestaw['ostatnie_wyniki'] = full_results
-        zestaw['data_ostatniej_nauki'] = datetime.now(timezone.utc).isoformat()
-        
+        unsolved_count = sum(1 for r in full_results if r is None)
+        now_ts = datetime.now(timezone.utc)
+        today = now_ts.date().isoformat()
+        zestaw['data_ostatniej_nauki'] = now_ts.isoformat()
+
+        # Aktualizacja per-karta: sesje, degradacja tolerancyjna, due scheduling
+        from datetime import timedelta as _td
+        for i in range(total_cards):
+            session_res = full_results[i]
+            karta = zestaw['karty'][i]
+            stats = karta.setdefault('statystyki', {})
+            # Uzupełnij brakujące klucze
+            stats.setdefault('sessions_ok_streak', 0)
+            stats.setdefault('fail_streak_sessions', 0)
+            stats.setdefault('last_seen_date', None)
+            stats.setdefault('total_sessions_ok', 0)
+            stats.setdefault('next_due', None)
+            stats.setdefault('leech', False)
+            stats.setdefault('opanowana', False)
+
+            if session_res is not None:
+                stats['last_seen_date'] = today
+                if session_res is True:
+                    stats['sessions_ok_streak'] = stats.get('sessions_ok_streak', 0) + 1
+                    stats['fail_streak_sessions'] = 0
+                    stats['total_sessions_ok'] = stats.get('total_sessions_ok', 0) + 1
+                    # Proste odstępy powtórek (SM-2 light) zależne od streak sesji
+                    streak = stats['sessions_ok_streak']
+                    if streak >= 3:
+                        interval_days = 16
+                    elif streak == 2:
+                        interval_days = 6
+                    else:
+                        interval_days = 1
+                    stats['next_due'] = (now_ts.date() + _td(days=interval_days)).isoformat()
+                else:
+                    stats['fail_streak_sessions'] = stats.get('fail_streak_sessions', 0) + 1
+                    stats['sessions_ok_streak'] = 0
+                    # Tolerancja błędu: degraduj dopiero po 2 kolejnych sesjach z błędem
+                    if stats.get('opanowana') and stats['fail_streak_sessions'] >= 2:
+                        stats['opanowana'] = False
+
+                # Nadanie opanowania wg sesji lub prób + skuteczność
+                pokazane = stats.get('pokazane', 0)
+                procent = stats.get('procent_sukcesu', 0)
+                if not stats.get('opanowana') and (
+                    stats.get('sessions_ok_streak', 0) >= 3 or (pokazane >= 5 and procent >= 85)
+                ):
+                    stats['opanowana'] = True
+
+                # Wykrywanie szczególnie trudnych fiszek
+                if stats.get('nie_rozumiem', 0) >= 6 and procent < 60:
+                    stats['leech'] = True
+                elif procent >= 70:
+                    stats['leech'] = False
+
         # Dodaj wpis do historii nauki
         if 'historia_nauki' not in zestaw:
             zestaw['historia_nauki'] = []
-        
-        today = datetime.now(timezone.utc).date().isoformat()
         zestaw['historia_nauki'].append({
             'data': today,
-            'timestamp': datetime.now(timezone.utc).isoformat(),
+            'timestamp': now_ts.isoformat(),
             'zrozumiane': understood_count,
             'niezrozumiane': not_understood_count
         })
-        
+
+        # Oznacz zestaw jako ukończony dziś, jeśli wszystkie fiszki były dziś przerobione
+        try:
+            zestaw.setdefault('days_completed', [])
+            all_seen_today = True
+            for karta in zestaw.get('karty', []) or []:
+                stats = karta.get('statystyki') or {}
+                if stats.get('last_seen_date') != today:
+                    all_seen_today = False
+                    break
+            if all_seen_today and today not in zestaw['days_completed']:
+                zestaw['days_completed'].append(today)
+        except Exception:
+            pass
+
+        # Ustal termin kolejnej powtórki zestawu wg harmonogramu, tylko jeśli ukończony dziś:
+        # - pierwsze 5 dni ukończeń: codziennie
+        # - potem 3 ukończenia co 3 dni
+        # - potem co tydzień
+        try:
+            if all_seen_today:
+                completed_days = set(zestaw.get('days_completed') or [])
+                completed_count = len(completed_days)
+                from datetime import timedelta as _td
+                if completed_count < 5:
+                    next_review = (now_ts.date() + _td(days=1)).isoformat()
+                elif completed_count < 8:  # 5 dni + 3 powtórki co 3 dni
+                    next_review = (now_ts.date() + _td(days=3)).isoformat()
+                else:
+                    next_review = (now_ts.date() + _td(days=7)).isoformat()
+                zestaw['next_review_date'] = next_review
+        except Exception:
+            pass
+
         save_sets(sets)
     
     # Wyczyść sesję
@@ -852,7 +1139,8 @@ def learn_summary(set_id):
                          understood=understood_count,
                          not_understood=not_understood_count,
                          unsolved=unsolved_count,
-                         total=total_cards)
+                         total=total_cards,
+                         last_mode=last_mode)
 
 @app.route('/zestawy/<set_id>/test')
 def test_set(set_id):

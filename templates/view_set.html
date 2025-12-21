@@ -12,11 +12,11 @@
             display: flex; 
             justify-content: space-between; 
             align-items: flex-start;
-            margin-bottom: 24px;
-            padding-bottom: 16px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
             border-bottom: 1px solid rgba(148,163,184,0.1);
         }
-        .set-info h1 { margin: 0 0 8px; font-size: 28px; color: #f1f5f9; }
+        .set-info h1 { margin: 0 0 8px; font-size: 28px; color: #f1f5f9; text-align: left; }
         .set-meta { color: #94a3b8; font-size: 14px; }
         .set-actions { display: flex; gap: 8px; }
         .flashcards-list { margin-top: 20px; }
@@ -63,10 +63,66 @@
             color: #10b981;
             font-weight: 600;
         }
+        .flashcard-stats.mastered {
+            background: rgba(16,185,129,0.15);
+            color: #34d399;
+            font-weight: 700;
+        }
+        .flashcard-stats.due {
+            background: rgba(245,158,11,0.15);
+            color: #fbbf24;
+            font-weight: 600;
+        }
+        .flashcard-stats.trudna {
+            background: rgba(239,68,68,0.15);
+            color: #ef4444;
+            font-weight: 700;
+        }
         .flashcard-content {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 16px;
+        }
+        .difficult-section {
+            margin-bottom: 24px;
+        }
+        .difficult-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+        }
+        .difficult-card {
+            background: rgba(30,41,59,0.8);
+            border: 1px solid rgba(239,68,68,0.25);
+            border-radius: 10px;
+            padding: 14px;
+        }
+        .difficult-card h4 {
+            margin: 0 0 6px;
+            font-size: 14px;
+            color: #f87171;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .difficult-meta {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+        .difficult-pill {
+            background: rgba(239,68,68,0.15);
+            color: #fca5a5;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 11px;
+            border: 1px solid rgba(239,68,68,0.25);
+        }
+        .difficult-body {
+            color: #e2e8f0;
+            font-size: 14px;
+            white-space: pre-wrap;
         }
         .flashcard-side h4 {
             font-size: 13px;
@@ -107,6 +163,9 @@
                 grid-template-columns: 1fr;
                 gap: 12px;
             }
+            .difficult-grid {
+                grid-template-columns: 1fr;
+            }
             .flashcard-stats {
                 display: block;
                 margin-left: 0;
@@ -126,6 +185,15 @@
                 font-size: 10px;
                 padding: 3px 6px;
             }
+            .difficult-card {
+                padding: 12px;
+            }
+            .difficult-card h4 {
+                font-size: 13px;
+            }
+            .difficult-body {
+                font-size: 13px;
+            }
         }
     </style>
 </head>
@@ -135,7 +203,14 @@
         <div class="bg-blob b"></div>
 
         <div class="card">
-            <a href="{{ url_for('dashboard') }}" class="btn ghost" style="margin-bottom: 20px; width: fit-content;">← Powrót do panelu</a>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <a href="{{ url_for('dashboard') }}" class="btn ghost" style="width: fit-content;">← Powrót do panelu</a>
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="openLearnModal()" class="btn primary" style="background: linear-gradient(90deg, #10b981, #059669);">🎯 Rozpocznij naukę</button>
+                    <button onclick="openTestModal()" class="btn primary" style="background: linear-gradient(90deg, #3b82f6, #2563eb);">📝 Test</button>
+                    <a href="{{ url_for('edit_set', set_id=zestaw.id) }}" class="btn primary" style="background: linear-gradient(90deg, #8b5cf6, #7c3aed); text-decoration: none;">✏️ Edytuj</a>
+                </div>
+            </div>
             
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
@@ -154,13 +229,37 @@
                         <span>{{ zestaw.karty|length }} fiszek</span>
                         <span> • </span>
                         <span>Utworzono: {{ zestaw.data_utworzenia[:10] }}</span>
+                        {% if zestaw.next_review_date %}
+                            <span> • </span>
+                            <span style="background: rgba(245,158,11,0.14); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); border-radius: 999px; padding: 2px 8px; font-size: 12px;">Do powtórki: {{ zestaw.next_review_date }}</span>
+                        {% elif (not zestaw.days_completed) and (not zestaw.historia_nauki) %}
+                            <span> • </span>
+                            <span style="background: rgba(245,158,11,0.14); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); border-radius: 999px; padding: 2px 8px; font-size: 12px;">Zaplanuj dziś</span>
+                        {% endif %}
                     </div>
                 </div>
-                <div class="set-actions">
-                    <button onclick="openLearnModal()" class="btn primary" style="background: linear-gradient(90deg, #10b981, #059669);">🎯 Rozpocznij naukę</button>
-                    <button onclick="openTestModal()" class="btn ghost">📝 Test</button>
-                    <a href="{{ url_for('edit_set', set_id=zestaw.id) }}" class="btn ghost">Edytuj</a>
-                </div>
+            </div>
+
+            <div class="difficult-section">
+                <h3 style="margin: 0 0 10px; font-size: 18px; display: flex; align-items: center; gap: 8px; color: #f1f5f9;">
+                    🔥 Najtrudniejsze fiszki
+                </h3>
+                {% if top_difficult_cards and top_difficult_cards|length > 0 %}
+                    <div class="difficult-grid">
+                        {% for card in top_difficult_cards %}
+                            <div class="difficult-card">
+                                <h4>#{{ card.index }} • {{ card.tekst or 'Brak pytania' }}</h4>
+                                <div class="difficult-meta">
+                                    <span class="difficult-pill">{{ card.procent_sukcesu|int }}% sukcesu</span>
+                                    <span class="difficult-pill">{{ card.pokazane }}x pokazana</span>
+                                </div>
+                                <div class="difficult-body">Odpowiedź: {{ card.odpowiedz or 'Brak odpowiedzi' }}</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p style="color: #94a3b8; margin: 0;">Brak danych — zacznij naukę, aby zobaczyć najtrudniejsze fiszki.</p>
+                {% endif %}
             </div>
 
             <div class="flashcards-list">
@@ -180,6 +279,13 @@
                                 {% endif %}
                             {% elif karta.statystyki and karta.statystyki.pokazane > 0 %}
                                 <span class="flashcard-stats">{{ karta.statystyki.pokazane }}x pokazana</span>
+                            {% endif %}
+                            {% if karta.statystyki and karta.statystyki.opanowana %}
+                                <span class="flashcard-stats mastered">⭐ Opanowana</span>
+                                {% if karta.statystyki.next_due %}
+                                    {% set due_date = karta.statystyki.next_due %}
+                                    {% set today = (cycler.next() and '') %}
+                                {% endif %}
                             {% endif %}
                             <div class="flashcard-content">
                                 <div class="flashcard-side">
@@ -276,7 +382,7 @@
             
             <div class="modal-options">
                 <label class="option-checkbox">
-                    <input type="checkbox" id="randomOrder" checked>
+                    <input type="checkbox" id="randomOrder">
                     <div class="option-info">
                         <strong>🔀 Losowa kolejność</strong>
                         <span>Fiszki będą wyświetlane w losowej kolejności</span>
@@ -400,7 +506,7 @@
             const reviewMode = document.getElementById('reviewMode').checked;
             
             const params = new URLSearchParams();
-            if (randomOrder) params.append('random', '1');
+            params.append('random', randomOrder ? '1' : '0');
             if (reviewMode) params.append('review', '1');
             
             window.location.href = "{{ url_for('learn_set', set_id=zestaw.id) }}" + 

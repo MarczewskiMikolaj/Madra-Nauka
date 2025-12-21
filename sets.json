@@ -8,79 +8,266 @@
       "karty": [
         {
           "tekst": "Jakie są dwa główne składniki systemu Oracle Database, które tworzą jego architekturę?",
-          "odpowiedz": "Instancja systemu (procesy i SGA) oraz baza danych (pliki)."
+          "odpowiedz": "Instancja systemu (procesy i SGA) oraz baza danych (pliki).",
+          "statystyki": {
+            "pokazane": 2,
+            "rozumiem": 0,
+            "nie_rozumiem": 2,
+            "procent_sukcesu": 0.0,
+            "opanowana": false,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 1,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 1,
+            "last_seen_date": "2025-12-21",
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
         },
         {
           "tekst": "Czym jest instancja bazy danych Oracle?",
-          "odpowiedz": "Jest to zestaw procesów działających w tle i struktur pamięci (SGA i PGA), które zarządzają plikami bazy danych."
+          "odpowiedz": "Jest to zestaw procesów działających w tle i struktur pamięci (SGA i PGA), które zarządzają plikami bazy danych.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Z jakich dwóch głównych struktur pamięci składa się instancja Oracle?",
-          "odpowiedz": "Z Globalnego Obszaru Systemowego (SGA) i Obszarów Globalnych Programu (PGA)."
+          "odpowiedz": "Z Globalnego Obszaru Systemowego (SGA) i Obszarów Globalnych Programu (PGA).",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Jaka jest relacja między procesami serwera, procesami w tle a SGA w instancji Oracle?",
-          "odpowiedz": "Wszystkie procesy serwera i procesy w tle współużytkują ten sam obszar SGA."
+          "odpowiedz": "Wszystkie procesy serwera i procesy w tle współużytkują ten sam obszar SGA.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Ile obszarów PGA (Program Global Area) istnieje w instancji Oracle?",
-          "odpowiedz": "Dla każdego procesu serwera i procesu w tle tworzony jest jeden, prywatny obszar PGA."
+          "odpowiedz": "Dla każdego procesu serwera i procesu w tle tworzony jest jeden, prywatny obszar PGA.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Który obszar pamięci w Oracle Database buforuje elementy współużytkowane przez użytkowników, takie jak przeanalizowany kod SQL i PL/SQL?",
-          "odpowiedz": "Shared Pool (Obszar dzielony)."
+          "odpowiedz": "Shared Pool (Obszar dzielony).",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Jaka jest funkcja Database Buffer Cache w ramach SGA?",
-          "odpowiedz": "Przechowuje kopie bloków danych odczytanych z plików danych, aby przyspieszyć do nich dostęp."
+          "odpowiedz": "Przechowuje kopie bloków danych odczytanych z plików danych, aby przyspieszyć do nich dostęp.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Do czego służy Redo Log Buffer w SGA?",
-          "odpowiedz": "Jest to bufor cykliczny przechowujący informacje o zmianach w bazie danych, używane do odzyskiwania stanu bazy."
+          "odpowiedz": "Jest to bufor cykliczny przechowujący informacje o zmianach w bazie danych, używane do odzyskiwania stanu bazy.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "_____ to opcjonalny obszar pamięci w SGA przeznaczony na alokacje pamięci, które są zbyt duże dla Shared Pool, używany m.in. przez RMAN i serwer współdzielony.",
-          "odpowiedz": "Large Pool (Obszar wielki)."
+          "odpowiedz": "Large Pool (Obszar wielki).",
+          "statystyki": {
+            "pokazane": 1,
+            "rozumiem": 0,
+            "nie_rozumiem": 1,
+            "procent_sukcesu": 0.0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
         },
         {
           "tekst": "W jakim celu używany jest Java Pool w SGA?",
-          "odpowiedz": "Służy do przechowywania kodu Java i danych specyficznych dla sesji w wirtualnej maszynie języka Java (JVM)."
+          "odpowiedz": "Służy do przechowywania kodu Java i danych specyficznych dla sesji w wirtualnej maszynie języka Java (JVM).",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Jaki komponent SGA jest używany przez Oracle Streams, Data Pump i GoldenGate do przechowywania buforowanych komunikatów w kolejce?",
-          "odpowiedz": "Streams Pool."
+          "odpowiedz": "Streams Pool.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Wymień trzy obowiązkowe (obligatoryjne) struktury danych wchodzące w skład SGA.",
-          "odpowiedz": "Shared Pool, Database Buffer Cache i Redo Log Buffer."
+          "odpowiedz": "Shared Pool, Database Buffer Cache i Redo Log Buffer.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Czym są procesy tła (background processes) w Oracle Database?",
-          "odpowiedz": "Są to procesy stanowiące część instancji, które wykonują zadania związane z obsługą bazy danych i maksymalizacją wydajności."
+          "odpowiedz": "Są to procesy stanowiące część instancji, które wykonują zadania związane z obsługą bazy danych i maksymalizacją wydajności.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Jaki proces tła jest odpowiedzialny za porządkowanie systemu po awaryjnym przerwaniu połączenia, np. zwalnianie blokad i zasobów SGA?",
-          "odpowiedz": "PMON (Process Monitor)."
+          "odpowiedz": "PMON (Process Monitor).",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Który proces tła wykonuje automatyczne odtwarzanie instancji przy starcie, zarządza segmentami wycofania i łączy wolne obszary w plikach danych?",
-          "odpowiedz": "SMON (System Monitor)."
+          "odpowiedz": "SMON (System Monitor).",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Jaka jest główna funkcja procesu DBWn (Database Writer)?",
-          "odpowiedz": "Zapisywanie zmodyfikowanych bloków danych z Database Buffer Cache do plików danych na dysku."
+          "odpowiedz": "Zapisywanie zmodyfikowanych bloków danych z Database Buffer Cache do plików danych na dysku.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Za co odpowiedzialny jest proces LGWR (Log Writer)?",
-          "odpowiedz": "Zapisuje wpisy z Redo Log Buffer do plików dziennika powtórzeń (Redo Log Files) na dysku."
+          "odpowiedz": "Zapisuje wpisy z Redo Log Buffer do plików dziennika powtórzeń (Redo Log Files) na dysku.",
+          "statystyki": {
+            "pokazane": 1,
+            "rozumiem": 0,
+            "nie_rozumiem": 1,
+            "procent_sukcesu": 0.0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
         },
         {
           "tekst": "Jaka jest rola procesu CKPT (Checkpoint)?",
-          "odpowiedz": "Odpowiada za aktualizację nagłówków plików danych i plików kontrolnych informacjami o punkcie kontrolnym, sygnalizując procesowi DBWn zapis bloków na dysk."
+          "odpowiedz": "Odpowiada za aktualizację nagłówków plików danych i plików kontrolnych informacjami o punkcie kontrolnym, sygnalizując procesowi DBWn zapis bloków na dysk.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
+          }
         },
         {
           "tekst": "Który proces tła jest odpowiedzialny za rozwiązywanie problemów związanych z awarią transakcji rozproszonych?",
-          "odpowiedz": "RECO (Recoverer Process)."
+          "odpowiedz": "RECO (Recoverer Process).",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Procesy tła ARCn (Archiver) są procesami opcjonalnymi. Jaka jest ich funkcja?",
@@ -89,32 +276,97 @@
             "pokazane": 1,
             "rozumiem": 0,
             "nie_rozumiem": 1,
-            "procent_sukcesu": 0.0
+            "procent_sukcesu": 0.0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
           }
         },
         {
           "tekst": "Czym są procesy serwera (foreground processes) w Oracle?",
-          "odpowiedz": "Są to procesy obsługujące połączenia z bazą danych i wykonujące pracę na rzecz programów klienckich, np. analizowanie i uruchamianie instrukcji SQL."
+          "odpowiedz": "Są to procesy obsługujące połączenia z bazą danych i wykonujące pracę na rzecz programów klienckich, np. analizowanie i uruchamianie instrukcji SQL.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Jaką rolę w architekturze Oracle pełni proces nasłuchujący (Listener)?",
-          "odpowiedz": "Odbiera żądania klientów, nawiązuje połączenie z instancją bazy danych, a następnie przekazuje je do procesu serwera."
+          "odpowiedz": "Odbiera żądania klientów, nawiązuje połączenie z instancją bazy danych, a następnie przekazuje je do procesu serwera.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Czym jest plik kontrolny (Control File) w Oracle Database?",
-          "odpowiedz": "Jest to obligatoryjny plik przechowujący metadane o plikach danych i dziennika powtórzeń, niezbędne do otwarcia i funkcjonowania bazy."
+          "odpowiedz": "Jest to obligatoryjny plik przechowujący metadane o plikach danych i dziennika powtórzeń, niezbędne do otwarcia i funkcjonowania bazy.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Co przechowują pliki dziennika powtórzeń (Redo Log Files)?",
-          "odpowiedz": "Przechowują chronologiczny zapis wszystkich zmian dokonanych w bazie danych, co jest kluczowe dla procesu odtwarzania."
+          "odpowiedz": "Przechowują chronologiczny zapis wszystkich zmian dokonanych w bazie danych, co jest kluczowe dla procesu odtwarzania.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Jak nazywa się plik definiujący sposób konfiguracji instancji bazy danych podczas jej uruchamiania?",
-          "odpowiedz": "Plik parametrów (PFILE lub SPFILE)."
+          "odpowiedz": "Plik parametrów (PFILE lub SPFILE).",
+          "statystyki": {
+            "pokazane": 1,
+            "rozumiem": 0,
+            "nie_rozumiem": 1,
+            "procent_sukcesu": 0.0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
         },
         {
           "tekst": "Jaka jest podstawowa różnica między plikiem PFILE a SPFILE?",
-          "odpowiedz": "PFILE jest plikiem tekstowym edytowanym ręcznie, a SPFILE jest plikiem binarnym zarządzanym przez serwer za pomocą polecenia ALTER SYSTEM."
+          "odpowiedz": "PFILE jest plikiem tekstowym edytowanym ręcznie, a SPFILE jest plikiem binarnym zarządzanym przez serwer za pomocą polecenia ALTER SYSTEM.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Jakiego polecenia należy użyć, aby trwale zmienić parametr w pliku SPFILE?",
@@ -123,156 +375,516 @@
             "pokazane": 1,
             "rozumiem": 0,
             "nie_rozumiem": 1,
-            "procent_sukcesu": 0.0
+            "procent_sukcesu": 0.0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
           }
         },
         {
           "tekst": "Co oznacza skrót CDB w architekturze multitenant Oracle?",
-          "odpowiedz": "Container Database (Kontenerowa baza danych)."
+          "odpowiedz": "Container Database (Kontenerowa baza danych).",
+          "statystyki": {
+            "pokazane": 1,
+            "rozumiem": 0,
+            "nie_rozumiem": 1,
+            "procent_sukcesu": 0.0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
         },
         {
           "tekst": "Czym jest PDB (Pluggable Database) w architekturze multitenant?",
-          "odpowiedz": "Jest to przenośna kolekcja schematów i obiektów, która dla użytkownika lub aplikacji jest logicznie widoczna jako oddzielna baza danych w ramach CDB."
+          "odpowiedz": "Jest to przenośna kolekcja schematów i obiektów, która dla użytkownika lub aplikacji jest logicznie widoczna jako oddzielna baza danych w ramach CDB.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Jak nazywa się główny kontener w architekturze CDB, który przechowuje metadane wspólne dla wszystkich PDB?",
-          "odpowiedz": "Kontener główny (root container) o nazwie CDB$ROOT."
+          "odpowiedz": "Kontener główny (root container) o nazwie CDB$ROOT.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Do czego służy PDB$SEED w architekturze kontenerowej?",
-          "odpowiedz": "Jest to szablon (ziarno) dostarczany przez system, używany do tworzenia nowych baz danych PDB."
+          "odpowiedz": "Jest to szablon (ziarno) dostarczany przez system, używany do tworzenia nowych baz danych PDB.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Jaka jest różnica w architekturze między Oracle Database z pojedynczą instancją a Oracle Real Application Clusters (RAC)?",
-          "odpowiedz": "W architekturze z pojedynczą instancją jedna instancja obsługuje jedną bazę danych, podczas gdy w RAC wiele instancji na różnych serwerach pracuje z tą samą bazą danych."
+          "odpowiedz": "W architekturze z pojedynczą instancją jedna instancja obsługuje jedną bazę danych, podczas gdy w RAC wiele instancji na różnych serwerach pracuje z tą samą bazą danych.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "W jakim celu stosuje się zwielokrotnienie (multiplexing) plików kontrolnych i plików dziennika powtórzeń?",
-          "odpowiedz": "W celu zapewnienia wysokiej dostępności i ochrony przed utratą danych w przypadku awarii jednego z dysków."
+          "odpowiedz": "W celu zapewnienia wysokiej dostępności i ochrony przed utratą danych w przypadku awarii jednego z dysków.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Co to jest Automatyczne Repozytorium Diagnostyczne (ADR)?",
-          "odpowiedz": "Jest to centralne, oparte na plikach repozytorium do przechowywania danych diagnostycznych, takich jak pliki śladu, dzienniki alertów i raporty monitora stanu."
+          "odpowiedz": "Jest to centralne, oparte na plikach repozytorium do przechowywania danych diagnostycznych, takich jak pliki śladu, dzienniki alertów i raporty monitora stanu.",
+          "statystyki": {
+            "pokazane": 1,
+            "rozumiem": 0,
+            "nie_rozumiem": 1,
+            "procent_sukcesu": 0.0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
         },
         {
           "tekst": "Jakie informacje zawiera plik ostrzeżeń (alert log)?",
-          "odpowiedz": "Zawiera chronologiczny zapis błędów (np. ORA-600), działań administracyjnych (STARTUP, SHUTDOWN) oraz wartości parametrów inicjalizacyjnych."
+          "odpowiedz": "Zawiera chronologiczny zapis błędów (np. ORA-600), działań administracyjnych (STARTUP, SHUTDOWN) oraz wartości parametrów inicjalizacyjnych.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Kiedy tworzone są pliki śladu (trace files)?",
-          "odpowiedz": "Są tworzone, gdy proces serwera lub proces tła napotka błąd wewnętrzny lub gdy śledzenie SQL jest włączone dla sesji."
+          "odpowiedz": "Są tworzone, gdy proces serwera lub proces tła napotka błąd wewnętrzny lub gdy śledzenie SQL jest włączone dla sesji.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Jaką funkcję pełni opcjonalny plik haseł (password file)?",
-          "odpowiedz": "Umożliwia użytkownikom z uprawnieniami administracyjnymi (np. SYSDBA, SYSOPER) zdalne łączenie się z instancją i wykonywanie zadań administracyjnych."
+          "odpowiedz": "Umożliwia użytkownikom z uprawnieniami administracyjnymi (np. SYSDBA, SYSOPER) zdalne łączenie się z instancją i wykonywanie zadań administracyjnych.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Czym jest Oracle Wallet?",
-          "odpowiedz": "Jest to bezpieczny kontener programowy służący do przechowywania danych uwierzytelniających i podpisujących, np. poświadczeń do łączenia się z bazą danych."
+          "odpowiedz": "Jest to bezpieczny kontener programowy służący do przechowywania danych uwierzytelniających i podpisujących, np. poświadczeń do łączenia się z bazą danych.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "W jaki sposób opcjonalny plik śledzenia zmian bloku (block change tracking file) poprawia wydajność przyrostowych kopii zapasowych?",
-          "odpowiedz": "Rejestruje zmienione bloki, dzięki czemu RMAN nie musi skanować wszystkich plików danych, aby zidentyfikować bloki wymagające kopii zapasowej."
+          "odpowiedz": "Rejestruje zmienione bloki, dzięki czemu RMAN nie musi skanować wszystkich plików danych, aby zidentyfikować bloki wymagające kopii zapasowej.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Jakie usługi dla aplikacji oferuje autonomiczna baza danych Oracle?",
-          "odpowiedz": "Autonomous Transaction Processing (ATP) dla OLTP, Autonomous DataWarehouse (ADW) dla hurtowni danych i Autonomous JSON Database (AJD) do przetwarzania dokumentów."
+          "odpowiedz": "Autonomous Transaction Processing (ATP) dla OLTP, Autonomous DataWarehouse (ADW) dla hurtowni danych i Autonomous JSON Database (AJD) do przetwarzania dokumentów.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Wymień trzy narzędzia, za pomocą których można zarządzać bazą danych Oracle.",
-          "odpowiedz": "SQL*Plus, SQL Developer oraz Oracle Enterprise Manager."
+          "odpowiedz": "SQL*Plus, SQL Developer oraz Oracle Enterprise Manager.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Jakie są dwie podstawowe konfiguracje procesów usługowych serwera Oracle?",
-          "odpowiedz": "Serwer dedykowany (domyślna) i serwer dzielony (dla OLTP)."
+          "odpowiedz": "Serwer dedykowany (domyślna) i serwer dzielony (dla OLTP).",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Wymień jedno z głównych obowiązków Administratora Bazy Danych (DBA) związane z zakładaniem i zarządzaniem użytkownikami.",
-          "odpowiedz": "Zakładanie użytkowników, zarządzanie ich przywilejami oraz kontrolowanie i monitorowanie dostępu do bazy danych."
+          "odpowiedz": "Zakładanie użytkowników, zarządzanie ich przywilejami oraz kontrolowanie i monitorowanie dostępu do bazy danych.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Jaki jest jeden z kluczowych obowiązków DBA związany z zapewnieniem ciągłości działania bazy danych?",
-          "odpowiedz": "Archiwizacja i odtwarzanie bazy danych (Backup and Recovery)."
+          "odpowiedz": "Archiwizacja i odtwarzanie bazy danych (Backup and Recovery).",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Który proces tła jest specyficzny dla środowiska Oracle RAC i zarządza zasobami oraz pracą wielu instancji?",
-          "odpowiedz": "LMS (Global Cache Service process)."
+          "odpowiedz": "LMS (Global Cache Service process).",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Jaki komponent opcjonalny SGA umożliwia przechowywanie obiektów w formacie kolumnowym w pamięci w celu przyspieszenia zapytań analitycznych?",
-          "odpowiedz": "In-Memory Area."
+          "odpowiedz": "In-Memory Area.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Do czego służy opcjonalny komponent SGA o nazwie Database Smart Flash Cache?",
-          "odpowiedz": "Zapewnia pamięć podręczną poziomu 2 (L2 cache) dla bloków bazy danych na szybkich urządzeniach typu flash, poprawiając wydajność operacji odczytu."
+          "odpowiedz": "Zapewnia pamięć podręczną poziomu 2 (L2 cache) dla bloków bazy danych na szybkich urządzeniach typu flash, poprawiając wydajność operacji odczytu.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Czym jest SCN (System Change Number) i który proces tła zarządza jego utrzymaniem?",
-          "odpowiedz": "Jest to systemowy numer zmiany, globalny znacznik czasu w bazie danych; za jego utrzymanie odpowiada proces SMON."
+          "odpowiedz": "Jest to systemowy numer zmiany, globalny znacznik czasu w bazie danych; za jego utrzymanie odpowiada proces SMON.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Co dzieje się z niezatwierdzonymi transakcjami przerwanego procesu serwera?",
-          "odpowiedz": "Proces PMON wycofuje (rollback) te niezatwierdzone transakcje."
+          "odpowiedz": "Proces PMON wycofuje (rollback) te niezatwierdzone transakcje.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "W jaki sposób Oracle Database zapewnia możliwość pracy w wielu językach i różnych krajach?",
-          "odpowiedz": "Poprzez funkcje globalizacji, które są jednym z zagadnień administracyjnych."
+          "odpowiedz": "Poprzez funkcje globalizacji, które są jednym z zagadnień administracyjnych.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Który plik zawiera unikalny identyfikator bazy danych, czas jej utworzenia oraz nazwy wszystkich plików danych i dziennika?",
-          "odpowiedz": "Plik kontrolny (Control File)."
+          "odpowiedz": "Plik kontrolny (Control File).",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Czy zmiana w pliku PFILE odnosi skutek natychmiastowo?",
-          "odpowiedz": "Nie, zmiany w pliku PFILE przynoszą efekty dopiero po ponownym uruchomieniu instancji."
+          "odpowiedz": "Nie, zmiany w pliku PFILE przynoszą efekty dopiero po ponownym uruchomieniu instancji.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "W jaki sposób można umieścić komentarz w pliku parametrów PFILE?",
-          "odpowiedz": "Komentarz w pliku PFILE rozpoczyna się od znaku #."
+          "odpowiedz": "Komentarz w pliku PFILE rozpoczyna się od znaku #.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Co to jest Flashback Database i z jakich plików korzysta?",
-          "odpowiedz": "Jest to funkcja umożliwiająca przywrócenie bazy danych do stanu z niedawnej przeszłości, korzystająca z dedykowanych dzienników flashback (flashback logs)."
+          "odpowiedz": "Jest to funkcja umożliwiająca przywrócenie bazy danych do stanu z niedawnej przeszłości, korzystająca z dedykowanych dzienników flashback (flashback logs).",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Wymień dwa przykłady modeli danych, które obsługuje wielomodelowy system Oracle Database.",
-          "odpowiedz": "Relacyjny, klucz-wartość, obiektowy, dokumentowy (JSON, XML), tekstowy, geoprzestrzenny lub binarny."
+          "odpowiedz": "Relacyjny, klucz-wartość, obiektowy, dokumentowy (JSON, XML), tekstowy, geoprzestrzenny lub binarny.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Jak nazywa się proces tła, który okresowo kopiuje zmodyfikowane bloki z bufora bazy danych do bufora flashback?",
-          "odpowiedz": "Recovery Writer Process (RVWR)."
+          "odpowiedz": "Recovery Writer Process (RVWR).",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Jaki komponent opcjonalny SGA zapewnia wysoką wydajność dla zapytań opartych na kluczach poprzez wykorzystanie indeksu hash i przypinanie bloków w pamięci?",
-          "odpowiedz": "Memoptimize Pool."
+          "odpowiedz": "Memoptimize Pool.",
+          "statystyki": {
+            "pokazane": 1,
+            "rozumiem": 0,
+            "nie_rozumiem": 1,
+            "procent_sukcesu": 0.0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
         },
         {
           "tekst": "Do przechowywania jakiego typu danych przeznaczony jest Shared I/O Pool?",
-          "odpowiedz": "Do dużych operacji we/wy na obiektach typu LOB (Large Objects) z parametrem SecureFile."
+          "odpowiedz": "Do dużych operacji we/wy na obiektach typu LOB (Large Objects) z parametrem SecureFile.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Czym są procesy robocze (slave processes) w architekturze Oracle?",
-          "odpowiedz": "Są to procesy w tle wykonujące pracę w imieniu innych procesów, np. procesy dyspozytorskie (Dnnn) lub współdzielonego serwera (Snnn)."
+          "odpowiedz": "Są to procesy w tle wykonujące pracę w imieniu innych procesów, np. procesy dyspozytorskie (Dnnn) lub współdzielonego serwera (Snnn).",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Jaka jest główna korzyść z architektury Oracle Real Application Clusters (RAC)?",
-          "odpowiedz": "Zapewnia wysoką dostępność, skalowalność i wydajność poprzez rozłożenie pracy na wiele instancji działających na osobnych serwerach."
+          "odpowiedz": "Zapewnia wysoką dostępność, skalowalność i wydajność poprzez rozłożenie pracy na wiele instancji działających na osobnych serwerach.",
+          "statystyki": {
+            "pokazane": 1,
+            "rozumiem": 0,
+            "nie_rozumiem": 1,
+            "procent_sukcesu": 0.0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
         },
         {
           "tekst": "W jakim celu DBA pozyskuje i instaluje łaty (patches) dla systemu Oracle?",
-          "odpowiedz": "W celu naprawy błędów, poprawy bezpieczeństwa lub dodania nowej funkcjonalności do oprogramowania serwera Oracle."
+          "odpowiedz": "W celu naprawy błędów, poprawy bezpieczeństwa lub dodania nowej funkcjonalności do oprogramowania serwera Oracle.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Jakie przestrzenie tabel (tablespaces) są tworzone w kontenerze głównym (CDB$ROOT) i zwykłych PDB?",
-          "odpowiedz": "SYSTEM, SYSAUX, USERS, TEMP i UNDO."
+          "odpowiedz": "SYSTEM, SYSAUX, USERS, TEMP i UNDO.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Czy bazy danych typu Nie-CDB (non-CDB) są obsługiwane w Oracle Database 21c?",
-          "odpowiedz": "Nie, od wersji 21c nie są już obsługiwane, a instalator nie pozwala na ich tworzenie."
+          "odpowiedz": "Nie, od wersji 21c nie są już obsługiwane, a instalator nie pozwala na ich tworzenie.",
+          "statystyki": {
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false,
+            "opanowana": false
+          }
         },
         {
           "tekst": "Jaki parametr w pliku parametrów identyfikuje lokalizacje plików kontrolnych?",
-          "odpowiedz": "Parametr CONTROL_FILES."
+          "odpowiedz": "Parametr CONTROL_FILES.",
+          "statystyki": {
+            "pokazane": 1,
+            "rozumiem": 0,
+            "nie_rozumiem": 1,
+            "procent_sukcesu": 0.0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
         }
       ],
       "ostatnie_wyniki": [
@@ -341,7 +953,7 @@
         null,
         null
       ],
-      "data_ostatniej_nauki": "2025-12-21T08:49:14.533137+00:00",
+      "data_ostatniej_nauki": "2025-12-21T12:03:20.320303+00:00",
       "historia_nauki": [
         {
           "data": "2025-12-20",
@@ -408,6 +1020,24 @@
           "timestamp": "2025-12-21T08:49:14.533158+00:00",
           "zrozumiane": 0,
           "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:19:42.572558+00:00",
+          "zrozumiane": 0,
+          "niezrozumiane": 7
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:21:19.606280+00:00",
+          "zrozumiane": 0,
+          "niezrozumiane": 2
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T12:03:20.320303+00:00",
+          "zrozumiane": 0,
+          "niezrozumiane": 1
         }
       ],
       "historia_testow": [
@@ -467,7 +1097,9 @@
           "lacznie": 5,
           "procent": 80.0
         }
-      ]
+      ],
+      "next_review_date": "2025-12-22",
+      "days_completed": []
     },
     {
       "id": "17122c9819de4ad1b8de0a455de0e85d",
@@ -479,13 +1111,724 @@
           "tekst": "lol",
           "odpowiedz": "lol",
           "statystyki": {
+            "pokazane": 48,
+            "rozumiem": 27,
+            "nie_rozumiem": 21,
+            "procent_sukcesu": 56.2,
+            "opanowana": true,
+            "streak_rozumiem": 4,
+            "streak_nie_rozumiem": 0,
+            "sessions_ok_streak": 4,
+            "fail_streak_sessions": 0,
+            "last_seen_date": "2025-12-21",
+            "total_sessions_ok": 4,
+            "next_due": "2026-01-06",
+            "leech": true
+          }
+        },
+        {
+          "tekst": "tttttest",
+          "odpowiedz": "testttt",
+          "statystyki": {
+            "pokazane": 45,
+            "rozumiem": 35,
+            "nie_rozumiem": 10,
+            "procent_sukcesu": 77.8,
+            "opanowana": true,
+            "streak_rozumiem": 3,
+            "streak_nie_rozumiem": 0,
+            "sessions_ok_streak": 3,
+            "fail_streak_sessions": 0,
+            "last_seen_date": "2025-12-21",
+            "total_sessions_ok": 3,
+            "next_due": "2026-01-06",
+            "leech": false
+          }
+        },
+        {
+          "tekst": "123",
+          "odpowiedz": "123",
+          "statystyki": {
+            "pokazane": 47,
+            "rozumiem": 27,
+            "nie_rozumiem": 20,
+            "procent_sukcesu": 57.4,
+            "opanowana": false,
+            "streak_rozumiem": 1,
+            "streak_nie_rozumiem": 0,
+            "sessions_ok_streak": 1,
+            "fail_streak_sessions": 0,
+            "last_seen_date": "2025-12-21",
+            "total_sessions_ok": 3,
+            "next_due": "2025-12-22",
+            "leech": true
+          }
+        }
+      ],
+      "ostatnie_wyniki": [
+        true,
+        true,
+        true
+      ],
+      "data_ostatniej_nauki": "2025-12-21T15:52:13.550528+00:00",
+      "historia_nauki": [
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:24:59.097630+00:00",
+          "zrozumiane": 1,
+          "niezrozumiane": 0
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:25:25.748522+00:00",
+          "zrozumiane": 0,
+          "niezrozumiane": 3
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:25:32.197010+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:25:39.645543+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:25:42.862962+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:25:56.981513+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:26:03.712400+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:26:10.780923+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:26:19.680091+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:26:24.846674+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:26:31.346534+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:27:50.441354+00:00",
+          "zrozumiane": 0,
+          "niezrozumiane": 2
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:27:56.879881+00:00",
+          "zrozumiane": 1,
+          "niezrozumiane": 2
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:28:01.947241+00:00",
+          "zrozumiane": 1,
+          "niezrozumiane": 2
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:28:07.312211+00:00",
+          "zrozumiane": 1,
+          "niezrozumiane": 2
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:28:12.477233+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:28:18.687730+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:28:24.812339+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:28:29.878577+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:28:37.280461+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:29:11.947673+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:29:17.094386+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:29:20.522174+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:29:23.361030+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:29:26.111868+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:29:38.456122+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:29:40.775867+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:30:00.745684+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:30:07.577102+00:00",
+          "zrozumiane": 1,
+          "niezrozumiane": 2
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:30:17.213654+00:00",
+          "zrozumiane": 0,
+          "niezrozumiane": 3
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:30:21.682769+00:00",
+          "zrozumiane": 3,
+          "niezrozumiane": 0
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:30:26.845640+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:30:33.446423+00:00",
+          "zrozumiane": 3,
+          "niezrozumiane": 0
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:30:38.630249+00:00",
+          "zrozumiane": 3,
+          "niezrozumiane": 0
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:31:35.129646+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:31:38.713765+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:31:42.629807+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:31:47.062093+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:31:54.389551+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:32:00.631084+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:33:04.863260+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:33:09.529286+00:00",
+          "zrozumiane": 1,
+          "niezrozumiane": 2
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:33:32.312972+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:33:37.254743+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T15:35:32.423020+00:00",
+          "zrozumiane": 3,
+          "niezrozumiane": 0
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T15:36:09.308276+00:00",
+          "zrozumiane": 3,
+          "niezrozumiane": 0
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T15:52:06.212934+00:00",
+          "zrozumiane": 1,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T15:52:13.550528+00:00",
+          "zrozumiane": 3,
+          "niezrozumiane": 0
+        }
+      ],
+      "next_review_date": "2025-12-22",
+      "days_completed": [
+        "2025-12-21"
+      ]
+    },
+    {
+      "id": "f9797891a2e74c47b6ea432e907ac12b",
+      "autor": "test",
+      "nazwa": "test",
+      "data_utworzenia": "2025-12-21T11:32:30.455570+00:00",
+      "karty": [
+        {
+          "tekst": "test",
+          "odpowiedz": "trst",
+          "statystyki": {
+            "pokazane": 19,
+            "rozumiem": 12,
+            "nie_rozumiem": 7,
+            "procent_sukcesu": 63.2,
+            "opanowana": false,
+            "streak_rozumiem": 1,
+            "streak_nie_rozumiem": 0,
+            "sessions_ok_streak": 1,
+            "fail_streak_sessions": 0,
+            "last_seen_date": "2025-12-21",
+            "total_sessions_ok": 1,
+            "next_due": "2025-12-22",
+            "leech": false
+          }
+        },
+        {
+          "tekst": "elo",
+          "odpowiedz": "elo",
+          "statystyki": {
+            "pokazane": 19,
+            "rozumiem": 7,
+            "nie_rozumiem": 12,
+            "procent_sukcesu": 36.8,
+            "opanowana": false,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 3,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 3,
+            "last_seen_date": "2025-12-21",
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": true
+          }
+        }
+      ],
+      "ostatnie_wyniki": [
+        true,
+        false
+      ],
+      "data_ostatniej_nauki": "2025-12-21T11:50:13.557502+00:00",
+      "historia_nauki": [
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:32:49.319857+00:00",
+          "zrozumiane": 1,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:34:01.545518+00:00",
+          "zrozumiane": 1,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:34:04.373043+00:00",
+          "zrozumiane": 1,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:36:00.178196+00:00",
+          "zrozumiane": 1,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:36:06.027354+00:00",
+          "zrozumiane": 1,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:36:08.130642+00:00",
+          "zrozumiane": 1,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:38:01.393421+00:00",
+          "zrozumiane": 0,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:38:05.344432+00:00",
+          "zrozumiane": 1,
+          "niezrozumiane": 0
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:40:04.046971+00:00",
+          "zrozumiane": 1,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:41:13.997586+00:00",
+          "zrozumiane": 0,
+          "niezrozumiane": 2
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:41:16.387021+00:00",
+          "zrozumiane": 1,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:41:18.748147+00:00",
+          "zrozumiane": 1,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:41:24.329970+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 0
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:41:27.631833+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 0
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:41:30.632510+00:00",
+          "zrozumiane": 2,
+          "niezrozumiane": 0
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:41:32.496005+00:00",
+          "zrozumiane": 1,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:41:35.340203+00:00",
+          "zrozumiane": 1,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:49:51.834177+00:00",
+          "zrozumiane": 0,
+          "niezrozumiane": 2
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:50:08.782865+00:00",
+          "zrozumiane": 0,
+          "niezrozumiane": 2
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T11:50:13.557502+00:00",
+          "zrozumiane": 1,
+          "niezrozumiane": 1
+        }
+      ],
+      "next_review_date": "2025-12-22"
+    },
+    {
+      "id": "4c5e61ae5815439b92a0b0dadbe89f61",
+      "autor": "test",
+      "nazwa": "test",
+      "data_utworzenia": "2025-12-21T12:03:35.043680+00:00",
+      "karty": [
+        {
+          "tekst": "test",
+          "odpowiedz": "testtt",
+          "statystyki": {
+            "pokazane": 1,
+            "rozumiem": 0,
+            "nie_rozumiem": 1,
+            "procent_sukcesu": 0.0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 1,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 1,
+            "last_seen_date": "2025-12-21",
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "312",
+          "odpowiedz": "312",
+          "statystyki": {
             "pokazane": 0,
             "rozumiem": 0,
             "nie_rozumiem": 0,
-            "procent_sukcesu": 0
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "31",
+          "odpowiedz": "312",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
           }
         }
-      ]
+      ],
+      "ostatnie_wyniki": [
+        false,
+        null,
+        null
+      ],
+      "data_ostatniej_nauki": "2025-12-21T12:03:40.488222+00:00",
+      "historia_nauki": [
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T12:03:40.488222+00:00",
+          "zrozumiane": 0,
+          "niezrozumiane": 1
+        }
+      ],
+      "days_completed": [],
+      "next_review_date": "2025-12-22"
+    },
+    {
+      "id": "eee127073111416e8d5afb04c28855df",
+      "autor": "test",
+      "nazwa": "test",
+      "data_utworzenia": "2025-12-21T12:05:30.611237+00:00",
+      "karty": [
+        {
+          "tekst": "test",
+          "odpowiedz": "test",
+          "statystyki": {
+            "pokazane": 2,
+            "rozumiem": 0,
+            "nie_rozumiem": 2,
+            "procent_sukcesu": 0.0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 2,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 2,
+            "last_seen_date": "2025-12-21",
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "tesrqqwe",
+          "odpowiedz": "teqweq",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        }
+      ],
+      "ostatnie_wyniki": [
+        false,
+        null
+      ],
+      "data_ostatniej_nauki": "2025-12-21T12:22:59.734489+00:00",
+      "historia_nauki": [
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T12:05:55.505425+00:00",
+          "zrozumiane": 0,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T12:22:59.734489+00:00",
+          "zrozumiane": 0,
+          "niezrozumiane": 1
+        }
+      ],
+      "days_completed": []
+    },
+    {
+      "id": "22d46691098448f6baa2abb052ae29fc",
+      "autor": "test",
+      "nazwa": "eqw",
+      "data_utworzenia": "2025-12-21T12:07:40.876693+00:00",
+      "karty": [
+        {
+          "tekst": "eqw",
+          "odpowiedz": "eq",
+          "statystyki": {
+            "pokazane": 1,
+            "rozumiem": 1,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 100.0,
+            "streak_rozumiem": 1,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 1,
+            "fail_streak_sessions": 0,
+            "last_seen_date": "2025-12-21",
+            "total_sessions_ok": 1,
+            "next_due": "2025-12-22",
+            "leech": false
+          }
+        }
+      ],
+      "ostatnie_wyniki": [
+        true
+      ],
+      "data_ostatniej_nauki": "2025-12-21T15:35:56.670496+00:00",
+      "historia_nauki": [
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T15:35:56.670496+00:00",
+          "zrozumiane": 1,
+          "niezrozumiane": 0
+        }
+      ],
+      "days_completed": [
+        "2025-12-21"
+      ],
+      "next_review_date": "2025-12-22"
     }
   ]
 }
