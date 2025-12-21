@@ -86,6 +86,47 @@
             color: #94a3b8;
         }
         .btn-group { display: flex; gap: 8px; margin-top: 20px; }
+        
+        @media (max-width: 768px) {
+            .set-header {
+                flex-direction: column;
+                gap: 16px;
+            }
+            .set-info h1 {
+                font-size: 22px;
+            }
+            .set-actions {
+                width: 100%;
+                flex-direction: column;
+            }
+            .set-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .flashcard-content {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            .flashcard-stats {
+                display: block;
+                margin-left: 0;
+                margin-top: 8px;
+            }
+        }
+        
+        @media (max-width: 430px) {
+            .flashcard-item {
+                padding: 12px;
+            }
+            .set-info h1 {
+                font-size: 20px;
+            }
+            .flashcard-number,
+            .flashcard-stats {
+                font-size: 10px;
+                padding: 3px 6px;
+            }
+        }
     </style>
 </head>
 <body>
