@@ -24,12 +24,47 @@ BUCKET_NAME = os.environ.get("USERS_BUCKET_NAME", "python-fiszki-users")
 USERS_FILE_NAME = "users.json"
 SETS_FILE_NAME = "sets.json"
 
+# Sprawdź czy używać Cloud Storage (produkcja) czy lokalnych plików (development)
+USE_CLOUD_STORAGE = os.environ.get("USE_CLOUD_STORAGE", "false").lower() == "true"
+
 
 def get_storage_client():
     return storage.Client()
 
 def load_users():
-    """Wczytaj użytkowników z Google Cloud Storage (zaszyfrowany JSON)."""
+    """Wczytaj użytkowników - z GCS (produkcja) lub lokalnie (development)."""
+    if not USE_CLOUD_STORAGE:
+        # Wersja lokalna - pliki na dysku
+        if not os.path.exists(USERS_FILE):
+            return []
+        try:
+            with open(USERS_FILE, 'rb') as f:
+                encrypted_data = f.read()
+                if not encrypted_data:
+                    return []
+                decrypted_data = cipher.decrypt(encrypted_data)
+                data = json.loads(decrypted_data.decode('utf-8'))
+                
+                if isinstance(data, dict) and 'users' in data and isinstance(data['users'], list):
+                    return data['users']
+                if isinstance(data, dict):
+                    migrated = []
+                    for login, info in data.items():
+                        item = {
+                            'login': login,
+                            'haslo': info.get('haslo') or info.get('password'),
+                            'data_utworzenia': info.get('data_utworzenia')
+                        }
+                        migrated.append(item)
+                    return migrated
+                if isinstance(data, list):
+                    return data
+                return []
+        except Exception as e:
+            print(f"Błąd podczas wczytywania użytkowników (lokalnie): {e}")
+            return []
+    
+    # Wersja cloud - Google Cloud Storage
     try:
         client = get_storage_client()
         bucket = client.bucket(BUCKET_NAME)
@@ -67,11 +102,24 @@ def load_users():
         
         return []
     except Exception as e:
-        print(f"Błąd podczas wczytywania użytkowników: {e}")
+        print(f"Błąd podczas wczytywania użytkowników (cloud): {e}")
         return []
 
 def save_users(users_data):
-    """Zapisz użytkowników do Google Cloud Storage (zaszyfrowany JSON)."""
+    """Zapisz użytkowników - do GCS (produkcja) lub lokalnie (development)."""
+    if not USE_CLOUD_STORAGE:
+        # Wersja lokalna - pliki na dysku
+        try:
+            wrapper = {'users': users_data}
+            json_data = json.dumps(wrapper, indent=2, ensure_ascii=False).encode('utf-8')
+            encrypted_data = cipher.encrypt(json_data)
+            with open(USERS_FILE, 'wb') as f:
+                f.write(encrypted_data)
+        except Exception as e:
+            print(f"Błąd podczas zapisywania użytkowników (lokalnie): {e}")
+        return
+    
+    # Wersja cloud - Google Cloud Storage
     try:
         wrapper = {'users': users_data}
         json_data = json.dumps(wrapper, indent=2, ensure_ascii=False).encode('utf-8')
@@ -82,13 +130,30 @@ def save_users(users_data):
         blob = bucket.blob(USERS_FILE_NAME)
         blob.upload_from_string(encrypted_data, content_type='application/octet-stream')
     except Exception as e:
-        print(f"Błąd podczas zapisywania użytkowników: {e}")
+        print(f"Błąd podczas zapisywania użytkowników (cloud): {e}")
 
 # Wczytaj użytkowników przy starcie aplikacji
 users = load_users()
 
 def load_sets():
-    """Wczytaj zestawy fiszek z Google Cloud Storage (bez szyfrowania)."""
+    """Wczytaj zestawy fiszek - z GCS (produkcja) lub lokalnie (development)."""
+    if not USE_CLOUD_STORAGE:
+        # Wersja lokalna - pliki na dysku
+        if not os.path.exists(SETS_FILE):
+            return []
+        try:
+            with open(SETS_FILE, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                if isinstance(data, dict) and 'sets' in data and isinstance(data['sets'], list):
+                    return data['sets']
+                if isinstance(data, list):
+                    return data
+                return []
+        except Exception as e:
+            print(f"Błąd podczas wczytywania zestawów (lokalnie): {e}")
+            return []
+    
+    # Wersja cloud - Google Cloud Storage
     try:
         client = get_storage_client()
         bucket = client.bucket(BUCKET_NAME)
@@ -108,11 +173,22 @@ def load_sets():
             return data
         return []
     except Exception as e:
-        print(f"Błąd podczas wczytywania zestawów: {e}")
+        print(f"Błąd podczas wczytywania zestawów (cloud): {e}")
         return []
 
 def save_sets(sets_data):
-    """Zapisz zestawy fiszek do Google Cloud Storage (bez szyfrowania)."""
+    """Zapisz zestawy fiszek - do GCS (produkcja) lub lokalnie (development)."""
+    if not USE_CLOUD_STORAGE:
+        # Wersja lokalna - pliki na dysku
+        try:
+            wrapper = {'sets': sets_data}
+            with open(SETS_FILE, 'w', encoding='utf-8') as f:
+                json.dump(wrapper, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            print(f"Błąd podczas zapisywania zestawów (lokalnie): {e}")
+        return
+    
+    # Wersja cloud - Google Cloud Storage
     try:
         wrapper = {'sets': sets_data}
         client = get_storage_client()
@@ -123,7 +199,7 @@ def save_sets(sets_data):
             content_type='application/json'
         )
     except Exception as e:
-        print(f"Błąd podczas zapisywania zestawów: {e}")
+        print(f"Błąd podczas zapisywania zestawów (cloud): {e}")
 
 # Wczytaj zestawy przy starcie aplikacji
 sets = load_sets()
