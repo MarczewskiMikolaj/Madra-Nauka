@@ -42,6 +42,38 @@
             display: flex;
             gap: 8px;
             align-items: center;
+            flex-wrap: wrap;
+        }
+        .mastery-pill {
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid transparent;
+        }
+        .review-pill {
+            background: rgba(245,158,11,0.14);
+            color: #fbbf24;
+            border: 1px solid rgba(245,158,11,0.3);
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .mastery-pill.low {
+            background: rgba(239,68,68,0.12);
+            color: #fca5a5;
+            border-color: rgba(239,68,68,0.25);
+        }
+        .mastery-pill.mid {
+            background: rgba(245,158,11,0.14);
+            color: #fbbf24;
+            border-color: rgba(245,158,11,0.3);
+        }
+        .mastery-pill.high {
+            background: rgba(16,185,129,0.12);
+            color: #34d399;
+            border-color: rgba(16,185,129,0.25);
         }
         .set-actions-section {
             display: flex;
@@ -141,6 +173,19 @@
             .calendar-popover {
                 left: 50%;
                 transform: translateX(-50%);
+                min-width: unset;
+                width: 90vw;
+                max-width: 300px;
+            }
+            .calendar-weekdays {
+                gap: 2px;
+            }
+            .calendar-grid {
+                gap: 2px;
+            }
+            .calendar-day {
+                padding: 8px 0;
+                font-size: 11px;
             }
         }
         
@@ -165,6 +210,129 @@
                 padding: 5px 10px;
             }
         }
+
+        /* Top bar with user info */
+        .topbar {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .topbar-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #f1f5f9;
+        }
+        .topbar-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 10px;
+        }
+        .user-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(15,23,42,0.75);
+            border: 1px solid rgba(148,163,184,0.25);
+            border-radius: 999px;
+            padding: 6px 10px 6px 6px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+        }
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #14b8a6);
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            color: #fff;
+            font-size: 14px;
+        }
+        .user-name {
+            color: #e2e8f0;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .user-actions {
+            display: inline-flex;
+            gap: 6px;
+        }
+        .btn-ghost-compact {
+            background: rgba(148,163,184,0.08);
+            color: #e2e8f0;
+            border: 1px solid rgba(148,163,184,0.2);
+            border-radius: 10px;
+            padding: 7px 12px;
+            font-size: 12px;
+            text-decoration: none;
+            transition: all .15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+        }
+        .btn-ghost-compact:hover {
+            background: rgba(148,163,184,0.16);
+            border-color: rgba(148,163,184,0.35);
+            transform: translateY(-1px);
+        }
+        .btn-top-profile { background: linear-gradient(90deg, #3b82f6, #2563eb); border: none; }
+        .btn-top-logout { background: linear-gradient(90deg, #f43f5e, #e11d48); border: none; }
+
+        /* Due today highlight */
+        .due-section {
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(14,165,233,0.15), rgba(124,58,237,0.13));
+            border: 1px solid rgba(59,130,246,0.22);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+            width: 100%;
+        }
+        .due-section h3 {
+            margin: 0 0 8px;
+            color: #e2e8f0;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .due-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            gap: 6px;
+        }
+        .due-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            background: rgba(15,23,42,0.5);
+            border: 1px solid rgba(148,163,184,0.12);
+            border-radius: 8px;
+            padding: 8px 10px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .due-item:hover {
+            background: rgba(15,23,42,0.75);
+            border-color: rgba(148,163,184,0.25);
+            transform: translateX(2px);
+        }
+        .due-item a { 
+            color: #e2e8f0; 
+            text-decoration: none; 
+            font-weight: 600; 
+            font-size: 13px;
+            flex: 1;
+        }
+        .due-item .review-pill { 
+            margin-left: auto; 
+            font-size: 11px;
+            padding: 3px 8px;
+        }
     </style>
 </head>
 <body>
@@ -182,6 +350,38 @@
                     </div>
                 {% endif %}
             {% endwith %}
+
+            <div class="topbar">
+                <div class="topbar-title">Panel główny</div>
+                <div class="topbar-right">
+                    <div class="user-badge">
+                        <div class="user-avatar">{{ username[0].upper() }}</div>
+                        <div class="user-name">{{ username }}</div>
+                        <div class="user-actions">
+                            <a href="{{ url_for('profile') }}" class="btn-ghost-compact btn-top-profile">👤 Profil</a>
+                            <a href="{{ url_for('logout') }}" class="btn-ghost-compact btn-top-logout">↩ Wyloguj</a>
+                        </div>
+                    </div>
+                    
+                    {% if due_today_sets and due_today_sets|length > 0 %}
+                    <section class="due-section">
+                        <h3>📌 Do powtórki dzisiaj</h3>
+                        <ul class="due-list">
+                            {% for zs in due_today_sets %}
+                            <li class="due-item" onclick="window.location.href='{{ url_for('view_set', set_id=zs['id']) }}'">
+                                <a href="{{ url_for('view_set', set_id=zs['id']) }}">{{ zs['nazwa'] }}</a>
+                                {% if zs.get('next_review_date') %}
+                                    <span class="review-pill">{{ zs.get('next_review_date') }}</span>
+                                {% else %}
+                                    <span class="review-pill">Zaplanuj dziś</span>
+                                {% endif %}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </section>
+                    {% endif %}
+                </div>
+            </div>
 
             <div class="welcome">
                 <h2>Witaj, {{ username }}! 👋</h2>
@@ -217,9 +417,9 @@
                     <input type="text" id="searchInput" placeholder="🔍 Szukaj zestawu..." style="width: 280px; padding: 10px 14px; background: rgba(30,41,59,0.8); border: 1px solid rgba(148,163,184,0.1); border-radius: 10px; color: #f1f5f9; font-size: 13px; outline: none; transition: all 0.2s ease;" onfocus="this.style.borderColor='rgba(99,102,241,0.4)'" onblur="this.style.borderColor='rgba(148,163,184,0.1)'" oninput="filterSets()">
                 </div>
                 <div class="actions">
-                    <a href="{{ url_for('profile') }}" class="btn ghost">👤 Profil</a>
-                    <a href="{{ url_for('create_set') }}" class="btn primary">+ Nowy zestaw</a>
-                    <a href="{{ url_for('logout') }}" class="btn ghost">Wyloguj się</a>
+                    <a href="{{ url_for('profile') }}" class="btn primary" style="background: linear-gradient(90deg, #3b82f6, #2563eb);">👤 Profil</a>
+                    <a href="{{ url_for('create_set') }}" class="btn primary" style="background: linear-gradient(90deg, #22c55e, #16a34a);">+ Nowy zestaw</a>
+                    <a href="{{ url_for('logout') }}" class="btn primary" style="background: linear-gradient(90deg, #f43f5e, #e11d48);">Wyloguj się</a>
                 </div>
             </div>
 
@@ -233,16 +433,25 @@
                                     <span>{{ z.karty|length }} fiszek</span>
                                     <span>•</span>
                                     <span>{{ z.data_utworzenia[:10] }}</span>
+                                    <span>•</span>
+                                    <span class="mastery-pill {{ z.mastery_class }}">Opanowanie: {{ z.mastery_percent }}%</span>
+                                    {% if z.next_review_date %}
+                                        <span>•</span>
+                                        <span class="review-pill">Powtórka: {{ z.next_review_date }}</span>
+                                    {% elif (not z.days_completed) and (not z.historia_nauki) %}
+                                        <span>•</span>
+                                        <span class="review-pill">Zaplanuj dziś</span>
+                                    {% endif %}
                                 </div>
                             </div>
                             <div class="set-actions-section">
                                 <button onclick="openLearnModal('{{ z.id }}')" class="btn primary" style="background: linear-gradient(90deg, #10b981, #059669); white-space: nowrap;">
                                     🎯 Ucz się
                                 </button>
-                                <button onclick="openTestModal('{{ z.id }}')" class="btn ghost" style="white-space: nowrap;">
+                                <button onclick="openTestModal('{{ z.id }}')" class="btn primary" style="background: linear-gradient(90deg, #3b82f6, #2563eb); white-space: nowrap;">
                                     📝 Test
                                 </button>
-                                <a href="{{ url_for('view_set', set_id=z.id) }}" class="btn ghost" style="white-space: nowrap;">
+                                <a href="{{ url_for('view_set', set_id=z.id) }}" class="btn primary" style="background: linear-gradient(90deg, #8b5cf6, #7c3aed); white-space: nowrap; text-decoration: none;">
                                     👁️ Zobacz
                                 </a>
                             </div>
@@ -308,7 +517,7 @@
             
             <div class="modal-options">
                 <label class="option-checkbox">
-                    <input type="checkbox" id="randomOrder" checked>
+                    <input type="checkbox" id="randomOrder">
                     <div class="option-info">
                         <strong>🔀 Losowa kolejność</strong>
                         <span>Fiszki będą wyświetlane w losowej kolejności</span>
@@ -440,7 +649,7 @@
             const reviewMode = document.getElementById('reviewMode').checked;
             
             const params = new URLSearchParams();
-            if (randomOrder) params.append('random', '1');
+            params.append('random', randomOrder ? '1' : '0');
             if (reviewMode) params.append('review', '1');
             
             window.location.href = `/zestawy/${currentSetId}/ucz-sie` + 
