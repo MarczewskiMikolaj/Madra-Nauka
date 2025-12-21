@@ -497,14 +497,14 @@ def profile():
 # Widok listy zestawów fiszek (placeholder)
 @app.route('/zestawy')
 def zestawy():
-    if 'username' not in session:
-        return redirect(url_for('login'))
-    # Pokaż tylko zestawy należące do aktualnego użytkownika
-    user_sets = [s for s in sets if s.get('autor') == session['username']]
-    return render_template('dashboard.html', username=session['username'], zestawy=user_sets)
+    # Utrzymujemy jedno źródło prawdy dla listy zestawów – przekierowujemy do dashboardu,
+    # który oblicza opanowanie i pozostałe dane widoku.
+    return redirect(url_for('dashboard'))
 
 @app.route('/zestawy/nowy', methods=['GET', 'POST'])
 def create_set():
+    global sets
+    
     if 'username' not in session:
         return redirect(url_for('login'))
 
@@ -605,6 +605,8 @@ def create_set():
 
         sets.append(new_set)
         save_sets(sets)
+        # Odśwież zestawy po zapisie aby mieć pewność synchronizacji
+        sets = load_sets()
         flash('Zestaw został utworzony!', 'success')
         return redirect(url_for('zestawy'))
 
@@ -695,6 +697,8 @@ def view_set(set_id):
 
 @app.route('/zestawy/<set_id>/edytuj', methods=['GET', 'POST'])
 def edit_set(set_id):
+    global sets
+    
     if 'username' not in session:
         return redirect(url_for('login'))
     
@@ -771,6 +775,7 @@ def edit_set(set_id):
         zestaw['nazwa'] = nazwa
         zestaw['karty'] = karty
         save_sets(sets)
+        sets = load_sets()
         flash('Zestaw został zaktualizowany!', 'success')
         return redirect(url_for('view_set', set_id=set_id))
     
@@ -778,6 +783,8 @@ def edit_set(set_id):
 
 @app.route('/zestawy/<set_id>/usun', methods=['POST'])
 def delete_set(set_id):
+    global sets
+    
     if 'username' not in session:
         return redirect(url_for('login'))
     
@@ -795,6 +802,7 @@ def delete_set(set_id):
     # Usuń zestaw z listy
     sets.remove(zestaw)
     save_sets(sets)
+    sets = load_sets()
     
     flash(f'Zestaw "{zestaw["nazwa"]}" został usunięty.', 'success')
     return redirect(url_for('dashboard'))
@@ -881,6 +889,8 @@ def learn_set(set_id):
 
 @app.route('/zestawy/<set_id>/ucz-sie/<int:card_index>', methods=['GET', 'POST'])
 def learn_card(set_id, card_index):
+    global sets
+    
     if 'username' not in session:
         return redirect(url_for('login'))
     
@@ -958,6 +968,7 @@ def learn_card(set_id, card_index):
             
             # Zapisz zmiany do pliku
             save_sets(sets)
+            sets = load_sets()
         
         # Jeśli nie rozumie, dodaj do listy trudnych fiszek w sesji (dla starych użytkowników)
         if not understood:
@@ -993,6 +1004,8 @@ def learn_card(set_id, card_index):
 
 @app.route('/zestawy/<set_id>/podsumowanie')
 def learn_summary(set_id):
+    global sets
+    
     if 'username' not in session:
         return redirect(url_for('login'))
     
@@ -1123,6 +1136,7 @@ def learn_summary(set_id):
             pass
 
         save_sets(sets)
+        sets = load_sets()
     
     # Wyczyść sesję
     if results_key in session:
@@ -1288,6 +1302,8 @@ def test_question(set_id, question_index):
 
 @app.route('/zestawy/<set_id>/test/summary')
 def test_summary_route(set_id):
+    global sets
+    
     if 'username' not in session:
         return redirect(url_for('login'))
     
@@ -1323,6 +1339,7 @@ def test_summary_route(set_id):
     })
     
     save_sets(sets)
+    sets = load_sets()
     
     # Wyczyść sesję testu
     for key in [f'test_{set_id}_questions', f'test_{set_id}_current', f'test_{set_id}_results']:

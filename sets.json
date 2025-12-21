@@ -35,7 +35,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -48,7 +54,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -61,7 +73,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -74,7 +92,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -87,7 +111,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -100,7 +130,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -113,7 +149,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -130,7 +172,9 @@
             "last_seen_date": null,
             "total_sessions_ok": 0,
             "next_due": null,
-            "leech": false
+            "leech": false,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -143,7 +187,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -156,7 +206,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -169,7 +225,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -182,7 +244,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -195,7 +263,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -208,7 +282,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -221,7 +301,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -238,7 +324,9 @@
             "last_seen_date": null,
             "total_sessions_ok": 0,
             "next_due": null,
-            "leech": false
+            "leech": false,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -253,7 +341,11 @@
             "leech": false,
             "opanowana": false,
             "streak_rozumiem": 0,
-            "streak_nie_rozumiem": 0
+            "streak_nie_rozumiem": 0,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0
           }
         },
         {
@@ -266,7 +358,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -283,7 +381,9 @@
             "last_seen_date": null,
             "total_sessions_ok": 0,
             "next_due": null,
-            "leech": false
+            "leech": false,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -296,7 +396,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -309,7 +415,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -322,7 +434,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -335,7 +453,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -352,7 +476,9 @@
             "last_seen_date": null,
             "total_sessions_ok": 0,
             "next_due": null,
-            "leech": false
+            "leech": false,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -365,7 +491,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -382,7 +514,9 @@
             "last_seen_date": null,
             "total_sessions_ok": 0,
             "next_due": null,
-            "leech": false
+            "leech": false,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -399,7 +533,9 @@
             "last_seen_date": null,
             "total_sessions_ok": 0,
             "next_due": null,
-            "leech": false
+            "leech": false,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -412,7 +548,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -425,7 +567,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -438,7 +586,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -451,7 +605,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -464,7 +624,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -481,7 +647,9 @@
             "last_seen_date": null,
             "total_sessions_ok": 0,
             "next_due": null,
-            "leech": false
+            "leech": false,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -494,7 +662,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -507,7 +681,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -520,7 +700,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -533,7 +719,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -546,7 +738,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -559,7 +757,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -572,7 +776,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -585,7 +795,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -598,7 +814,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -611,7 +833,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -624,7 +852,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -637,7 +871,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -650,7 +890,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -663,7 +909,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -676,7 +928,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -689,7 +947,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -702,7 +966,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -715,7 +985,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -728,7 +1004,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -741,7 +1023,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -754,7 +1042,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -767,7 +1061,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -784,7 +1084,9 @@
             "last_seen_date": null,
             "total_sessions_ok": 0,
             "next_due": null,
-            "leech": false
+            "leech": false,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -797,7 +1099,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -810,7 +1118,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -827,7 +1141,9 @@
             "last_seen_date": null,
             "total_sessions_ok": 0,
             "next_due": null,
-            "leech": false
+            "leech": false,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -840,7 +1156,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -853,7 +1175,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -866,7 +1194,13 @@
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false,
-            "opanowana": false
+            "opanowana": false,
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         },
         {
@@ -883,7 +1217,9 @@
             "last_seen_date": null,
             "total_sessions_ok": 0,
             "next_due": null,
-            "leech": false
+            "leech": false,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0
           }
         }
       ],
@@ -1788,47 +2124,31 @@
       "days_completed": []
     },
     {
-      "id": "22d46691098448f6baa2abb052ae29fc",
+      "id": "97bdf7ea3e7943ec82e88398391bc7bb",
       "autor": "test",
-      "nazwa": "eqw",
-      "data_utworzenia": "2025-12-21T12:07:40.876693+00:00",
+      "nazwa": "testowy",
+      "data_utworzenia": "2025-12-21T17:43:59.919721+00:00",
       "karty": [
         {
-          "tekst": "eqw",
-          "odpowiedz": "eq",
+          "tekst": "zestaw",
+          "odpowiedz": "zadanek",
           "statystyki": {
-            "pokazane": 1,
-            "rozumiem": 1,
+            "pokazane": 0,
+            "rozumiem": 0,
             "nie_rozumiem": 0,
-            "procent_sukcesu": 100.0,
-            "streak_rozumiem": 1,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
             "streak_nie_rozumiem": 0,
             "opanowana": false,
-            "sessions_ok_streak": 1,
+            "sessions_ok_streak": 0,
             "fail_streak_sessions": 0,
-            "last_seen_date": "2025-12-21",
-            "total_sessions_ok": 1,
-            "next_due": "2025-12-22",
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
             "leech": false
           }
         }
-      ],
-      "ostatnie_wyniki": [
-        true
-      ],
-      "data_ostatniej_nauki": "2025-12-21T15:35:56.670496+00:00",
-      "historia_nauki": [
-        {
-          "data": "2025-12-21",
-          "timestamp": "2025-12-21T15:35:56.670496+00:00",
-          "zrozumiane": 1,
-          "niezrozumiane": 0
-        }
-      ],
-      "days_completed": [
-        "2025-12-21"
-      ],
-      "next_review_date": "2025-12-22"
+      ]
     }
   ]
 }
