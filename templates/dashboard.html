@@ -66,6 +66,45 @@
             gap: 8px;
             flex-wrap: wrap;
         }
+        .streak-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 999px;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: 600;
+            width: fit-content;
+        }
+        .streak-wrapper { display: inline-block; position: relative; }
+        .calendar-popover {
+            position: absolute;
+            top: 32px;
+            left: 0;
+            background: rgba(15,23,42,0.95);
+            border: 1px solid rgba(148,163,184,0.2);
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .2s ease;
+            z-index: 10;
+            min-width: 250px;
+        }
+        .streak-wrapper:hover .calendar-popover { opacity: 1; pointer-events: auto; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .calendar-header .month-label { color: #f1f5f9; font-weight: 600; font-size: 13px; }
+        .calendar-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 4px; }
+        .calendar-weekdays span { text-align: center; font-size: 10px; color: #94a3b8; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+        .calendar-day { text-align: center; padding: 6px 0; border-radius: 6px; font-size: 12px; color: #cbd5e1; border: 1px solid rgba(148,163,184,0.1); }
+        .calendar-day.active { background: rgba(34,197,94,0.2); border-color: rgba(34,197,94,0.4); color: #22c55e; }
+        .calendar-day.inactive { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.2); color: #ef4444; }
+        .calendar-day.streak { background: rgba(245,158,11,0.2); border-color: rgba(245,158,11,0.4); color: #f59e0b; }
     </style>
 </head>
 <body>
@@ -87,10 +126,36 @@
             <div class="welcome">
                 <h2>Witaj, {{ username }}! 👋</h2>
                 <p>Twoja platforma do nauki z fiszkami jest gotowa</p>
+                <div class="streak-wrapper">
+                    <div class="streak-pill" title="Codzienny streak (ciąg dni z aktywnością)">🔥 Streak: {{ daily_streak }} {{ 'dzień' if daily_streak == 1 else 'dni' }}</div>
+                    <div class="calendar-popover">
+                        <div class="calendar-header">
+                            <span class="month-label">{{ month_name }} {{ year }}</span>
+                            <span style="font-size:11px; color:#94a3b8;">Aktywność</span>
+                        </div>
+                        <div class="calendar-weekdays">
+                            <span>Pn</span><span>Wt</span><span>Śr</span><span>Czw</span><span>Pt</span><span>Sob</span><span>Niedz</span>
+                        </div>
+                        <div class="calendar-grid">
+                            {% for row in month_rows %}
+                                {% for cell in row %}
+                                    {% if cell %}
+                                        <div class="calendar-day {{ 'active' if cell.active else 'inactive' }} {{ 'streak' if cell.streak else '' }}">{{ cell.day }}</div>
+                                    {% else %}
+                                        <div class="calendar-day" style="opacity:.4;">&nbsp;</div>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="section-header">
-                <h2>Twoje zestawy</h2>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <h2>Twoje zestawy</h2>
+                    <input type="text" id="searchInput" placeholder="🔍 Szukaj zestawu..." style="width: 280px; padding: 10px 14px; background: rgba(30,41,59,0.8); border: 1px solid rgba(148,163,184,0.1); border-radius: 10px; color: #f1f5f9; font-size: 13px; outline: none; transition: all 0.2s ease;" onfocus="this.style.borderColor='rgba(99,102,241,0.4)'" onblur="this.style.borderColor='rgba(148,163,184,0.1)'" oninput="filterSets()">
+                </div>
                 <div class="actions">
                     <a href="{{ url_for('profile') }}" class="btn ghost">👤 Profil</a>
                     <a href="{{ url_for('create_set') }}" class="btn primary">+ Nowy zestaw</a>
@@ -99,7 +164,7 @@
             </div>
 
             {% if zestawy and zestawy|length > 0 %}
-                <div class="sets-container">
+                <div class="sets-container" id="setsContainer">
                     {% for z in zestawy %}
                         <div class="set-item-container">
                             <div class="set-info-section">
@@ -194,7 +259,7 @@
                     <input type="checkbox" id="reviewMode">
                     <div class="option-info">
                         <strong>🔁 Tryb powtórki</strong>
-                        <span>Tylko fiszki oznaczone jako "nie rozumiem"</span>
+                        <span>Tylko fiszki, których w pełni nie opanowałeś (&lt;70% sukcesu lub &lt;3 pokazania)</span>
                     </div>
                 </label>
             </div>
@@ -362,6 +427,39 @@
                 closeTestModal();
             }
         });
+
+        // Wyszukiwanie zestawów
+        function filterSets() {
+            const searchValue = document.getElementById('searchInput').value.toLowerCase();
+            const setItems = document.querySelectorAll('.set-item-container');
+            let visibleCount = 0;
+
+            setItems.forEach(item => {
+                const title = item.querySelector('.set-title').textContent.toLowerCase();
+                if (title.includes(searchValue)) {
+                    item.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Pokaż komunikat jeśli nic nie znaleziono
+            const container = document.getElementById('setsContainer');
+            let noResults = document.getElementById('noResultsMessage');
+            
+            if (visibleCount === 0 && searchValue !== '') {
+                if (!noResults) {
+                    noResults = document.createElement('p');
+                    noResults.id = 'noResultsMessage';
+                    noResults.style.cssText = 'color:#64748b; margin-top: 18px; text-align: center;';
+                    noResults.textContent = 'Nie znaleziono zestawów pasujących do wyszukiwania.';
+                    container.appendChild(noResults);
+                }
+            } else if (noResults) {
+                noResults.remove();
+            }
+        }
     </script>
 </body>
 </html>

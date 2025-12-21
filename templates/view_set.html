@@ -43,6 +43,26 @@
             border-radius: 6px;
             margin-bottom: 8px;
         }
+        .flashcard-stats {
+            display: inline-block;
+            background: rgba(148,163,184,0.1);
+            color: #94a3b8;
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            margin-left: 8px;
+            margin-bottom: 8px;
+        }
+        .flashcard-stats.difficult {
+            background: rgba(239,68,68,0.15);
+            color: #ef4444;
+            font-weight: 600;
+        }
+        .flashcard-stats.good {
+            background: rgba(16,185,129,0.15);
+            color: #10b981;
+            font-weight: 600;
+        }
         .flashcard-content {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -109,6 +129,17 @@
                     {% for karta in zestaw.karty %}
                         <div class="flashcard-item">
                             <span class="flashcard-number">Fiszka {{ loop.index }}</span>
+                            {% if karta.statystyki and karta.statystyki.pokazane >= 3 %}
+                                {% if karta.statystyki.procent_sukcesu < 70 %}
+                                    <span class="flashcard-stats difficult">⚠️ Trudna ({{ karta.statystyki.procent_sukcesu|int }}%)</span>
+                                {% elif karta.statystyki.procent_sukcesu >= 90 %}
+                                    <span class="flashcard-stats good">✓ Opanowana ({{ karta.statystyki.procent_sukcesu|int }}%)</span>
+                                {% else %}
+                                    <span class="flashcard-stats">{{ karta.statystyki.procent_sukcesu|int }}% sukcesu</span>
+                                {% endif %}
+                            {% elif karta.statystyki and karta.statystyki.pokazane > 0 %}
+                                <span class="flashcard-stats">{{ karta.statystyki.pokazane }}x pokazana</span>
+                            {% endif %}
                             <div class="flashcard-content">
                                 <div class="flashcard-side">
                                     <h4>Pytanie</h4>
@@ -127,54 +158,75 @@
                     </div>
                 {% endif %}
             </div>
-        </div>
-    </div>
 
-    <!-- Test Modal -->
-    <div id="testModal" class="modal">
-        <div class="modal-content">
-            <h2 style="margin: 0 0 20px; font-size: 22px; color: #f1f5f9;">Wybierz liczbę pytań</h2>
-            
-            <div class="modal-options">
-                <label class="option-checkbox" onclick="selectTestOption(5)">
-                    <input type="radio" name="test_count" value="5" checked>
-                    <div class="option-info">
-                        <strong>5 pytań</strong>
-                        <span>Szybki test</span>
-                    </div>
-                </label>
-                
-                <label class="option-checkbox" onclick="selectTestOption(10)">
-                    <input type="radio" name="test_count" value="10">
-                    <div class="option-info">
-                        <strong>10 pytań</strong>
-                        <span>Średni test</span>
-                    </div>
-                </label>
-                
-                <label class="option-checkbox" onclick="selectTestOption(15)">
-                    <input type="radio" name="test_count" value="15">
-                    <div class="option-info">
-                        <strong>15 pytań</strong>
-                        <span>Długi test</span>
-                    </div>
-                </label>
-                
-                <label class="option-checkbox" onclick="selectTestOption(-1)">
-                    <input type="radio" name="test_count" value="-1">
-                    <div class="option-info">
-                        <strong>Wszystkie</strong>
-                        <span>Pełny test ze wszystkich fiszek</span>
-                    </div>
-                </label>
-            </div>
-            
-            <div class="modal-actions">
-                <button onclick="closeTestModal()" class="btn ghost">Anuluj</button>
-                <button onclick="startTest()" class="btn primary" style="background: linear-gradient(90deg, #6366f1, #4f46e5);">Rozpocznij test</button>
-            </div>
+        <div style="margin-top: 32px; border-top: 1px solid rgba(148,163,184,0.1); padding-top: 24px;">
+            <button onclick="openDeleteModal()" class="btn" style="background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); width: 100%;">
+                🗑️ Usuń zestaw
+            </button>
         </div>
     </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <h2 style="margin: 0 0 16px; font-size: 22px; color: #f1f5f9;">⚠️ Potwierdź usunięcie</h2>
+        <p style="color: #94a3b8; margin-bottom: 24px;">Czy na pewno chcesz usunąć zestaw <strong style="color: #f1f5f9;">{{ zestaw.nazwa }}</strong>? Tej operacji nie można cofnąć.</p>
+        
+        <div class="modal-actions">
+            <button onclick="closeDeleteModal()" class="btn ghost">Anuluj</button>
+            <form method="POST" action="{{ url_for('delete_set', set_id=zestaw.id) }}" style="display: inline;">
+                <button type="submit" class="btn primary" style="background: linear-gradient(90deg, #ef4444, #dc2626);">Usuń zestaw</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Test Modal -->
+<div id="testModal" class="modal">
+    <div class="modal-content">
+        <h2 style="margin: 0 0 20px; font-size: 22px; color: #f1f5f9;">Wybierz liczbę pytań</h2>
+        
+        <div class="modal-options">
+            <label class="option-checkbox" onclick="selectTestOption(5)">
+                <input type="radio" name="test_count" value="5" checked>
+                <div class="option-info">
+                    <strong>5 pytań</strong>
+                    <span>Szybki test</span>
+                </div>
+            </label>
+            
+            <label class="option-checkbox" onclick="selectTestOption(10)">
+                <input type="radio" name="test_count" value="10">
+                <div class="option-info">
+                    <strong>10 pytań</strong>
+                    <span>Średni test</span>
+                </div>
+            </label>
+            
+            <label class="option-checkbox" onclick="selectTestOption(15)">
+                <input type="radio" name="test_count" value="15">
+                <div class="option-info">
+                    <strong>15 pytań</strong>
+                    <span>Długi test</span>
+                </div>
+            </label>
+            
+            <label class="option-checkbox" onclick="selectTestOption(-1)">
+                <input type="radio" name="test_count" value="-1">
+                <div class="option-info">
+                    <strong>Wszystkie</strong>
+                    <span>Pełny test ze wszystkich fiszek</span>
+                </div>
+            </label>
+        </div>
+        
+        <div class="modal-actions">
+            <button onclick="closeTestModal()" class="btn ghost">Anuluj</button>
+            <button onclick="startTest()" class="btn primary" style="background: linear-gradient(90deg, #6366f1, #4f46e5);">Rozpocznij test</button>
+        </div>
+    </div>
+</div>
 
     <!-- Learning Mode Modal -->
     <div id="learnModal" class="modal">
@@ -194,7 +246,7 @@
                     <input type="checkbox" id="reviewMode">
                     <div class="option-info">
                         <strong>🔁 Tryb powtórki</strong>
-                        <span>Tylko fiszki oznaczone jako "nie rozumiem"</span>
+                        <span>Tylko fiszki, których w pełni nie opanowałeś (&lt;70% sukcesu lub &lt;3 pokazania)</span>
                     </div>
                 </label>
             </div>
@@ -286,6 +338,14 @@
     <script>
         let selectedTestCount = 5;
         
+        function openDeleteModal() {
+            document.getElementById('deleteModal').classList.add('active');
+        }
+        
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('active');
+        }
+        
         function openLearnModal() {
             document.getElementById('learnModal').classList.add('active');
         }
@@ -306,10 +366,12 @@
                 (params.toString() ? '?' + params.toString() : '');
         }
         
-        // Close modal on ESC key
+        // Close modals on ESC key
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeLearnModal();
+                closeDeleteModal();
+                closeTestModal();
             }
         });
         
@@ -317,6 +379,12 @@
         document.getElementById('learnModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeLearnModal();
+            }
+        });
+        
+        document.getElementById('deleteModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDeleteModal();
             }
         });
         

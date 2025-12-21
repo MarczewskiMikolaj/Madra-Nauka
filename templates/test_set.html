@@ -155,9 +155,6 @@
                 </div>
 
                 <div class="submit-container" style="margin-top: auto;">
-                    {% if question_index >= total_questions - 1 %}
-                        <input type="hidden" name="end" value="1">
-                    {% endif %}
                     <button type="submit" class="btn primary" style="background: linear-gradient(90deg, #6366f1, #4f46e5); min-width: 140px;">
                         {% if question_index < total_questions - 1 %}
                             Dalej →

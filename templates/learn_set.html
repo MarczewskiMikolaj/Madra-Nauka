@@ -74,6 +74,7 @@
 
     <script>
         let isFlipped = false;
+        let isSubmitting = false;
 
         function flipCard() {
             const card = document.getElementById('flashcard');
@@ -88,6 +89,44 @@
                 isFlipped = false;
             }
         }
+
+        function submitNotUnderstood() {
+            if (isSubmitting) return;
+            const form = document.querySelector('.action-buttons form:first-child');
+            if (form) {
+                isSubmitting = true;
+                form.submit();
+            }
+        }
+
+        function submitUnderstood() {
+            if (isSubmitting) return;
+            const forms = document.querySelectorAll('.action-buttons form');
+            const form = forms[forms.length - 1];
+            if (form) {
+                isSubmitting = true;
+                form.submit();
+            }
+        }
+
+        // Obsługa klawiatury: spacja = obrót, strzałka lewo/prawo = decyzja
+        document.addEventListener('keydown', function(e) {
+            // Nie przechwytuj w polach edycji
+            const tag = (e.target.tagName || '').toLowerCase();
+            if (tag === 'input' || tag === 'textarea') return;
+            if (e.repeat) return;
+
+            if (e.code === 'Space') {
+                e.preventDefault();
+                flipCard();
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                submitNotUnderstood();
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                submitUnderstood();
+            }
+        });
     </script>
 </body>
 </html>
