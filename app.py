@@ -3,12 +3,15 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from cryptography.fernet import Fernet
 from datetime import datetime, timezone
 from uuid import uuid4
+from google.cloud import storage
 import os
 import json
 import random
 
+
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-change-this-in-production'
+
 
 # Encryption key - in production, store this securely (environment variable, key management service)
 ENCRYPTION_KEY = b'8LQQvN7xVJ9xKvJZLWj0zQYzQYJtZGN7xVJ9xKvJZLW=' # Example key - change in production
@@ -17,52 +20,67 @@ cipher = Fernet(ENCRYPTION_KEY)
 USERS_FILE = 'users.json'
 SETS_FILE = 'sets.json'
 
+BUCKET_NAME = os.environ.get("USERS_BUCKET_NAME", "python-fiszki-users")
+USERS_FILE_NAME = "users.json"
+SETS_FILE_NAME = "sets.json"
+
+
+def get_storage_client():
+    return storage.Client()
+
 def load_users():
-    """Wczytaj użytkowników z zaszyfrowanego pliku JSON jako listę obiektów."""
-    if not os.path.exists(USERS_FILE):
-        return []
-
+    """Wczytaj użytkowników z Google Cloud Storage (zaszyfrowany JSON)."""
     try:
-        with open(USERS_FILE, 'rb') as f:
-            encrypted_data = f.read()
-            if not encrypted_data:
-                return []
-            decrypted_data = cipher.decrypt(encrypted_data)
-            data = json.loads(decrypted_data.decode('utf-8'))
-
-            # Obsługa formatu: {"users": [...]} 
-            if isinstance(data, dict) and 'users' in data and isinstance(data['users'], list):
-                return data['users']
-
-            # Obsługa starego formatu: {"login": {"haslo": ..., "data_utworzenia": ...}, ...}
-            if isinstance(data, dict):
-                migrated = []
-                for login, info in data.items():
-                    item = {
-                        'login': login,
-                        'haslo': info.get('haslo') or info.get('password'),
-                        'data_utworzenia': info.get('data_utworzenia')
-                    }
-                    migrated.append(item)
-                return migrated
-
-            # Jeśli już lista
-            if isinstance(data, list):
-                return data
-
+        client = get_storage_client()
+        bucket = client.bucket(BUCKET_NAME)
+        blob = bucket.blob(USERS_FILE_NAME)
+        
+        if not blob.exists():
             return []
+        
+        encrypted_data = blob.download_as_bytes()
+        if not encrypted_data:
+            return []
+        
+        decrypted_data = cipher.decrypt(encrypted_data)
+        data = json.loads(decrypted_data.decode('utf-8'))
+        
+        # Obsługa formatu: {"users": [...]} 
+        if isinstance(data, dict) and 'users' in data and isinstance(data['users'], list):
+            return data['users']
+        
+        # Obsługa starego formatu: {"login": {"haslo": ..., "data_utworzenia": ...}, ...}
+        if isinstance(data, dict):
+            migrated = []
+            for login, info in data.items():
+                item = {
+                    'login': login,
+                    'haslo': info.get('haslo') or info.get('password'),
+                    'data_utworzenia': info.get('data_utworzenia')
+                }
+                migrated.append(item)
+            return migrated
+        
+        # Jeśli już lista
+        if isinstance(data, list):
+            return data
+        
+        return []
     except Exception as e:
         print(f"Błąd podczas wczytywania użytkowników: {e}")
         return []
 
 def save_users(users_data):
-    """Zapisz użytkowników (lista obiektów) do zaszyfrowanego pliku JSON w formacie {users: [...]}"""
+    """Zapisz użytkowników do Google Cloud Storage (zaszyfrowany JSON)."""
     try:
         wrapper = {'users': users_data}
         json_data = json.dumps(wrapper, indent=2, ensure_ascii=False).encode('utf-8')
         encrypted_data = cipher.encrypt(json_data)
-        with open(USERS_FILE, 'wb') as f:
-            f.write(encrypted_data)
+        
+        client = get_storage_client()
+        bucket = client.bucket(BUCKET_NAME)
+        blob = bucket.blob(USERS_FILE_NAME)
+        blob.upload_from_string(encrypted_data, content_type='application/octet-stream')
     except Exception as e:
         print(f"Błąd podczas zapisywania użytkowników: {e}")
 
@@ -70,27 +88,40 @@ def save_users(users_data):
 users = load_users()
 
 def load_sets():
-    """Wczytaj zestawy fiszek z pliku JSON (bez szyfrowania) jako listę obiektów."""
-    if not os.path.exists(SETS_FILE):
-        return []
+    """Wczytaj zestawy fiszek z Google Cloud Storage (bez szyfrowania)."""
     try:
-        with open(SETS_FILE, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-            if isinstance(data, dict) and 'sets' in data and isinstance(data['sets'], list):
-                return data['sets']
-            if isinstance(data, list):
-                return data
+        client = get_storage_client()
+        bucket = client.bucket(BUCKET_NAME)
+        blob = bucket.blob(SETS_FILE_NAME)
+        
+        if not blob.exists():
             return []
+        
+        data_str = blob.download_as_text()
+        if not data_str.strip():
+            return []
+        
+        data = json.loads(data_str)
+        if isinstance(data, dict) and 'sets' in data and isinstance(data['sets'], list):
+            return data['sets']
+        if isinstance(data, list):
+            return data
+        return []
     except Exception as e:
         print(f"Błąd podczas wczytywania zestawów: {e}")
         return []
 
 def save_sets(sets_data):
-    """Zapisz zestawy fiszek (lista obiektów) do pliku JSON w formacie {sets: [...]} (bez szyfrowania)."""
+    """Zapisz zestawy fiszek do Google Cloud Storage (bez szyfrowania)."""
     try:
         wrapper = {'sets': sets_data}
-        with open(SETS_FILE, 'w', encoding='utf-8') as f:
-            json.dump(wrapper, f, indent=2, ensure_ascii=False)
+        client = get_storage_client()
+        bucket = client.bucket(BUCKET_NAME)
+        blob = bucket.blob(SETS_FILE_NAME)
+        blob.upload_from_string(
+            json.dumps(wrapper, ensure_ascii=False, indent=2),
+            content_type='application/json'
+        )
     except Exception as e:
         print(f"Błąd podczas zapisywania zestawów: {e}")
 
@@ -942,6 +973,7 @@ def test_summary_route(set_id):
                          correct=correct_count,
                          total=total,
                          percentage=round(percentage, 1))
+
 
 import os
 if __name__ == '__main__':
