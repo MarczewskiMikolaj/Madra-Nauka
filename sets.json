@@ -1,70 +1,6 @@
 {
   "sets": [
     {
-      "id": "cf6a819d044840ada39cb899b7a9f560",
-      "autor": "test",
-      "nazwa": "Matematyka",
-      "data_utworzenia": "2025-12-20T16:12:15.790533+00:00",
-      "karty": [
-        {
-          "tekst": "2+2",
-          "odpowiedz": "4"
-        },
-        {
-          "tekst": "3-1",
-          "odpowiedz": "2"
-        },
-        {
-          "tekst": "6*6",
-          "odpowiedz": "36"
-        }
-      ],
-      "ostatnie_wyniki": [
-        true,
-        false,
-        true
-      ],
-      "data_ostatniej_nauki": "2025-12-20T17:55:42.027384+00:00",
-      "historia_nauki": [
-        {
-          "data": "2025-12-20",
-          "timestamp": "2025-12-20T17:08:11.229022+00:00",
-          "zrozumiane": 2,
-          "niezrozumiane": 1
-        },
-        {
-          "data": "2025-12-20",
-          "timestamp": "2025-12-20T17:08:25.291431+00:00",
-          "zrozumiane": 3,
-          "niezrozumiane": 0
-        },
-        {
-          "data": "2025-12-20",
-          "timestamp": "2025-12-20T17:45:00.538278+00:00",
-          "zrozumiane": 1,
-          "niezrozumiane": 0
-        },
-        {
-          "data": "2025-12-20",
-          "timestamp": "2025-12-20T17:52:02.592064+00:00",
-          "zrozumiane": 2,
-          "niezrozumiane": 1
-        },
-        {
-          "data": "2025-12-20",
-          "timestamp": "2025-12-20T17:53:21.800023+00:00",
-          "zrozumiane": 2,
-          "niezrozumiane": 0
-        },
-        {
-          "data": "2025-12-20",
-          "timestamp": "2025-12-20T17:55:42.027391+00:00",
-          "zrozumiane": 2,
-          "niezrozumiane": 1
-        }
-      ]
-    },
-    {
       "id": "945a8ed5c7804ade9799ebe5626cea9a",
       "autor": "test",
       "nazwa": "Oracle Architektura - Wykład 1",
@@ -148,7 +84,13 @@
         },
         {
           "tekst": "Procesy tła ARCn (Archiver) są procesami opcjonalnymi. Jaka jest ich funkcja?",
-          "odpowiedz": "Kopiują zapełnione pliki dziennika powtórzeń (Redo Log Files) do miejsca składowania archiwalnych dzienników."
+          "odpowiedz": "Kopiują zapełnione pliki dziennika powtórzeń (Redo Log Files) do miejsca składowania archiwalnych dzienników.",
+          "statystyki": {
+            "pokazane": 1,
+            "rozumiem": 0,
+            "nie_rozumiem": 1,
+            "procent_sukcesu": 0.0
+          }
         },
         {
           "tekst": "Czym są procesy serwera (foreground processes) w Oracle?",
@@ -176,7 +118,13 @@
         },
         {
           "tekst": "Jakiego polecenia należy użyć, aby trwale zmienić parametr w pliku SPFILE?",
-          "odpowiedz": "ALTER SYSTEM SET nazwa_parametru = wartość SCOPE = BOTH;"
+          "odpowiedz": "ALTER SYSTEM SET nazwa_parametru = wartość SCOPE = BOTH;",
+          "statystyki": {
+            "pokazane": 1,
+            "rozumiem": 0,
+            "nie_rozumiem": 1,
+            "procent_sukcesu": 0.0
+          }
         },
         {
           "tekst": "Co oznacza skrót CDB w architekturze multitenant Oracle?",
@@ -328,8 +276,8 @@
         }
       ],
       "ostatnie_wyniki": [
-        true,
         false,
+        null,
         null,
         null,
         null,
@@ -393,7 +341,7 @@
         null,
         null
       ],
-      "data_ostatniej_nauki": "2025-12-20T19:38:46.405517+00:00",
+      "data_ostatniej_nauki": "2025-12-21T08:49:14.533137+00:00",
       "historia_nauki": [
         {
           "data": "2025-12-20",
@@ -429,6 +377,36 @@
           "data": "2025-12-20",
           "timestamp": "2025-12-20T19:38:46.405541+00:00",
           "zrozumiane": 1,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T07:56:46.129253+00:00",
+          "zrozumiane": 3,
+          "niezrozumiane": 32
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T07:58:39.343807+00:00",
+          "zrozumiane": 7,
+          "niezrozumiane": 8
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T08:12:29.964538+00:00",
+          "zrozumiane": 1,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T08:46:46.992114+00:00",
+          "zrozumiane": 0,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T08:49:14.533158+00:00",
+          "zrozumiane": 0,
           "niezrozumiane": 1
         }
       ],
@@ -474,6 +452,20 @@
           "poprawne": 2,
           "lacznie": 5,
           "procent": 40.0
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T08:17:52.510868+00:00",
+          "poprawne": 5,
+          "lacznie": 5,
+          "procent": 100.0
+        },
+        {
+          "data": "2025-12-21",
+          "timestamp": "2025-12-21T08:19:39.260695+00:00",
+          "poprawne": 4,
+          "lacznie": 5,
+          "procent": 80.0
         }
       ]
     }
