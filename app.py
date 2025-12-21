@@ -151,7 +151,58 @@ def dashboard():
         return redirect(url_for('login'))
     # Pokaż zestawy użytkownika na stronie głównej
     user_sets = [s for s in sets if s.get('autor') == session['username']]
-    return render_template('dashboard.html', username=session['username'], zestawy=user_sets)
+
+    # Oblicz codzienny streak (kolejne dni z aktywnością, licząc od dziś)
+    from datetime import timedelta
+    activity_dates = set()
+    for zestaw in user_sets:
+        for wpis in zestaw.get('historia_nauki', []) or []:
+            data = wpis.get('data')
+            if data:
+                activity_dates.add(data)
+        for wpis in zestaw.get('historia_testow', []) or []:
+            data = wpis.get('data')
+            if data:
+                activity_dates.add(data)
+
+    streak = 0
+    day = datetime.now(timezone.utc).date()
+    while day.isoformat() in activity_dates:
+        streak += 1
+        day = day - timedelta(days=1)
+
+    # Zbierz daty należące do aktualnego streaka
+    streak_dates = set()
+    day_iter = datetime.now(timezone.utc).date()
+    while day_iter.isoformat() in activity_dates:
+        streak_dates.add(day_iter.isoformat())
+        day_iter = day_iter - timedelta(days=1)
+
+    # Przygotuj kalendarz bieżącego miesiąca do podglądu (popover)
+    import calendar as _calendar
+    today_date = datetime.now(timezone.utc).date()
+    year, month = today_date.year, today_date.month
+    start_weekday, days_in_month = _calendar.monthrange(year, month)  # Monday=0
+    # Zbuduj siatkę miesiąca z wypełnieniem luk
+    month_grid = []
+    for _ in range(start_weekday):
+        month_grid.append(None)
+    for d in range(1, days_in_month + 1):
+        date_obj = today_date.replace(day=d)
+        date_str = date_obj.isoformat()
+        month_grid.append({
+            'day': d,
+            'date': date_str,
+            'active': date_str in activity_dates,
+            'streak': date_str in streak_dates
+        })
+    while len(month_grid) % 7 != 0:
+        month_grid.append(None)
+    month_rows = [month_grid[i:i+7] for i in range(0, len(month_grid), 7)]
+    polish_months = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień']
+    month_name_pl = polish_months[month - 1]
+
+    return render_template('dashboard.html', username=session['username'], zestawy=user_sets, daily_streak=streak, month_rows=month_rows, month_name=month_name_pl, year=year)
 
 @app.route('/logout')
 def logout():
@@ -212,6 +263,59 @@ def profile():
         most_solved_id = max(set_solve_counts, key=set_solve_counts.get)
         most_solved_set = next((s for s in user_sets if s['id'] == most_solved_id), None)
         max_count = set_solve_counts[most_solved_id]
+
+    # Oblicz streak (ciąg kolejnych dni z aktywnością: nauka lub test)
+    from datetime import timedelta as _timedelta
+    activity_dates = set()
+    from collections import defaultdict
+    learn_counts_by_date = defaultdict(int)  # data -> łączna liczba rozwiązań (sesji nauki) tego dnia
+    for zestaw in user_sets:
+        for wpis in zestaw.get('historia_nauki', []) or []:
+            data = wpis.get('data')
+            if data:
+                activity_dates.add(data)
+                learn_counts_by_date[data] += 1
+        for wpis in zestaw.get('historia_testow', []) or []:
+            data = wpis.get('data')
+            if data:
+                activity_dates.add(data)
+                # Testy nie są wliczane do licznika kalendarza, aby dopasować pole "Rozwiązanych dzisiaj"
+    daily_streak = 0
+    _day = datetime.now(timezone.utc).date()
+    while _day.isoformat() in activity_dates:
+        daily_streak += 1
+        _day = _day - _timedelta(days=1)
+    
+    # Przygotuj pełny kalendarz aktywności na bieżący miesiąc (siatka tygodni)
+    import calendar as _calendar
+    today_date = datetime.now(timezone.utc).date()
+    year, month = today_date.year, today_date.month
+    start_weekday, days_in_month = _calendar.monthrange(year, month)  # Monday=0
+    month_grid = []
+    for _ in range(start_weekday):
+        month_grid.append(None)
+    # Zbierz daty należące do aktualnego streaka
+    streak_dates = set()
+    _iter = datetime.now(timezone.utc).date()
+    from datetime import timedelta as _td
+    while _iter.isoformat() in activity_dates:
+        streak_dates.add(_iter.isoformat())
+        _iter = _iter - _td(days=1)
+    for d in range(1, days_in_month + 1):
+        date_obj = today_date.replace(day=d)
+        date_str = date_obj.isoformat()
+        month_grid.append({
+            'day': d,
+            'date': date_str,
+            'active': date_str in activity_dates,
+            'streak': date_str in streak_dates,
+            'count': int(learn_counts_by_date.get(date_str, 0))
+        })
+    while len(month_grid) % 7 != 0:
+        month_grid.append(None)
+    month_rows = [month_grid[i:i+7] for i in range(0, len(month_grid), 7)]
+    polish_months = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień']
+    month_name_pl = polish_months[month - 1]
     
     return render_template('profile.html',
                          username=username,
@@ -219,7 +323,11 @@ def profile():
                          sets_solved_today=sets_solved_today,
                          chart_data=chart_data,
                          most_solved_set=most_solved_set,
-                         most_solved_count=max_count)
+                         most_solved_count=max_count,
+                         daily_streak=daily_streak,
+                         month_rows=month_rows,
+                         month_name=month_name_pl,
+                         year=year)
 
 # Widok listy zestawów fiszek (placeholder)
 @app.route('/zestawy')
@@ -257,7 +365,16 @@ def create_set():
                         pytanie = row[0].strip()
                         odpowiedz = row[1].strip()
                         if pytanie or odpowiedz:
-                            karty.append({'tekst': pytanie, 'odpowiedz': odpowiedz})
+                            karty.append({
+                                'tekst': pytanie,
+                                'odpowiedz': odpowiedz,
+                                'statystyki': {
+                                    'pokazane': 0,
+                                    'rozumiem': 0,
+                                    'nie_rozumiem': 0,
+                                    'procent_sukcesu': 0
+                                }
+                            })
                 
                 if not karty:
                     flash('Plik CSV jest pusty lub nieprawidłowy.', 'error')
@@ -276,7 +393,16 @@ def create_set():
                 t = (teksty[i].strip() if i < len(teksty) and teksty[i] is not None else '')
                 o = (odpowiedzi[i].strip() if i < len(odpowiedzi) and odpowiedzi[i] is not None else '')
                 if t or o:
-                    karty.append({'tekst': t, 'odpowiedz': o})
+                    karty.append({
+                        'tekst': t,
+                        'odpowiedz': o,
+                        'statystyki': {
+                            'pokazane': 0,
+                            'rozumiem': 0,
+                            'nie_rozumiem': 0,
+                            'procent_sukcesu': 0
+                        }
+                    })
 
         if not nazwa:
             flash('Podaj nazwę zestawu.', 'error')
@@ -340,13 +466,28 @@ def edit_set(set_id):
         teksty = request.form.getlist('tekst[]')
         odpowiedzi = request.form.getlist('odpowiedz[]')
 
-        # Zbuduj listę kart
+        # Zbuduj listę kart - zachowaj istniejące statystyki jeśli są
         karty = []
+        stare_karty = zestaw.get('karty', [])
         for i in range(max(len(teksty), len(odpowiedzi))):
             t = (teksty[i].strip() if i < len(teksty) and teksty[i] is not None else '')
             o = (odpowiedzi[i].strip() if i < len(odpowiedzi) and odpowiedzi[i] is not None else '')
             if t or o:
-                karty.append({'tekst': t, 'odpowiedz': o})
+                # Zachowaj statystyki jeśli karta już istniała w tym samym miejscu
+                stare_stats = None
+                if i < len(stare_karty) and stare_karty[i].get('tekst') == t:
+                    stare_stats = stare_karty[i].get('statystyki')
+                
+                karty.append({
+                    'tekst': t,
+                    'odpowiedz': o,
+                    'statystyki': stare_stats if stare_stats else {
+                        'pokazane': 0,
+                        'rozumiem': 0,
+                        'nie_rozumiem': 0,
+                        'procent_sukcesu': 0
+                    }
+                })
 
         if not nazwa:
             flash('Podaj nazwę zestawu.', 'error')
@@ -364,6 +505,29 @@ def edit_set(set_id):
         return redirect(url_for('view_set', set_id=set_id))
     
     return render_template('edit_set.html', username=session['username'], zestaw=zestaw)
+
+@app.route('/zestawy/<set_id>/usun', methods=['POST'])
+def delete_set(set_id):
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    
+    # Znajdź zestaw
+    zestaw = next((s for s in sets if s.get('id') == set_id), None)
+    if not zestaw:
+        flash('Zestaw nie został znaleziony.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    # Sprawdź czy użytkownik jest autorem
+    if zestaw.get('autor') != session['username']:
+        flash('Nie masz dostępu do tego zestawu.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    # Usuń zestaw z listy
+    sets.remove(zestaw)
+    save_sets(sets)
+    
+    flash(f'Zestaw "{zestaw["nazwa"]}" został usunięty.', 'success')
+    return redirect(url_for('dashboard'))
 
 @app.route('/zestawy/<set_id>/ucz-sie')
 def learn_set(set_id):
@@ -393,13 +557,23 @@ def learn_set(set_id):
     total_cards = len(zestaw.get('karty', []))
     order = list(range(total_cards))
     
-    # Tryb powtórki - tylko fiszki oznaczone jako trudne (używa oryginalnych indeksów)
+    # Tryb powtórki - tylko fiszki oznaczone jako trudne na podstawie statystyk
     if review_mode:
-        difficult_indices = session.get(f'learn_{set_id}_difficult', [])
+        # Znajdź karty z < 70% sukcesu LUB karty które nie mają jeszcze statystyk/były pokazane < 3 razy
+        difficult_indices = []
+        for i, karta in enumerate(zestaw['karty']):
+            stats = karta.get('statystyki', {})
+            pokazane = stats.get('pokazane', 0)
+            procent = stats.get('procent_sukcesu', 0)
+            
+            # Karta jest trudna jeśli: ma < 70% sukcesu LUB była pokazana < 3 razy (niedostatecznie poznana)
+            if pokazane < 3 or procent < 70:
+                difficult_indices.append(i)
+        
         if difficult_indices:
-            order = [i for i in order if i in difficult_indices]
+            order = difficult_indices
         else:
-            flash('Brak fiszek do powtórki. Najpierw przejdź normalną naukę.', 'info')
+            flash('Brak trudnych fiszek do powtórki! Wszystkie fiszki mają ≥70% sukcesu. 🎉', 'success')
             return redirect(url_for('view_set', set_id=set_id))
     
     # Losowa kolejność
@@ -452,14 +626,42 @@ def learn_card(set_id, card_index):
         
         session[results_key].append(understood)
         
-        # Jeśli nie rozumie, dodaj do listy trudnych fiszek
+        # Zaktualizuj statystyki tej konkretnej karty
+        order = session.get(f'learn_{set_id}_order') or list(range(len(zestaw.get('karty', []))))
+        original_index = order[card_index] if card_index < len(order) else card_index
+        
+        if original_index < len(zestaw['karty']):
+            karta = zestaw['karty'][original_index]
+            
+            # Upewnij się, że karta ma strukturę statystyk
+            if 'statystyki' not in karta:
+                karta['statystyki'] = {
+                    'pokazane': 0,
+                    'rozumiem': 0,
+                    'nie_rozumiem': 0,
+                    'procent_sukcesu': 0
+                }
+            
+            # Aktualizuj statystyki
+            karta['statystyki']['pokazane'] += 1
+            if understood:
+                karta['statystyki']['rozumiem'] += 1
+            else:
+                karta['statystyki']['nie_rozumiem'] += 1
+            
+            # Przelicz procent sukcesu
+            total = karta['statystyki']['pokazane']
+            if total > 0:
+                karta['statystyki']['procent_sukcesu'] = round((karta['statystyki']['rozumiem'] / total) * 100, 1)
+            
+            # Zapisz zmiany do pliku
+            save_sets(sets)
+        
+        # Jeśli nie rozumie, dodaj do listy trudnych fiszek w sesji (dla starych użytkowników)
         if not understood:
             difficult_key = f'learn_{set_id}_difficult'
             if difficult_key not in session:
                 session[difficult_key] = []
-            # Zapisz oryginalny indeks fiszki na podstawie kolejności w sesji
-            order = session.get(f'learn_{set_id}_order') or list(range(len(zestaw.get('karty', []))))
-            original_index = order[card_index] if card_index < len(order) else card_index
             if original_index not in session[difficult_key]:
                 session[difficult_key].append(original_index)
         
@@ -660,7 +862,6 @@ def test_question(set_id, question_index):
         # Zapisz odpowiedź
         user_answer = request.form.get('answer')
         is_correct = (user_answer == current_question['correct_answer'])
-        end_flag = request.form.get('end') == '1'
         
         results_key = f'test_{set_id}_results'
         if results_key not in session:
@@ -676,34 +877,8 @@ def test_question(set_id, question_index):
         
         # Sprawdź czy to ostatnie pytanie
         if question_index >= len(questions) - 1:
-            if end_flag:
-                # Policzenie wyniku i zapis do historii, potem powrót na panel
-                results = session.get(results_key, [])
-                correct_count = sum(1 for r in results if r['is_correct'])
-                total = len(results)
-                percentage = (correct_count / total * 100) if total > 0 else 0
-                
-                if 'historia_testow' not in zestaw:
-                    zestaw['historia_testow'] = []
-                today = datetime.now(timezone.utc).date().isoformat()
-                zestaw['historia_testow'].append({
-                    'data': today,
-                    'timestamp': datetime.now(timezone.utc).isoformat(),
-                    'poprawne': correct_count,
-                    'lacznie': total,
-                    'procent': round(percentage, 1)
-                })
-                save_sets(sets)
-                
-                # Wyczyść sesję testu
-                for key in [f'test_{set_id}_questions', f'test_{set_id}_current', f'test_{set_id}_results']:
-                    if key in session:
-                        del session[key]
-                session.modified = True
-                
-                return redirect(url_for('dashboard'))
-            else:
-                return redirect(url_for('test_summary_route', set_id=set_id))
+            # Ostatnie pytanie – pokaż podsumowanie testu
+            return redirect(url_for('test_summary_route', set_id=set_id))
         else:
             # Następne pytanie
             return redirect(url_for('test_question', set_id=set_id, question_index=question_index + 1))
