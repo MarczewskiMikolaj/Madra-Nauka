@@ -197,6 +197,48 @@
                 padding: 8px 0;
                 font-size: 11px;
             }
+            .page-shell { gap: 12px; }
+            .mobile-menu-toggle { display: inline-flex; }
+            .sidebar-backdrop {
+                display: block;
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.6);
+                backdrop-filter: blur(5px);
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity .2s ease;
+                z-index: 18;
+            }
+            .sidebar-backdrop.show { opacity: 1; pointer-events: auto; }
+            .sidebar {
+                position: fixed;
+                top: 0;
+                right: 0;
+                left: auto;
+                bottom: 0;
+                width: min(380px, 92vw);
+                max-height: none;
+                height: 100vh;
+                overflow: auto;
+                transform: translateX(100%);
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity .2s ease, transform .2s ease;
+                z-index: 19;
+            }
+            .sidebar.open {
+                opacity: 1;
+                pointer-events: auto;
+                transform: translateX(0);
+            }
+            .sidebar { box-shadow: 0 18px 38px rgba(0,0,0,0.5); }
+        }
+
+        @media (min-width: 769px) {
+            .mobile-menu-toggle { display: none; }
+            .sidebar { position: sticky; top: 16px; opacity: 1; pointer-events: auto; transform: none; }
+            .sidebar-backdrop { display: none; }
         }
         
         @media (max-width: 430px) {
@@ -230,6 +272,7 @@
         .main-card {
             flex: 1;
             padding-top: 24px;
+            padding-bottom: 16px;
         }
         .sidebar {
             width: 280px;
@@ -393,6 +436,56 @@
             font-size: 11px;
             padding: 3px 8px;
         }
+
+        /* Mobile override (placed after base to win cascade) */
+        @media (max-width: 768px) {
+            .mobile-menu-toggle { display: inline-flex !important; }
+            .sidebar-backdrop { display: block; }
+            .sidebar-backdrop.show { opacity: 1; pointer-events: auto; }
+            .sidebar {
+                position: fixed !important;
+                top: 10px !important;
+                right: 8px !important;
+                left: auto !important;
+                bottom: 10px !important;
+                width: min(340px, 88vw) !important;
+                height: calc(100vh - 20px) !important;
+                max-height: none !important;
+                overflow: auto;
+                transform: translateX(100%);
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity .2s ease, transform .2s ease;
+                z-index: 19;
+                box-shadow: 0 18px 38px rgba(0,0,0,0.5);
+            }
+            .sidebar.open {
+                opacity: 1;
+                pointer-events: auto;
+                transform: translateX(0);
+            }
+            body.sidebar-open { overflow: hidden; }
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(148,163,184,0.25);
+            background: linear-gradient(90deg, #3b82f6, #2563eb);
+            color: #e2e8f0;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            transition: transform .15s ease, box-shadow .15s ease;
+        }
+        .mobile-menu-toggle:hover { transform: translateY(-1px); box-shadow: 0 12px 26px rgba(0,0,0,0.35); }
+        .sidebar-backdrop { display: none; }
+        .sidebar-backdrop.show { display: block; }
+        body.sidebar-open { overflow: hidden; }
     </style>
 </head>
 <body>
@@ -401,6 +494,7 @@
         <div class="bg-blob b"></div>
         
         <div class="page-shell">
+            <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
             <div class="card main-card">
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
@@ -414,7 +508,10 @@
 
                     <div class="section-header">
                         <div style="display: flex; flex-direction: column; gap: 12px;">
-                            <h2>Twoje zestawy do nauki</h2>
+                            <div style="display:flex; align-items:center; gap:12px; justify-content: space-between;">
+                                <h2 style="margin:0;">Twoje zestawy do nauki</h2>
+                                <button class="mobile-menu-toggle" id="sidebarToggle">☰ Menu</button>
+                            </div>
                             <input type="text" id="searchInput" placeholder="🔍 Szukaj zestawu..." style="width: 280px; padding: 10px 14px; background: rgba(30,41,59,0.8); border: 1px solid rgba(148,163,184,0.1); border-radius: 10px; color: #f1f5f9; font-size: 13px; outline: none; transition: all 0.2s ease;" onfocus="this.style.borderColor='rgba(99,102,241,0.4)'" onblur="this.style.borderColor='rgba(148,163,184,0.1)'" oninput="filterSets()">
                         </div>
                         <div class="actions" style="align-self: flex-end; margin-top: 8px;">
@@ -770,6 +867,42 @@
                 closeTestModal();
             }
         });
+
+            // Mobile sidebar toggle
+            const sidebar = document.querySelector('.sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+
+            function closeSidebarMobile() {
+                if (sidebar) sidebar.classList.remove('open');
+                if (sidebarBackdrop) sidebarBackdrop.classList.remove('show');
+                document.body.classList.remove('sidebar-open');
+            }
+
+            function openSidebarMobile() {
+                if (sidebar) sidebar.classList.add('open');
+                if (sidebarBackdrop) sidebarBackdrop.classList.add('show');
+                document.body.classList.add('sidebar-open');
+            }
+
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', () => {
+                    if (sidebar && sidebar.classList.contains('open')) {
+                        closeSidebarMobile();
+                    } else {
+                        openSidebarMobile();
+                    }
+                });
+            }
+            if (sidebarBackdrop) {
+                sidebarBackdrop.addEventListener('click', closeSidebarMobile);
+            }
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeSidebarMobile();
+            });
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 768) closeSidebarMobile();
+            });
 
         // Wyszukiwanie zestawów
         function filterSets() {
