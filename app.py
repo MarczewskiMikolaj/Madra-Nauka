@@ -370,8 +370,15 @@ def dashboard():
     for s in enriched_sets:
         next_date = s.get('next_review_date')
         is_new = not (s.get('days_completed') or []) and not (s.get('historia_nauki') or [])
-        if next_date == today_str or is_new:
+        # Dodaj zestawy z datą <= dzisiaj (również przeterminowane) lub nowe zestawy
+        if (next_date and next_date <= today_str) or is_new:
             due_today_sets.append(s)
+    
+    # Dodaj dzisiejszą datę do wszystkich zestawów dla porównania w szablonie
+    for s in enriched_sets:
+        s['today_date'] = today_str
+    for s in due_today_sets:
+        s['today_date'] = today_str
 
     return render_template('dashboard.html', username=session['username'], zestawy=enriched_sets, due_today_sets=due_today_sets, daily_streak=streak, month_rows=month_rows, month_name=month_name_pl, year=year)
 

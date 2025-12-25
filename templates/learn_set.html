@@ -18,30 +18,6 @@
             <h1>{{ zestaw.nazwa }}</h1>
             <p class="subtitle">Ucz się z fiszkami</p>
 
-            {% if zestaw.ostatnie_wyniki %}
-                {% if order and current_index < order|length %}
-                    {% set orig_index = order[current_index] %}
-                {% else %}
-                    {% set orig_index = current_index %}
-                {% endif %}
-                {% if orig_index is not none and orig_index < zestaw.ostatnie_wyniki|length %}
-                    {% set last_result = zestaw.ostatnie_wyniki[orig_index] %}
-                {% else %}
-                    {% set last_result = none %}
-                {% endif %}
-            {% endif %}
-            {% if last_result is defined and last_result is not none %}
-                {% if last_result == true %}
-                    <div style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); padding: 8px 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; color: #059669;">
-                        ✅ Ostatnio: <strong>Zrozumiałem</strong>
-                    </div>
-                {% elif last_result == false %}
-                    <div style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); padding: 8px 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; color: #b91c1c;">
-                        ❌ Ostatnio: <strong>Nie zrozumiałem</strong>
-                    </div>
-                {% endif %}
-            {% endif %}
-
             <div class="progress-text">
                 Fiszka {{ current_index + 1 }} z {{ zestaw.karty|length }}
             </div>
