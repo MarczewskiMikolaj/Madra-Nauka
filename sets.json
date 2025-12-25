@@ -10,16 +10,16 @@
           "tekst": "Jakie są dwa główne składniki systemu Oracle Database, które tworzą jego architekturę?",
           "odpowiedz": "Instancja systemu (procesy i SGA) oraz baza danych (pliki).",
           "statystyki": {
-            "pokazane": 2,
+            "pokazane": 4,
             "rozumiem": 0,
-            "nie_rozumiem": 2,
+            "nie_rozumiem": 4,
             "procent_sukcesu": 0.0,
             "opanowana": false,
             "streak_rozumiem": 0,
-            "streak_nie_rozumiem": 1,
+            "streak_nie_rozumiem": 3,
             "sessions_ok_streak": 0,
-            "fail_streak_sessions": 1,
-            "last_seen_date": "2025-12-21",
+            "fail_streak_sessions": 3,
+            "last_seen_date": "2025-12-25",
             "total_sessions_ok": 0,
             "next_due": null,
             "leech": false
@@ -1289,7 +1289,7 @@
         null,
         null
       ],
-      "data_ostatniej_nauki": "2025-12-21T12:03:20.320303+00:00",
+      "data_ostatniej_nauki": "2025-12-25T11:41:23.894729+00:00",
       "historia_nauki": [
         {
           "data": "2025-12-20",
@@ -1372,6 +1372,18 @@
         {
           "data": "2025-12-21",
           "timestamp": "2025-12-21T12:03:20.320303+00:00",
+          "zrozumiane": 0,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-25",
+          "timestamp": "2025-12-25T11:38:45.411468+00:00",
+          "zrozumiane": 0,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2025-12-25",
+          "timestamp": "2025-12-25T11:41:23.894729+00:00",
           "zrozumiane": 0,
           "niezrozumiane": 1
         }

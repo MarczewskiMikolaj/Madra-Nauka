@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/sets.css') }}">
     <style>
-        .card { max-width: 1200px; }
+        .card { max-width: 1400px; }
         .set-item-container {
             background: rgba(30,41,59,0.8);
             border: 1px solid rgba(148,163,184,0.1);
@@ -59,6 +59,12 @@
             padding: 4px 10px;
             font-size: 12px;
             font-weight: 600;
+        }
+        .review-pill.overdue {
+            background: rgba(239,68,68,0.14);
+            color: #ef4444;
+            border: 1px solid rgba(239,68,68,0.35);
+            font-weight: 700;
         }
         .mastery-pill.low {
             background: rgba(239,68,68,0.12);
@@ -138,6 +144,10 @@
         .calendar-day.inactive { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.2); color: #ef4444; }
         .calendar-day.streak { background: rgba(245,158,11,0.2); border-color: rgba(245,158,11,0.4); color: #f59e0b; }
         
+        @media (max-width: 1100px) {
+            .page-shell { flex-direction: column; }
+            .sidebar { width: 100%; position: static; }
+        }
         @media (max-width: 768px) {
             .set-item-container {
                 flex-direction: column;
@@ -212,53 +222,103 @@
         }
 
         /* Top bar with user info */
-        .topbar {
+        .page-shell {
             display: flex;
             align-items: flex-start;
-            justify-content: space-between;
-            gap: 12px;
-            margin-bottom: 20px;
+            gap: 16px;
         }
-        .topbar-title {
-            font-size: 22px;
-            font-weight: 700;
-            color: #f1f5f9;
+        .main-card {
+            flex: 1;
+            padding-top: 24px;
         }
-        .topbar-right {
+        .sidebar {
+            width: 280px;
+            background: rgba(15,23,42,0.8);
+            border: 1px solid rgba(148,163,184,0.18);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 14px 36px rgba(0,0,0,0.42);
+            backdrop-filter: blur(10px);
             display: flex;
             flex-direction: column;
-            align-items: flex-end;
-            gap: 10px;
+            gap: 12px;
+            position: sticky;
+            top: 16px;
         }
-        .user-badge {
-            display: inline-flex;
+        .user-panel {
+            display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 10px;
-            background: rgba(15,23,42,0.75);
-            border: 1px solid rgba(148,163,184,0.25);
-            border-radius: 999px;
-            padding: 6px 10px 6px 6px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+            justify-content: center;
+            gap: 6px;
+            background: transparent;
+            border: none;
+            border-radius: 12px;
+            padding: 8px 0 12px;
+            box-shadow: none;
         }
-        .user-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #6366f1, #14b8a6);
+        .module-panel {
+            background: linear-gradient(135deg, rgba(30,41,59,0.9), rgba(59,130,246,0.22));
+            border: 1px solid rgba(148,163,184,0.32);
+            border-radius: 14px;
+            padding: 14px;
+            box-shadow: 0 10px 24px rgba(0,0,0,0.38);
             display: grid;
-            place-items: center;
-            font-weight: 700;
-            color: #fff;
-            font-size: 14px;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            align-items: start;
+        }
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+            text-align: center;
+            align-items: center;
         }
         .user-name {
             color: #e2e8f0;
-            font-weight: 600;
-            font-size: 13px;
+            font-weight: 800;
+            font-size: 18px;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
-        .user-actions {
+        .user-subtitle {
+            color: #e2e8f0;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.1px;
+        }
+        .user-pill {
             display: inline-flex;
-            gap: 6px;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: 14px;
+            border: 1px solid rgba(148,163,184,0.28);
+            font-weight: 700;
+            font-size: 14px;
+            color: #e2e8f0;
+            background: rgba(30,41,59,0.75);
+            box-shadow: 0 8px 18px rgba(0,0,0,0.32);
+            width: 100%;
+        }
+        .user-pill.review {
+            background: linear-gradient(135deg, rgba(37,99,235,0.28), rgba(46,16,101,0.32));
+            border-color: rgba(59,130,246,0.4);
+            color: #c7d2fe;
+        }
+        .user-pill.streak {
+            background: linear-gradient(135deg, rgba(34,197,94,0.22), rgba(12,74,110,0.24));
+            border-color: rgba(52,211,153,0.42);
+            color: #c7f9cc;
+        }
+        .user-pill.goals {
+            background: linear-gradient(135deg, rgba(234,179,8,0.16), rgba(30,41,59,0.4));
+            border-color: rgba(234,179,8,0.35);
+            color: #fcd34d;
         }
         .btn-ghost-compact {
             background: rgba(148,163,184,0.08);
@@ -340,29 +400,116 @@
         <div class="bg-blob a"></div>
         <div class="bg-blob b"></div>
         
-        <div class="card">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <div class="flash-messages">
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ category }}">{{ message }}</div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            {% endwith %}
+        <div class="page-shell">
+            <div class="card main-card">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="flash-messages">
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">{{ message }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
 
-            <div class="topbar">
-                <div class="topbar-title">Panel główny</div>
-                <div class="topbar-right">
-                    <div class="user-badge">
-                        <div class="user-avatar">{{ username[0].upper() }}</div>
-                        <div class="user-name">{{ username }}</div>
-                        <div class="user-actions">
-                            <a href="{{ url_for('profile') }}" class="btn-ghost-compact btn-top-profile">👤 Profil</a>
-                            <a href="{{ url_for('logout') }}" class="btn-ghost-compact btn-top-logout">↩ Wyloguj</a>
+                    <div class="section-header">
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <h2>Twoje zestawy do nauki</h2>
+                            <input type="text" id="searchInput" placeholder="🔍 Szukaj zestawu..." style="width: 280px; padding: 10px 14px; background: rgba(30,41,59,0.8); border: 1px solid rgba(148,163,184,0.1); border-radius: 10px; color: #f1f5f9; font-size: 13px; outline: none; transition: all 0.2s ease;" onfocus="this.style.borderColor='rgba(99,102,241,0.4)'" onblur="this.style.borderColor='rgba(148,163,184,0.1)'" oninput="filterSets()">
+                        </div>
+                        <div class="actions" style="align-self: flex-end; margin-top: 8px;">
+                            <a href="{{ url_for('create_set') }}" class="btn primary" style="background: linear-gradient(90deg, #22c55e, #16a34a);">+ Nowy zestaw</a>
                         </div>
                     </div>
-                    
+
+                    {% if zestawy and zestawy|length > 0 %}
+                        <div class="sets-container" id="setsContainer">
+                            {% for z in zestawy %}
+                                <div class="set-item-container">
+                                    <div class="set-info-section">
+                                        <div class="set-title">{{ z.nazwa }}</div>
+                                        <div class="set-meta">
+                                            <span>{{ z.karty|length }} fiszek</span>
+                                            <span>•</span>
+                                            <span>{{ z.data_utworzenia[:10] }}</span>
+                                            <span>•</span>
+                                            <span class="mastery-pill {{ z.mastery_class }}">Opanowanie: {{ z.mastery_percent }}%</span>
+                                            {% if z.next_review_date %}
+                                                <span>•</span>
+                                                {% set review_date = z.next_review_date %}
+                                                {% set today = z.get('today_date', '') %}
+                                                {% if today and review_date < today %}
+                                                    <span class="review-pill overdue">Pilna powtórka</span>
+                                                {% else %}
+                                                    <span class="review-pill">Powtórka: {{ z.next_review_date }}</span>
+                                                {% endif %}
+                                            {% elif (not z.days_completed) and (not z.historia_nauki) %}
+                                                <span>•</span>
+                                                <span class="review-pill">Zaplanuj dziś</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="set-actions-section">
+                                        <button onclick="openLearnModal('{{ z.id }}')" class="btn primary" style="background: linear-gradient(90deg, #10b981, #059669); white-space: nowrap;">
+                                            🎯 Ucz się
+                                        </button>
+                                        <button onclick="openTestModal('{{ z.id }}')" class="btn primary" style="background: linear-gradient(90deg, #3b82f6, #2563eb); white-space: nowrap;">
+                                            📝 Test
+                                        </button>
+                                        <a href="{{ url_for('view_set', set_id=z.id) }}" class="btn primary" style="background: linear-gradient(90deg, #8b5cf6, #7c3aed); white-space: nowrap; text-decoration: none;">
+                                            👁️ Zobacz
+                                        </a>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p style="color:#64748b; margin-top: 18px; text-align: center;">Brak zestawów. Kliknij "+ Nowy zestaw", aby utworzyć pierwszy.</p>
+                    {% endif %}
+                </div>
+
+                <aside class="sidebar">
+                    <div class="user-panel">
+                        <div class="user-info">
+                            <div class="user-name">Witaj, {{ username }} 👋</div>
+                        </div>
+                    </div>
+
+                    <div class="user-actions" style="display:flex; gap:8px;">
+                        <a href="{{ url_for('profile') }}" class="btn-ghost-compact btn-top-profile" style="flex:1; justify-content:center;">👤 Profil</a>
+                        <a href="{{ url_for('logout') }}" class="btn-ghost-compact btn-top-logout" style="flex:1; justify-content:center;">↩ Wyloguj</a>
+                    </div>
+
+                    <div class="user-panel module-panel">
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <div class="user-pill review">📌 Do powtórki: {{ due_today_sets|length }}</div>
+                            <div class="streak-wrapper" style="width: 100%;">
+                                <div class="user-pill streak">🔥 Streak: {{ daily_streak }}</div>
+                                <div class="calendar-popover">
+                                    <div class="calendar-header">
+                                        <span class="month-label">{{ month_name }} {{ year }}</span>
+                                        <span style="font-size:11px; color:#94a3b8;">Aktywność</span>
+                                    </div>
+                                    <div class="calendar-weekdays">
+                                        <span>Pn</span><span>Wt</span><span>Śr</span><span>Czw</span><span>Pt</span><span>Sob</span><span>Niedz</span>
+                                    </div>
+                                    <div class="calendar-grid">
+                                        {% for row in month_rows %}
+                                            {% for cell in row %}
+                                                {% if cell %}
+                                                    <div class="calendar-day {{ 'active' if cell.active else 'inactive' }} {{ 'streak' if cell.streak else '' }}">{{ cell.day }}</div>
+                                                {% else %}
+                                                    <div class="calendar-day" style="opacity:.4;">&nbsp;</div>
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="user-pill goals">🚧 Wkrótce: Cele</div>
+                        </div>
+                    </div>
+
                     {% if due_today_sets and due_today_sets|length > 0 %}
                     <section class="due-section">
                         <h3>📌 Do powtórki dzisiaj</h3>
@@ -371,7 +518,13 @@
                             <li class="due-item" onclick="window.location.href='{{ url_for('view_set', set_id=zs['id']) }}'">
                                 <a href="{{ url_for('view_set', set_id=zs['id']) }}">{{ zs['nazwa'] }}</a>
                                 {% if zs.get('next_review_date') %}
-                                    <span class="review-pill">{{ zs.get('next_review_date') }}</span>
+                                    {% set review_date = zs.get('next_review_date') %}
+                                    {% set today = zs.get('today_date', '') %}
+                                    {% if today and review_date < today %}
+                                        <span class="review-pill overdue">Pilna powtórka</span>
+                                    {% else %}
+                                        <span class="review-pill">{{ zs.get('next_review_date') }}</span>
+                                    {% endif %}
                                 {% else %}
                                     <span class="review-pill">Zaplanuj dziś</span>
                                 {% endif %}
@@ -380,87 +533,8 @@
                         </ul>
                     </section>
                     {% endif %}
-                </div>
+                </aside>
             </div>
-
-            <div class="welcome">
-                <h2>Witaj, {{ username }}! 👋</h2>
-                <p>Twoja platforma do nauki z fiszkami jest gotowa</p>
-                <div class="streak-wrapper">
-                    <div class="streak-pill" title="Codzienny streak (ciąg dni z aktywnością)">🔥 Streak: {{ daily_streak }} {{ 'dzień' if daily_streak == 1 else 'dni' }}</div>
-                    <div class="calendar-popover">
-                        <div class="calendar-header">
-                            <span class="month-label">{{ month_name }} {{ year }}</span>
-                            <span style="font-size:11px; color:#94a3b8;">Aktywność</span>
-                        </div>
-                        <div class="calendar-weekdays">
-                            <span>Pn</span><span>Wt</span><span>Śr</span><span>Czw</span><span>Pt</span><span>Sob</span><span>Niedz</span>
-                        </div>
-                        <div class="calendar-grid">
-                            {% for row in month_rows %}
-                                {% for cell in row %}
-                                    {% if cell %}
-                                        <div class="calendar-day {{ 'active' if cell.active else 'inactive' }} {{ 'streak' if cell.streak else '' }}">{{ cell.day }}</div>
-                                    {% else %}
-                                        <div class="calendar-day" style="opacity:.4;">&nbsp;</div>
-                                    {% endif %}
-                                {% endfor %}
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="section-header">
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <h2>Twoje zestawy</h2>
-                    <input type="text" id="searchInput" placeholder="🔍 Szukaj zestawu..." style="width: 280px; padding: 10px 14px; background: rgba(30,41,59,0.8); border: 1px solid rgba(148,163,184,0.1); border-radius: 10px; color: #f1f5f9; font-size: 13px; outline: none; transition: all 0.2s ease;" onfocus="this.style.borderColor='rgba(99,102,241,0.4)'" onblur="this.style.borderColor='rgba(148,163,184,0.1)'" oninput="filterSets()">
-                </div>
-                <div class="actions">
-                    <a href="{{ url_for('profile') }}" class="btn primary" style="background: linear-gradient(90deg, #3b82f6, #2563eb);">👤 Profil</a>
-                    <a href="{{ url_for('create_set') }}" class="btn primary" style="background: linear-gradient(90deg, #22c55e, #16a34a);">+ Nowy zestaw</a>
-                    <a href="{{ url_for('logout') }}" class="btn primary" style="background: linear-gradient(90deg, #f43f5e, #e11d48);">Wyloguj się</a>
-                </div>
-            </div>
-
-            {% if zestawy and zestawy|length > 0 %}
-                <div class="sets-container" id="setsContainer">
-                    {% for z in zestawy %}
-                        <div class="set-item-container">
-                            <div class="set-info-section">
-                                <div class="set-title">{{ z.nazwa }}</div>
-                                <div class="set-meta">
-                                    <span>{{ z.karty|length }} fiszek</span>
-                                    <span>•</span>
-                                    <span>{{ z.data_utworzenia[:10] }}</span>
-                                    <span>•</span>
-                                    <span class="mastery-pill {{ z.mastery_class }}">Opanowanie: {{ z.mastery_percent }}%</span>
-                                    {% if z.next_review_date %}
-                                        <span>•</span>
-                                        <span class="review-pill">Powtórka: {{ z.next_review_date }}</span>
-                                    {% elif (not z.days_completed) and (not z.historia_nauki) %}
-                                        <span>•</span>
-                                        <span class="review-pill">Zaplanuj dziś</span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="set-actions-section">
-                                <button onclick="openLearnModal('{{ z.id }}')" class="btn primary" style="background: linear-gradient(90deg, #10b981, #059669); white-space: nowrap;">
-                                    🎯 Ucz się
-                                </button>
-                                <button onclick="openTestModal('{{ z.id }}')" class="btn primary" style="background: linear-gradient(90deg, #3b82f6, #2563eb); white-space: nowrap;">
-                                    📝 Test
-                                </button>
-                                <a href="{{ url_for('view_set', set_id=z.id) }}" class="btn primary" style="background: linear-gradient(90deg, #8b5cf6, #7c3aed); white-space: nowrap; text-decoration: none;">
-                                    👁️ Zobacz
-                                </a>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <p style="color:#64748b; margin-top: 18px; text-align: center;">Brak zestawów. Kliknij "+ Nowy zestaw", aby utworzyć pierwszy.</p>
-            {% endif %}
         </div>
     </div>
 
