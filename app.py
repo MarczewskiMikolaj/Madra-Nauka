@@ -63,6 +63,8 @@ def load_users():
                 return ([], None)
         except Exception as e:
             print(f"Błąd podczas wczytywania użytkowników (lokalnie): {e}")
+            import traceback
+            traceback.print_exc()
             return ([], None)
     
     # Wersja cloud - Google Cloud Storage
@@ -72,6 +74,7 @@ def load_users():
         blob = bucket.blob(USERS_FILE_NAME)
         
         if not blob.exists():
+            print(f"Plik {USERS_FILE_NAME} nie istnieje w bucket {BUCKET_NAME}")
             return ([], None)
         
         # Pobierz dane wraz z generacją
@@ -108,6 +111,8 @@ def load_users():
         return ([], generation)
     except Exception as e:
         print(f"Błąd podczas wczytywania użytkowników (cloud): {e}")
+        import traceback
+        traceback.print_exc()
         return ([], None)
 
 def save_users(users_data, expected_generation=None, max_retries=3):
@@ -203,6 +208,8 @@ def load_sets():
                 return ([], None)
         except Exception as e:
             print(f"Błąd podczas wczytywania zestawów (lokalnie): {e}")
+            import traceback
+            traceback.print_exc()
             return ([], None)
     
     # Wersja cloud - Google Cloud Storage
@@ -212,6 +219,7 @@ def load_sets():
         blob = bucket.blob(SETS_FILE_NAME)
         
         if not blob.exists():
+            print(f"Plik {SETS_FILE_NAME} nie istnieje w bucket {BUCKET_NAME}")
             return ([], None)
         
         # Pobierz dane wraz z generacją (dla optymistic locking)
@@ -230,6 +238,8 @@ def load_sets():
         return ([], generation)
     except Exception as e:
         print(f"Błąd podczas wczytywania zestawów (cloud): {e}")
+        import traceback
+        traceback.print_exc()
         return ([], None)
 
 def save_sets(sets_data, expected_generation=None, max_retries=3):
