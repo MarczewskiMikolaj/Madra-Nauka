@@ -9,5 +9,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 EXPOSE 8080
 
 ENV PORT=8080
+ENV USE_CLOUD_STORAGE=true
+ENV USERS_BUCKET_NAME=python-fiszki-users
 
 CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app:app"]

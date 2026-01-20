@@ -32,21 +32,22 @@ def get_storage_client():
     return storage.Client()
 
 def load_users():
-    """Wczytaj użytkowników - z GCS (produkcja) lub lokalnie (development)."""
+    """Wczytaj użytkowników - z GCS (produkcja) lub lokalnie (development).
+    Zwraca tuple: (users_data, generation) dla GCS lub (users_data, None) dla lokalnego."""
     if not USE_CLOUD_STORAGE:
         # Wersja lokalna - pliki na dysku
         if not os.path.exists(USERS_FILE):
-            return []
+            return ([], None)
         try:
             with open(USERS_FILE, 'rb') as f:
                 encrypted_data = f.read()
                 if not encrypted_data:
-                    return []
+                    return ([], None)
                 decrypted_data = cipher.decrypt(encrypted_data)
                 data = json.loads(decrypted_data.decode('utf-8'))
                 
                 if isinstance(data, dict) and 'users' in data and isinstance(data['users'], list):
-                    return data['users']
+                    return (data['users'], None)
                 if isinstance(data, dict):
                     migrated = []
                     for login, info in data.items():
@@ -56,13 +57,13 @@ def load_users():
                             'data_utworzenia': info.get('data_utworzenia')
                         }
                         migrated.append(item)
-                    return migrated
+                    return (migrated, None)
                 if isinstance(data, list):
-                    return data
-                return []
+                    return (data, None)
+                return ([], None)
         except Exception as e:
             print(f"Błąd podczas wczytywania użytkowników (lokalnie): {e}")
-            return []
+            return ([], None)
     
     # Wersja cloud - Google Cloud Storage
     try:
@@ -71,18 +72,22 @@ def load_users():
         blob = bucket.blob(USERS_FILE_NAME)
         
         if not blob.exists():
-            return []
+            return ([], None)
         
+        # Pobierz dane wraz z generacją
+        blob.reload()
         encrypted_data = blob.download_as_bytes()
+        generation = blob.generation
+        
         if not encrypted_data:
-            return []
+            return ([], generation)
         
         decrypted_data = cipher.decrypt(encrypted_data)
         data = json.loads(decrypted_data.decode('utf-8'))
         
         # Obsługa formatu: {"users": [...]} 
         if isinstance(data, dict) and 'users' in data and isinstance(data['users'], list):
-            return data['users']
+            return (data['users'], generation)
         
         # Obsługa starego formatu: {"login": {"haslo": ..., "data_utworzenia": ...}, ...}
         if isinstance(data, dict):
@@ -94,19 +99,29 @@ def load_users():
                     'data_utworzenia': info.get('data_utworzenia')
                 }
                 migrated.append(item)
-            return migrated
+            return (migrated, generation)
         
         # Jeśli już lista
         if isinstance(data, list):
-            return data
+            return (data, generation)
         
-        return []
+        return ([], generation)
     except Exception as e:
         print(f"Błąd podczas wczytywania użytkowników (cloud): {e}")
-        return []
+        return ([], None)
 
-def save_users(users_data):
-    """Zapisz użytkowników - do GCS (produkcja) lub lokalnie (development)."""
+def save_users(users_data, expected_generation=None, max_retries=3):
+    """Zapisz użytkowników - do GCS (produkcja) lub lokalnie (development).
+    
+    Args:
+        users_data: dane do zapisania
+        expected_generation: oczekiwana generacja dla optymistic locking (tylko GCS)
+        max_retries: maksymalna liczba prób w przypadku konfliktu
+    
+    Returns:
+        True jeśli zapis się powiódł, False w przeciwnym razie
+    """
+    global users, users_generation
     if not USE_CLOUD_STORAGE:
         # Wersja lokalna - pliki na dysku
         try:
@@ -115,43 +130,80 @@ def save_users(users_data):
             encrypted_data = cipher.encrypt(json_data)
             with open(USERS_FILE, 'wb') as f:
                 f.write(encrypted_data)
+            users = users_data  # Aktualizuj globalną zmienną
+            return True
         except Exception as e:
             print(f"Błąd podczas zapisywania użytkowników (lokalnie): {e}")
-        return
+            return False
     
-    # Wersja cloud - Google Cloud Storage
-    try:
-        wrapper = {'users': users_data}
-        json_data = json.dumps(wrapper, indent=2, ensure_ascii=False).encode('utf-8')
-        encrypted_data = cipher.encrypt(json_data)
-        
-        client = get_storage_client()
-        bucket = client.bucket(BUCKET_NAME)
-        blob = bucket.blob(USERS_FILE_NAME)
-        blob.upload_from_string(encrypted_data, content_type='application/octet-stream')
-    except Exception as e:
-        print(f"Błąd podczas zapisywania użytkowników (cloud): {e}")
+    # Wersja cloud - Google Cloud Storage z retry logic
+    from google.api_core import exceptions as gcp_exceptions
+    
+    for attempt in range(max_retries):
+        try:
+            wrapper = {'users': users_data}
+            json_data = json.dumps(wrapper, indent=2, ensure_ascii=False).encode('utf-8')
+            encrypted_data = cipher.encrypt(json_data)
+            
+            client = get_storage_client()
+            bucket = client.bucket(BUCKET_NAME)
+            blob = bucket.blob(USERS_FILE_NAME)
+            
+            # Użyj if_generation_match dla optymistic locking
+            if expected_generation is not None:
+                blob.upload_from_string(
+                    encrypted_data,
+                    content_type='application/octet-stream',
+                    if_generation_match=expected_generation
+                )
+            else:
+                blob.upload_from_string(encrypted_data, content_type='application/octet-stream')
+            
+            # Aktualizuj globalną zmienną i generację
+            users = users_data
+            blob.reload()
+            users_generation = blob.generation
+            return True
+            
+        except gcp_exceptions.PreconditionFailed:
+            # Konflikt - ktoś inny zmodyfikował plik
+            print(f"Konflikt przy zapisie użytkowników (próba {attempt + 1}/{max_retries})")
+            if attempt < max_retries - 1:
+                # Przeładuj dane i spróbuj ponownie
+                import time
+                time.sleep(0.1 * (attempt + 1))  # Exponential backoff
+                continue
+            else:
+                print("Nie udało się zapisać użytkowników po wszystkich próbach")
+                return False
+                
+        except Exception as e:
+            print(f"Błąd podczas zapisywania użytkowników (cloud): {e}")
+            return False
+    
+    return False
 
 # Wczytaj użytkowników przy starcie aplikacji
-users = load_users()
+users, users_generation = load_users()
 
 def load_sets():
-    """Wczytaj zestawy fiszek - z GCS (produkcja) lub lokalnie (development)."""
+    """Wczytaj zestawy fiszek - z GCS (produkcja) lub lokalnie (development).
+    Zwraca tuple: (sets_data, generation) dla GCS lub (sets_data, None) dla lokalnego."""
     if not USE_CLOUD_STORAGE:
         # Wersja lokalna - pliki na dysku
         if not os.path.exists(SETS_FILE):
-            return []
+            return ([], None)
         try:
             with open(SETS_FILE, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 if isinstance(data, dict) and 'sets' in data and isinstance(data['sets'], list):
-                    return data['sets']
+                    return (data['sets'], None)
                 if isinstance(data, list):
-                    return data
-                return []
+                    return (data, None)
+                return ([], None)
         except Exception as e:
             print(f"Błąd podczas wczytywania zestawów (lokalnie): {e}")
-            return []
+            return ([], None)
     
     # Wersja cloud - Google Cloud Storage
     try:
@@ -160,49 +212,99 @@ def load_sets():
         blob = bucket.blob(SETS_FILE_NAME)
         
         if not blob.exists():
-            return []
+            return ([], None)
         
+        # Pobierz dane wraz z generacją (dla optymistic locking)
+        blob.reload()
         data_str = blob.download_as_text()
+        generation = blob.generation
+        
         if not data_str.strip():
-            return []
+            return ([], generation)
         
         data = json.loads(data_str)
         if isinstance(data, dict) and 'sets' in data and isinstance(data['sets'], list):
-            return data['sets']
+            return (data['sets'], generation)
         if isinstance(data, list):
-            return data
-        return []
+            return (data, generation)
+        return ([], generation)
     except Exception as e:
         print(f"Błąd podczas wczytywania zestawów (cloud): {e}")
-        return []
+        return ([], None)
 
-def save_sets(sets_data):
-    """Zapisz zestawy fiszek - do GCS (produkcja) lub lokalnie (development)."""
+def save_sets(sets_data, expected_generation=None, max_retries=3):
+    """Zapisz zestawy fiszek - do GCS (produkcja) lub lokalnie (development).
+    
+    Args:
+        sets_data: dane do zapisania
+        expected_generation: oczekiwana generacja dla optymistic locking (tylko GCS)
+        max_retries: maksymalna liczba prób w przypadku konfliktu
+    
+    Returns:
+        True jeśli zapis się powiódł, False w przeciwnym razie
+    """
+    global sets, sets_generation
     if not USE_CLOUD_STORAGE:
         # Wersja lokalna - pliki na dysku
         try:
             wrapper = {'sets': sets_data}
             with open(SETS_FILE, 'w', encoding='utf-8') as f:
                 json.dump(wrapper, f, indent=2, ensure_ascii=False)
+            sets = sets_data  # Aktualizuj globalną zmienną
+            return True
         except Exception as e:
             print(f"Błąd podczas zapisywania zestawów (lokalnie): {e}")
-        return
+            return False
     
-    # Wersja cloud - Google Cloud Storage
-    try:
-        wrapper = {'sets': sets_data}
-        client = get_storage_client()
-        bucket = client.bucket(BUCKET_NAME)
-        blob = bucket.blob(SETS_FILE_NAME)
-        blob.upload_from_string(
-            json.dumps(wrapper, ensure_ascii=False, indent=2),
-            content_type='application/json'
-        )
-    except Exception as e:
-        print(f"Błąd podczas zapisywania zestawów (cloud): {e}")
+    # Wersja cloud - Google Cloud Storage z retry logic
+    from google.api_core import exceptions as gcp_exceptions
+    
+    for attempt in range(max_retries):
+        try:
+            wrapper = {'sets': sets_data}
+            client = get_storage_client()
+            bucket = client.bucket(BUCKET_NAME)
+            blob = bucket.blob(SETS_FILE_NAME)
+            
+            # Użyj if_generation_match dla optymistic locking
+            if expected_generation is not None:
+                blob.upload_from_string(
+                    json.dumps(wrapper, ensure_ascii=False, indent=2),
+                    content_type='application/json',
+                    if_generation_match=expected_generation
+                )
+            else:
+                blob.upload_from_string(
+                    json.dumps(wrapper, ensure_ascii=False, indent=2),
+                    content_type='application/json'
+                )
+            
+            # Aktualizuj globalną zmienną i generację
+            sets = sets_data
+            blob.reload()
+            sets_generation = blob.generation
+            return True
+            
+        except gcp_exceptions.PreconditionFailed:
+            # Konflikt - ktoś inny zmodyfikował plik
+            print(f"Konflikt przy zapisie zestawów (próba {attempt + 1}/{max_retries})")
+            if attempt < max_retries - 1:
+                # Przeładuj dane i spróbuj ponownie
+                import time
+                time.sleep(0.1 * (attempt + 1))  # Exponential backoff
+                continue
+            else:
+                print("Nie udało się zapisać zestawów po wszystkich próbach")
+                return False
+                
+        except Exception as e:
+            print(f"Błąd podczas zapisywania zestawów (cloud): {e}")
+            return False
+    
+    return False
 
 # Wczytaj zestawy przy starcie aplikacji
-sets = load_sets()
+sets, sets_generation = load_sets()
 
 @app.route('/')
 def index():
@@ -213,6 +315,11 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
+        
+        # Przeładuj dane użytkowników z Cloud Storage
+        global users
+        if USE_CLOUD_STORAGE:
+            users = load_users()
         
         # Znajdź użytkownika po loginie w liście
         user = next((u for u in users if u.get('login') == username), None)
@@ -232,6 +339,11 @@ def register():
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
         
+        # Przeładuj dane użytkowników z Cloud Storage
+        global users
+        if USE_CLOUD_STORAGE:
+            users = load_users()
+        
         # Sprawdź, czy login już istnieje
         if any(u.get('login') == username for u in users):
             flash('Nazwa użytkownika już istnieje', 'error')
@@ -246,7 +358,7 @@ def register():
                 'data_utworzenia': datetime.now(timezone.utc).isoformat()
             }
             users.append(new_user)
-            save_users(users)
+            save_users(users, users_generation)
             flash('Rejestracja zakończona sukcesem! Zaloguj się.', 'success')
             return redirect(url_for('login'))
     
@@ -256,6 +368,10 @@ def register():
 def dashboard():
     if 'username' not in session:
         return redirect(url_for('login'))
+    # Przeładuj dane z Cloud Storage, aby mieć świeże dane
+    global sets, sets_generation
+    if USE_CLOUD_STORAGE:
+        sets, sets_generation = load_sets()
     # Pokaż zestawy użytkownika na stronie głównej
     user_sets = [s for s in sets if s.get('autor') == session['username']]
 
@@ -393,6 +509,11 @@ def profile():
     if 'username' not in session:
         return redirect(url_for('login'))
     
+    # Przeładuj dane z Cloud Storage
+    global sets, sets_generation
+    if USE_CLOUD_STORAGE:
+        sets, sets_generation = load_sets()
+    
     username = session['username']
     user_sets = [s for s in sets if s.get('autor') == username]
     
@@ -510,7 +631,7 @@ def zestawy():
 
 @app.route('/zestawy/nowy', methods=['GET', 'POST'])
 def create_set():
-    global sets
+    global sets, sets_generation
     
     if 'username' not in session:
         return redirect(url_for('login'))
@@ -611,9 +732,9 @@ def create_set():
         }
 
         sets.append(new_set)
-        save_sets(sets)
+        save_sets(sets, sets_generation)
         # Odśwież zestawy po zapisie aby mieć pewność synchronizacji
-        sets = load_sets()
+        sets, sets_generation = load_sets()
         flash('Zestaw został utworzony!', 'success')
         return redirect(url_for('zestawy'))
 
@@ -623,6 +744,11 @@ def create_set():
 def view_set(set_id):
     if 'username' not in session:
         return redirect(url_for('login'))
+    
+    # Przeładuj dane z Cloud Storage
+    global sets, sets_generation
+    if USE_CLOUD_STORAGE:
+        sets, sets_generation = load_sets()
     
     # Znajdź zestaw
     zestaw = next((s for s in sets if s.get('id') == set_id), None)
@@ -704,10 +830,15 @@ def view_set(set_id):
 
 @app.route('/zestawy/<set_id>/edytuj', methods=['GET', 'POST'])
 def edit_set(set_id):
-    global sets
+    global sets, sets_generation
     
     if 'username' not in session:
         return redirect(url_for('login'))
+    
+    # Przeładuj dane z Cloud Storage
+    if USE_CLOUD_STORAGE:
+        sets, sets_generation = load_sets()
+        sets = load_sets()
     
     # Znajdź zestaw
     zestaw = next((s for s in sets if s.get('id') == set_id), None)
@@ -781,8 +912,8 @@ def edit_set(set_id):
         # Aktualizuj zestaw
         zestaw['nazwa'] = nazwa
         zestaw['karty'] = karty
-        save_sets(sets)
-        sets = load_sets()
+        save_sets(sets, sets_generation)
+        sets, sets_generation = load_sets()
         flash('Zestaw został zaktualizowany!', 'success')
         return redirect(url_for('view_set', set_id=set_id))
     
@@ -790,10 +921,15 @@ def edit_set(set_id):
 
 @app.route('/zestawy/<set_id>/usun', methods=['POST'])
 def delete_set(set_id):
-    global sets
+    global sets, sets_generation
     
     if 'username' not in session:
         return redirect(url_for('login'))
+    
+    # Przeładuj dane z Cloud Storage
+    if USE_CLOUD_STORAGE:
+        sets, sets_generation = load_sets()
+        sets = load_sets()
     
     # Znajdź zestaw
     zestaw = next((s for s in sets if s.get('id') == set_id), None)
@@ -808,8 +944,7 @@ def delete_set(set_id):
     
     # Usuń zestaw z listy
     sets.remove(zestaw)
-    save_sets(sets)
-    sets = load_sets()
+    save_sets(sets, sets_generation)
     
     flash(f'Zestaw "{zestaw["nazwa"]}" został usunięty.', 'success')
     return redirect(url_for('dashboard'))
@@ -818,6 +953,11 @@ def delete_set(set_id):
 def learn_set(set_id):
     if 'username' not in session:
         return redirect(url_for('login'))
+    
+    # Przeładuj dane z Cloud Storage
+    global sets, sets_generation
+    if USE_CLOUD_STORAGE:
+        sets, sets_generation = load_sets()
     
     # Znajdź zestaw
     zestaw = next((s for s in sets if s.get('id') == set_id), None)
@@ -896,10 +1036,14 @@ def learn_set(set_id):
 
 @app.route('/zestawy/<set_id>/ucz-sie/<int:card_index>', methods=['GET', 'POST'])
 def learn_card(set_id, card_index):
-    global sets
+    global sets, sets_generation
     
     if 'username' not in session:
         return redirect(url_for('login'))
+    
+    # Przeładuj dane z Cloud Storage
+    if USE_CLOUD_STORAGE:
+        sets, sets_generation = load_sets()
     
     # Znajdź zestaw
     zestaw = next((s for s in sets if s.get('id') == set_id), None)
@@ -974,8 +1118,8 @@ def learn_card(set_id, card_index):
                 karta['statystyki']['opanowana'] = True
             
             # Zapisz zmiany do pliku
-            save_sets(sets)
-            sets = load_sets()
+            save_sets(sets, sets_generation)
+            sets, sets_generation = load_sets()
         
         # Jeśli nie rozumie, dodaj do listy trudnych fiszek w sesji (dla starych użytkowników)
         if not understood:
@@ -1011,10 +1155,14 @@ def learn_card(set_id, card_index):
 
 @app.route('/zestawy/<set_id>/podsumowanie')
 def learn_summary(set_id):
-    global sets
+    global sets, sets_generation
     
     if 'username' not in session:
         return redirect(url_for('login'))
+    
+    # Przeładuj dane z Cloud Storage
+    if USE_CLOUD_STORAGE:
+        sets, sets_generation = load_sets()
     
     # Znajdź zestaw
     zestaw = next((s for s in sets if s.get('id') == set_id), None)
@@ -1142,8 +1290,8 @@ def learn_summary(set_id):
         except Exception:
             pass
 
-        save_sets(sets)
-        sets = load_sets()
+        save_sets(sets, sets_generation)
+        sets, sets_generation = load_sets()
     
     # Wyczyść sesję
     if results_key in session:
@@ -1167,6 +1315,11 @@ def learn_summary(set_id):
 def test_set(set_id):
     if 'username' not in session:
         return redirect(url_for('login'))
+    
+    # Przeładuj dane z Cloud Storage
+    global sets, sets_generation
+    if USE_CLOUD_STORAGE:
+        sets, sets_generation = load_sets()
     
     # Znajdź zestaw
     zestaw = next((s for s in sets if s.get('id') == set_id), None)
@@ -1257,6 +1410,11 @@ def test_question(set_id, question_index):
     if 'username' not in session:
         return redirect(url_for('login'))
     
+    # Przeładuj dane z Cloud Storage
+    global sets, sets_generation
+    if USE_CLOUD_STORAGE:
+        sets, sets_generation = load_sets()
+    
     # Znajdź zestaw
     zestaw = next((s for s in sets if s.get('id') == set_id), None)
     if not zestaw:
@@ -1309,10 +1467,14 @@ def test_question(set_id, question_index):
 
 @app.route('/zestawy/<set_id>/test/summary')
 def test_summary_route(set_id):
-    global sets
+    global sets, sets_generation
     
     if 'username' not in session:
         return redirect(url_for('login'))
+    
+    # Przeładuj dane z Cloud Storage
+    if USE_CLOUD_STORAGE:
+        sets, sets_generation = load_sets()
     
     # Znajdź zestaw
     zestaw = next((s for s in sets if s.get('id') == set_id), None)
@@ -1345,8 +1507,7 @@ def test_summary_route(set_id):
         'procent': round(percentage, 1)
     })
     
-    save_sets(sets)
-    sets = load_sets()
+    save_sets(sets, sets_generation)
     
     # Wyczyść sesję testu
     for key in [f'test_{set_id}_questions', f'test_{set_id}_current', f'test_{set_id}_results']:
