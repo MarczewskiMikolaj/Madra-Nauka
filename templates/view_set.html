@@ -282,10 +282,6 @@
                             {% endif %}
                             {% if karta.statystyki and karta.statystyki.opanowana %}
                                 <span class="flashcard-stats mastered">⭐ Opanowana</span>
-                                {% if karta.statystyki.next_due %}
-                                    {% set due_date = karta.statystyki.next_due %}
-                                    {% set today = (cycler.next() and '') %}
-                                {% endif %}
                             {% endif %}
                             <div class="flashcard-content">
                                 <div class="flashcard-side">
