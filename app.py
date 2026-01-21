@@ -90,7 +90,15 @@ def load_users():
         
         # Obsługa formatu: {"users": [...]} 
         if isinstance(data, dict) and 'users' in data and isinstance(data['users'], list):
-            return (data['users'], generation)
+            users_list = data['users']
+            # Walidacja: upewnij się że każdy element to słownik
+            valid_users = []
+            for item in users_list:
+                if isinstance(item, dict):
+                    valid_users.append(item)
+                else:
+                    print(f"OSTRZEŻENIE: Nieprawidłowy format użytkownika: {item}")
+            return (valid_users, generation)
         
         # Obsługa starego formatu: {"login": {"haslo": ..., "data_utworzenia": ...}, ...}
         if isinstance(data, dict):
@@ -327,9 +335,14 @@ def login():
         password = request.form.get('password')
         
         # Przeładuj dane użytkowników z Cloud Storage
-        global users
+        global users, users_generation
         if USE_CLOUD_STORAGE:
-            users = load_users()
+            users, users_generation = load_users()
+        
+        # Debug: sprawdź typ i zawartość users
+        print(f"DEBUG login: type(users)={type(users)}, len={len(users) if isinstance(users, list) else 'N/A'}")
+        if isinstance(users, list) and len(users) > 0:
+            print(f"DEBUG login: type(users[0])={type(users[0])}, first_element={users[0]}")
         
         # Znajdź użytkownika po loginie w liście
         user = next((u for u in users if u.get('login') == username), None)
@@ -350,9 +363,9 @@ def register():
         confirm_password = request.form.get('confirm_password')
         
         # Przeładuj dane użytkowników z Cloud Storage
-        global users
+        global users, users_generation
         if USE_CLOUD_STORAGE:
-            users = load_users()
+            users, users_generation = load_users()
         
         # Sprawdź, czy login już istnieje
         if any(u.get('login') == username for u in users):
