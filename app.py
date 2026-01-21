@@ -240,9 +240,24 @@ def load_sets():
         
         data = json.loads(data_str)
         if isinstance(data, dict) and 'sets' in data and isinstance(data['sets'], list):
-            return (data['sets'], generation)
+            sets_list = data['sets']
+            # Walidacja: upewnij się że każdy element to słownik
+            valid_sets = []
+            for item in sets_list:
+                if isinstance(item, dict):
+                    valid_sets.append(item)
+                else:
+                    print(f"OSTRZEŻENIE: Nieprawidłowy format zestawu: {type(item)} - {item}")
+            return (valid_sets, generation)
         if isinstance(data, list):
-            return (data, generation)
+            # Walidacja dla formatu bez wrappera
+            valid_sets = []
+            for item in data:
+                if isinstance(item, dict):
+                    valid_sets.append(item)
+                else:
+                    print(f"OSTRZEŻENIE: Nieprawidłowy format zestawu: {type(item)} - {item}")
+            return (valid_sets, generation)
         return ([], generation)
     except Exception as e:
         print(f"Błąd podczas wczytywania zestawów (cloud): {e}")
@@ -861,7 +876,6 @@ def edit_set(set_id):
     # Przeładuj dane z Cloud Storage
     if USE_CLOUD_STORAGE:
         sets, sets_generation = load_sets()
-        sets = load_sets()
     
     # Znajdź zestaw
     zestaw = next((s for s in sets if s.get('id') == set_id), None)
@@ -952,7 +966,6 @@ def delete_set(set_id):
     # Przeładuj dane z Cloud Storage
     if USE_CLOUD_STORAGE:
         sets, sets_generation = load_sets()
-        sets = load_sets()
     
     # Znajdź zestaw
     zestaw = next((s for s in sets if s.get('id') == set_id), None)
