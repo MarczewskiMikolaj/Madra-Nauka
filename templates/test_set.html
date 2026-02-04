@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Test: {{ zestaw.nazwa }} - Fiszki</title>
+    <title>Test: {{ zestaw.nazwa }} - Mądra Nauka</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
         .app { padding: 12px 10px; }
@@ -147,8 +147,8 @@
                     <div class="options-container">
                         {% for option in question.options %}
                         <label class="option-item">
-                            <input type="radio" name="answer" value="{{ option }}" required>
-                            <span class="option-text">{{ option }}</span>
+                            <input type="radio" name="answer" value="{{ option.value }}" required>
+                            <span class="option-text">{{ option.text }}</span>
                         </label>
                         {% endfor %}
                     </div>

@@ -3,7 +3,16 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Fiszki - Ucz się mądrzej</title>
+    <title>Mądra Nauka - Platforma do Efektywnej Nauki</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Mądra Nauka">
+    <link rel="manifest" href="{{ url_for('manifest') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192x192.png') }}">
+    
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
@@ -12,8 +21,8 @@
         <div class="bg-blob b"></div>
         
         <div class="card">
-            <h1>Fiszki</h1>
-            <p class="subtitle">Ucz się mądrzej z interaktywnymi fiszkami. Zaloguj się, aby rozpocząć swoją naukę.</p>
+            <h1>Mądra Nauka</h1>
+            <p class="subtitle">Platforma do efektywnej nauki. Fiszki, testy i inteligentne powtórki. Zaloguj się, aby rozpocząć.</p>
             
             <div class="actions">
                 <a href="{{ url_for('login') }}" class="btn primary">Zaloguj się</a>
@@ -21,5 +30,20 @@
             </div>
         </div>
     </div>
+    
+    <script>
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => {
+                        console.log('✅ Service Worker zarejestrowany:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('❌ Błąd rejestracji Service Workera:', error);
+                    });
+            });
+        }
+    </script>
 </body>
 </html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Podgląd Logo - Mądra Nauka PWA</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 40px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 40px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+        .icon-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            transition: transform 0.2s;
+        }
+        .icon-card:hover {
+            transform: translateY(-5px);
+        }
+        .icon-card img {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+        .size-label {
+            color: #6366f1;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .preview-section {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-top: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        }
+        .preview-section h2 {
+            color: #1e293b;
+            margin-bottom: 30px;
+        }
+        .device-preview {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .iphone-mockup {
+            width: 300px;
+            height: 600px;
+            background: #1e293b;
+            border-radius: 40px;
+            padding: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .iphone-screen {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border-radius: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .home-icon {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 15px;
+            margin: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .home-icon img {
+            width: 80px;
+            height: 80px;
+            display: block;
+        }
+        .app-name {
+            color: white;
+            font-size: 12px;
+            margin-top: 8px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .info-box {
+            background: #f1f5f9;
+            border-left: 4px solid #6366f1;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+        .info-box h3 {
+            margin-top: 0;
+            color: #1e293b;
+        }
+        .info-box ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .info-box li {
+            margin: 8px 0;
+            color: #475569;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Logo Aplikacji Mądra Nauka - PWA</h1>
+        
+        <div class="grid">
+            <div class="icon-card">
+                <img src="icon-72x72.png" alt="72x72">
+                <div class="size-label">72 × 72</div>
+            </div>
+            <div class="icon-card">
+                <img src="icon-96x96.png" alt="96x96">
+                <div class="size-label">96 × 96</div>
+            </div>
+            <div class="icon-card">
+                <img src="icon-128x128.png" alt="128x128">
+                <div class="size-label">128 × 128</div>
+            </div>
+            <div class="icon-card">
+                <img src="icon-144x144.png" alt="144x144">
+                <div class="size-label">144 × 144</div>
+            </div>
+            <div class="icon-card">
+                <img src="icon-152x152.png" alt="152x152">
+                <div class="size-label">152 × 152</div>
+            </div>
+            <div class="icon-card">
+                <img src="icon-192x192.png" alt="192x192">
+                <div class="size-label">192 × 192</div>
+            </div>
+            <div class="icon-card">
+                <img src="icon-384x384.png" alt="384x384">
+                <div class="size-label">384 × 384</div>
+            </div>
+            <div class="icon-card">
+                <img src="icon-512x512.png" alt="512x512">
+                <div class="size-label">512 × 512 (główna)</div>
+            </div>
+        </div>
+
+        <div class="preview-section">
+            <h2>📱 Podgląd na iPhone</h2>
+            <div class="device-preview">
+                <div class="iphone-mockup">
+                    <div class="iphone-screen">
+                        <div class="home-icon">
+                            <img src="icon-192x192.png" alt="Mądra Nauka">
+                        </div>
+                        <div class="app-name">Mądra Nauka</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <h3>💡 Informacje o logo:</h3>
+                <ul>
+                    <li><strong>Koncept:</strong> Fiszka (biała karta) z symbolem mózgu</li>
+                    <li><strong>Gradient tła:</strong> Indigo (#6366f1) → Fiolet (#8b5cf6)</li>
+                    <li><strong>Akcent:</strong> Złote gwiazdki symbolizujące "moment olśnienia"</li>
+                    <li><strong>Rozmiary:</strong> 8 wariantów (72px - 512px) dla różnych urządzeń</li>
+                    <li><strong>Format:</strong> PNG z przezroczystością</li>
+                    <li><strong>Zgodność:</strong> iOS, Android, Desktop PWA</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

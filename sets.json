@@ -1448,6 +1448,1736 @@
       ],
       "next_review_date": "2025-12-22",
       "days_completed": []
+    },
+    {
+      "id": "c60e77c70e0d4d0ba28b72b158ab5fcf",
+      "autor": "test",
+      "nazwa": "zestaw testowy",
+      "data_utworzenia": "2026-02-04T20:33:32.525788+00:00",
+      "karty": [
+        {
+          "tekst": "Co jest podstawowym zadaniem przełącznika (switcha)?",
+          "odpowiedz": "Łączy urządzenia końcowe lub pośredniczące ze sobą w jedną sieć.",
+          "statystyki": {
+            "pokazane": 1,
+            "rozumiem": 1,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": true,
+            "sessions_ok_streak": 3,
+            "fail_streak_sessions": 0,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 3,
+            "next_due": "2026-02-20",
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Czym różnią się bardziej zaawansowane przełączniki od modeli najprostszych?",
+          "odpowiedz": "Można je konfigurować, dodając dodatkowe funkcje na poszczególnych portach.",
+          "statystyki": {
+            "pokazane": 1,
+            "rozumiem": 1,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": true,
+            "sessions_ok_streak": 3,
+            "fail_streak_sessions": 0,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 3,
+            "next_due": "2026-02-20",
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Jaka jest główna rola routera w sieci komputerowej?",
+          "odpowiedz": "Łączy ze sobą różne sieci i pozwala na wymianę informacji między nimi.",
+          "statystyki": {
+            "pokazane": 1,
+            "rozumiem": 1,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": true,
+            "sessions_ok_streak": 3,
+            "fail_streak_sessions": 0,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 3,
+            "next_due": "2026-02-20",
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Jakie metody wykorzystuje router do wyznaczania tras do odległych sieci?",
+          "odpowiedz": "Routing statyczny i/lub protokoły routingu.",
+          "statystyki": {
+            "pokazane": 1,
+            "rozumiem": 1,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": true,
+            "sessions_ok_streak": 3,
+            "fail_streak_sessions": 0,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 3,
+            "next_due": "2026-02-20",
+            "leech": false
+          }
+        },
+        {
+          "tekst": "W jaki sposób segmentacja wiadomości może poprawić niezawodność komunikacji?",
+          "odpowiedz": "Odrębne części wiadomości nie muszą być przesyłane dokładnie tą samą ścieżką od źródła do celu.",
+          "statystyki": {
+            "pokazane": 1,
+            "rozumiem": 1,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": true,
+            "sessions_ok_streak": 3,
+            "fail_streak_sessions": 0,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 3,
+            "next_due": "2026-02-20",
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Czym charakteryzują się aktywne urządzenia sieciowe?",
+          "odpowiedz": "Wyróżniają się możliwością generowania i modyfikowania sygnału przesyłanego w sieci.",
+          "statystyki": {
+            "pokazane": 1,
+            "rozumiem": 1,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 1,
+            "fail_streak_sessions": 0,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 2,
+            "next_due": "2026-02-05",
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Podaj przykłady aktywnych urządzeń sieciowych wymienionych w materiale.",
+          "odpowiedz": "Routery, przełączniki (switche), mosty (bridge) oraz bramy sieciowe (gateway).",
+          "statystyki": {
+            "pokazane": 1,
+            "rozumiem": 0,
+            "nie_rozumiem": 1,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 2,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 2,
+            "next_due": "2026-02-10",
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Jaka jest rola urządzeń pasywnych w infrastrukturze sieciowej?",
+          "odpowiedz": "Wspierają działanie urządzeń aktywnych, tworząc fizyczną ścieżkę transmisji danych.",
+          "statystyki": {
+            "pokazane": 1,
+            "rozumiem": 0,
+            "nie_rozumiem": 1,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 1,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 1,
+            "next_due": "2026-02-05",
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Termin: Enkapsulacja",
+          "odpowiedz": "Definicja: Proces podziału strumienia danych na jednostki i dołączania do nich nagłówków.",
+          "statystyki": {
+            "pokazane": 1,
+            "rozumiem": 0,
+            "nie_rozumiem": 1,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 3,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Termin: Dekapsulacja",
+          "odpowiedz": "Definicja: Proces odwrotny do enkapsulacji, realizowany podczas odbierania danych i wysyłania ich do wyższych warstw.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 2,
+            "fail_streak_sessions": 0,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 2,
+            "next_due": "2026-02-10",
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Podaj nazwę jednostki PDU dla warstwy aplikacji.",
+          "odpowiedz": "Dane",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 2,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Podaj nazwę jednostki PDU dla warstwy transportowej.",
+          "odpowiedz": "Segment",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Jak nazywa się jednostka PDU w warstwie sieci/Internetu?",
+          "odpowiedz": "Pakiet",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Jak nazywa się jednostka PDU w warstwie łącza danych?",
+          "odpowiedz": "Ramka",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Podaj nazwę jednostki PDU dla warstwy fizycznej.",
+          "odpowiedz": "Bity",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Jaki rodzaj adresacji jest przypisany do jednostki PDU o nazwie segment?",
+          "odpowiedz": "Numery portów",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Jaki rodzaj adresacji jest charakterystyczny dla warstwy sieci?",
+          "odpowiedz": "Adresy IP",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 1,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Jaki rodzaj adresacji jest wykorzystywany w jednostce PDU nazywanej ramką?",
+          "odpowiedz": "Adresy MAC",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Ile domen kolizyjnych znajduje się w przykładowej topologii zawierającej jeden Hub (H), jeden Switch (SW) i jeden Router (R1)?",
+          "odpowiedz": "$6$",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 1,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Czym jest domena rozgłoszeniowa (broadcast domain)?",
+          "odpowiedz": "To logiczny segment sieci, w którym ruch rozgłoszeniowy trafia do każdego podłączonego urządzenia.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Jakie urządzenia stanowią fizyczną granicę domeny rozgłoszeniowej?",
+          "odpowiedz": "Routery",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Jakie dwa warunki muszą spełniać urządzenia, aby transmitować dane bezpośrednio w tej samej domenie rozgłoszeniowej?",
+          "odpowiedz": "Muszą dzielić tę samą podsieć i znajdować się w tym samym VLAN.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 2,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "W jaki sposób pojedynczy przełącznik może utworzyć wiele domen rozgłoszeniowych?",
+          "odpowiedz": "Poprzez konfigurację wirtualnych sieci lokalnych (VLAN).",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Dlaczego tworzenie sieci VLAN zmniejsza obciążenie procesora urządzeń końcowych?",
+          "odpowiedz": "Ponieważ redukuje liczbę urządzeń odbierających każdą ramkę rozgłoszeniową.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "W jaki sposób sieci VLAN poprawiają bezpieczeństwo w kontekście transmisji ramek?",
+          "odpowiedz": "Zmniejszają liczbę hostów odbierających kopie ramek rozgłoszeniowych, multicast i nieznanych unicast.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 1,
+            "fail_streak_sessions": 0,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 1,
+            "next_due": "2026-02-05",
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Wymień trzy opcje routingu między sieciami VLAN.",
+          "odpowiedz": "Routing tradycyjny, Router na patyku oraz Przełącznik warstwy $3$ z interfejsami SVI.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Dlaczego tradycyjny routing między VLAN-ami jest uważany za rozwiązanie przestarzałe?",
+          "odpowiedz": "Ponieważ nie skaluje się dobrze w większych sieciach.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Które rozwiązanie routingu między VLAN-ami jest zalecane dla małych i średnich sieci?",
+          "odpowiedz": "Router na patyku",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Które rozwiązanie routingu między VLAN-ami jest najbardziej skalowalne dla dużych organizacji?",
+          "odpowiedz": "Przełącznik warstwy $3$ z interfejsami SVI (Switched Virtual Interface).",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 1,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Na czym polega działanie mechanizmu VTP Pruning?",
+          "odpowiedz": "Przełączniki analizują użycie VLAN-ów i ograniczają ruch rozgłoszeniowy tylko do trunków, gdzie dany VLAN jest potrzebny.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Jaka jest główna korzyść z użycia VTP Pruning w kontekście przepustowości?",
+          "odpowiedz": "Zmniejsza przepustowość zużywaną przez niepotrzebny ruch rozgłoszeniowy na portach trunk.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Jaka jest podstawowa koncepcja działania prywatnych VLANów (Private VLANs)?",
+          "odpowiedz": "Partycjonowanie pojedynczego VLANu (Primary) na mniejsze sub-VLANy (Secondary).",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 1,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Jak urządzenia w Private VLAN są widoczne dla świata zewnętrznego (poza LAN)?",
+          "odpowiedz": "Wszystkie urządzenia są widoczne jako przynależące do pojedynczego Primary VLANu.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Czy urządzenia w odseparowanych Secondary VLANach mogą korzystać ze wspólnej podsieci adresowej?",
+          "odpowiedz": "Tak",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Za co odpowiedzialna jest warstwa transportowa modelu sieciowego?",
+          "odpowiedz": "Za logiczną komunikację między aplikacjami działającymi na różnych hostach.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 1,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 1,
+            "next_due": "2026-02-05",
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Jaką funkcję pełni warstwa transportowa w relacji do warstwy aplikacji i warstw transmisji sieciowej?",
+          "odpowiedz": "Służy jako łącznik pomiędzy warstwą aplikacji a warstwą odpowiedzialną za transmisję w sieci.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Wymień dwa główne protokoły działające w warstwie transportowej.",
+          "odpowiedz": "TCP i UDP",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Wymień trzy główne zadania warstwy transportowej.",
+          "odpowiedz": "Śledzenie konwersacji, segmentacja/składanie danych oraz dodawanie informacji nagłówka.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "W jaki sposób warstwa transportowa umożliwia przeplatanie wielu rozmów w tej samej sieci?",
+          "odpowiedz": "Poprzez wykorzystanie segmentacji i multipleksowania.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 1,
+            "fail_streak_sessions": 0,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 1,
+            "next_due": "2026-02-05",
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Czym różni się protokół TCP od UDP w kwestii nawiązywania połączenia?",
+          "odpowiedz": "TCP jest protokołem połączeniowym, natomiast UDP nie nawiązuje połączenia przed wysłaniem danych.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 1,
+            "fail_streak_sessions": 0,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 1,
+            "next_due": "2026-02-05",
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Dlaczego protokół UDP charakteryzuje się małym narzutem (overhead)?",
+          "odpowiedz": "Posiada niewielki nagłówek i nie zarządza ruchem w sieci.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Podaj definicję gniazda (socket) w formie zapisu technicznego.",
+          "odpowiedz": "$adresIP:port$",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Jaki mechanizm stosuje TCP w przypadku wykrycia niepotwierdzonych danych po upływie czasu?",
+          "odpowiedz": "Ponowne przesyłanie niepotwierdzonych danych.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Na czym polega sekwencjonowanie danych w protokole TCP?",
+          "odpowiedz": "Na porządkowaniu segmentów, które mogły pojawić się u celu w złej kolejności.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Jaki zakres numerów obejmują tzw. porty dobrze znane (well-known ports)?",
+          "odpowiedz": "Od $0$ do $1023$.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 1,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Dla jakich celów zarezerwowane są numery portów od $0$ do $1023$?",
+          "odpowiedz": "Dla popularnych lub powszechnie stosowanych usług i aplikacji serwerowych.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 1,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Jaki numer portu i protokół transportowy są przypisane do klienta DHCP?",
+          "odpowiedz": "Port $68$ UDP",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Co dzieje się z numerami portów źródłowego i docelowego w pakiecie zwrotnym od serwera do klienta?",
+          "odpowiedz": "Następuje inwersja (zamiana miejscami) numerów portów.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 1,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Co umożliwia gniazdo (socket) w kontekście procesów działających u klienta?",
+          "odpowiedz": "Umożliwia rozróżnianie wielu procesów u klienta oraz wielu połączeń z serwerem.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Co jest głównym podobieństwem między modelem OSI a TCP/IP?",
+          "odpowiedz": "Oba modele przetwarzają informacje przy użyciu systemu warstwowego, gdzie każda warstwa ma określoną funkcję.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Jaka jest największa różnica strukturalna między modelem OSI a TCP/IP?",
+          "odpowiedz": "Model OSI rozróżnia funkcje, które model TCP/IP grupuje w pojedyncze warstwy (aplikacji i dostępu do sieci).",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Które warstwy modelu OSI odpowiadają warstwie aplikacji modelu TCP/IP?",
+          "odpowiedz": "Warstwy aplikacji, prezentacji oraz sesji.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 1,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Dlaczego model OSI jest uważany za ułatwiający rozwiązywanie problemów w porównaniu do modelu TCP/IP?",
+          "odpowiedz": "Pozwala na precyzyjne skupienie się na konkretnej warstwie (np. sesji), aby zidentyfikować przyczynę błędu.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Jak nazywa się jednostka PDU warstwy Internetu w modelu TCP/IP?",
+          "odpowiedz": "Pakiet",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 1,
+            "fail_streak_sessions": 0,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 1,
+            "next_due": "2026-02-05",
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Do której warstwy modelu OSI należą porty?",
+          "odpowiedz": "Do warstwy transportowej ($4$).",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Jakie technologie są wymienione jako przykłady warstwy dostępu do sieci w modelu TCP/IP?",
+          "odpowiedz": "Ethernet, WLAN, SONET oraz SDH.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 1,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Warstwa transportowa TCP/IP obejmuje protokoły _____ i _____.",
+          "odpowiedz": "TCP; UDP",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Zasada: Kontrola przepływu w TCP",
+          "odpowiedz": "Działanie: Wysyłanie danych w odpowiednim tempie, które jest akceptowalne przez odbiorcę.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 1,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Który protokół transportowy zapewnia większą niezawodność: TCP czy UDP?",
+          "odpowiedz": "TCP",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Czym jest FCS (Frame Check Sequence) w strukturze ramki?",
+          "odpowiedz": "To pole w stopce ramki służące do sprawdzania poprawności transmisji danych (sumy kontrolnej).",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 1,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "W modelu OSI warstwa $3$ to warstwa _____, a w modelu TCP/IP to warstwa _____.",
+          "odpowiedz": "Sieci; Internetu",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 1,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 1,
+            "next_due": "2026-02-05",
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Jakie zadanie pełni nagłówek segmentu w procesie komunikacji?",
+          "odpowiedz": "Zawiera numery portów umożliwiające skierowanie danych do odpowiedniej aplikacji.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "W procesie enkapsulacji, segment jest umieszczany wewnątrz _____, a ten z kolei wewnątrz _____.",
+          "odpowiedz": "Pakietu; ramki",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 1,
+            "fail_streak_sessions": 0,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 1,
+            "next_due": "2026-02-05",
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Jaka warstwa modelu OSI odpowiada bezpośrednio za bity?",
+          "odpowiedz": "Warstwa fizyczna ($1$).",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Jaka jest rola nagłówka IP w pakiecie?",
+          "odpowiedz": "Zawiera adresację logiczną (IP źródłowe i docelowe) oraz informacje o routingu.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Co określa termin 'Primary VLAN'?",
+          "odpowiedz": "Jest to główny VLAN, będący kolekcją jednego lub większej liczby Secondary VLANów.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Który model sieciowy jest opisany w RFC $1122$?",
+          "odpowiedz": "Model TCP/IP",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 1,
+            "fail_streak_sessions": 0,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 1,
+            "next_due": "2026-02-05",
+            "leech": false
+          }
+        },
+        {
+          "tekst": "W modelu TCP/IP (Common), warstwa dostępu do sieci odpowiada którym warstwom modelu OSI?",
+          "odpowiedz": "Warstwie fizycznej i warstwie łącza danych.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 1,
+            "fail_streak_sessions": 0,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 1,
+            "next_due": "2026-02-05",
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Jaki element ramki Ethernet znajduje się na samym jej końcu?",
+          "odpowiedz": "FCS (Frame Check Sequence)",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Z ilu bitów składa się przykładowy ciąg w warstwie fizycznej pokazany na schemacie?",
+          "odpowiedz": "$20$ bitów ($1011011100011110000$)",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "PDU warstwy $4$ OSI to _____, a warstwy $3$ to _____.",
+          "odpowiedz": "Segment; pakiet",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 1,
+            "fail_streak_sessions": 0,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 1,
+            "next_due": "2026-02-05",
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Jak nazywa się proces składania danych z segmentów u odbiorcy?",
+          "odpowiedz": "Powtórne składanie (reasemblacja).",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Multipleksowanie w warstwie transportowej pozwala na _____ różnych strumieni danych.",
+          "odpowiedz": "Przeplatanie",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 1,
+            "fail_streak_sessions": 0,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 1,
+            "next_due": "2026-02-05",
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Przykładowe zastosowanie dobrze znanych portów to _____.",
+          "odpowiedz": "Przeglądarki internetowe, klienci e-mail lub klienci dostępu zdalnego.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Co router robi z ramkami danych przy przesyłaniu pakietu między różnymi podsieciami?",
+          "odpowiedz": "Dekapsuluje ramkę, aby odczytać pakiet, a następnie enkapsuluje go w nową ramkę właściwą dla kolejnego łącza.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Czy porty źródłowe są zawsze takie same jak porty docelowe?",
+          "odpowiedz": "Nie, zazwyczaj port źródłowy u klienta jest dynamiczny (wysoki), a docelowy u serwera jest dobrze znany.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Jaki protokół warstwy transportowej zapewnia potwierdzanie odbioru danych?",
+          "odpowiedz": "TCP",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Który element modelu hierarchicznego PDU zawiera pole 'Source MAC'?",
+          "odpowiedz": "Ramka (Frame)",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Który element modelu hierarchicznego PDU zawiera pole 'Protocol'?",
+          "odpowiedz": "Pakiet (Packet)",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "W procesie enkapsulacji, pole 'Data' pochodzi z warstwy _____.",
+          "odpowiedz": "Aplikacji",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "SVI to interfejs wirtualny konfigurowany na _____.",
+          "odpowiedz": "Przełączniku warstwy $3$",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 1,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Czy VLAN może istnieć bez zdefiniowanej podsieci IP, aby domena rozgłoszeniowa działała poprawnie?",
+          "odpowiedz": "Zgodnie z materiałem, urządzenia powinny dzielić tę samą podsieć, aby transmitować bezpośrednio.",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 1,
+            "fail_streak_sessions": 0,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 1,
+            "next_due": "2026-02-05",
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Jaką funkcję pełni stopka ramki (Frame trailer)?",
+          "odpowiedz": "Zawiera informacje o zakończeniu ramki i dane do kontroli błędów (FCS).",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 1,
+            "fail_streak_sessions": 0,
+            "last_seen_date": "2026-02-04",
+            "total_sessions_ok": 1,
+            "next_due": "2026-02-05",
+            "leech": false
+          }
+        },
+        {
+          "tekst": "Model OSI posiada _____ warstw, a model TCP/IP posiada zazwyczaj _____ warstwy.",
+          "odpowiedz": "$7$; $4$",
+          "statystyki": {
+            "pokazane": 0,
+            "rozumiem": 0,
+            "nie_rozumiem": 0,
+            "procent_sukcesu": 0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 0,
+            "last_seen_date": null,
+            "total_sessions_ok": 0,
+            "next_due": null,
+            "leech": false
+          }
+        }
+      ],
+      "ostatnie_wyniki": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "data_ostatniej_nauki": "2026-02-04T20:48:08.600753+00:00",
+      "historia_nauki": [
+        {
+          "data": "2026-02-04",
+          "timestamp": "2026-02-04T20:41:33.950080+00:00",
+          "zrozumiane": 6,
+          "niezrozumiane": 13
+        },
+        {
+          "data": "2026-02-04",
+          "timestamp": "2026-02-04T20:41:56.532971+00:00",
+          "zrozumiane": 7,
+          "niezrozumiane": 0
+        },
+        {
+          "data": "2026-02-04",
+          "timestamp": "2026-02-04T20:43:57.516526+00:00",
+          "zrozumiane": 6,
+          "niezrozumiane": 78
+        },
+        {
+          "data": "2026-02-04",
+          "timestamp": "2026-02-04T20:44:11.513921+00:00",
+          "zrozumiane": 6,
+          "niezrozumiane": 78
+        },
+        {
+          "data": "2026-02-04",
+          "timestamp": "2026-02-04T20:46:07.915974+00:00",
+          "zrozumiane": 4,
+          "niezrozumiane": 6
+        },
+        {
+          "data": "2026-02-04",
+          "timestamp": "2026-02-04T20:48:08.600753+00:00",
+          "zrozumiane": 6,
+          "niezrozumiane": 3
+        }
+      ],
+      "days_completed": []
     }
   ]
 }

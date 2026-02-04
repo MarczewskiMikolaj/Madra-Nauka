@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Icons</title>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+        
+        function generateIcon(size) {
+            const canvas = document.getElementById('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // Background gradient (indigo to purple)
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#6366f1');
+            gradient.addColorStop(1, '#8b5cf6');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Brain icon concept - simplified flashcard with brain elements
+            const centerX = size / 2;
+            const centerY = size / 2;
+            const scale = size / 512;
+            
+            // White rounded rectangle (flashcard)
+            const cardWidth = 280 * scale;
+            const cardHeight = 200 * scale;
+            const cardX = centerX - cardWidth / 2;
+            const cardY = centerY - cardHeight / 2;
+            const radius = 20 * scale;
+            
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.beginPath();
+            ctx.roundRect(cardX, cardY, cardWidth, cardHeight, radius);
+            ctx.fill();
+            
+            // Brain/lightbulb symbol in the center
+            ctx.fillStyle = '#6366f1';
+            
+            // Top circle (brain top)
+            ctx.beginPath();
+            ctx.arc(centerX, centerY - 30 * scale, 50 * scale, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Left lobe
+            ctx.beginPath();
+            ctx.arc(centerX - 30 * scale, centerY - 10 * scale, 35 * scale, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Right lobe
+            ctx.beginPath();
+            ctx.arc(centerX + 30 * scale, centerY - 10 * scale, 35 * scale, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Bottom connection (stem)
+            ctx.fillRect(centerX - 15 * scale, centerY + 20 * scale, 30 * scale, 40 * scale);
+            
+            // Sparkle effects
+            ctx.fillStyle = '#fbbf24';
+            
+            // Star 1 (top right)
+            drawStar(ctx, centerX + 80 * scale, centerY - 60 * scale, 5, 12 * scale, 6 * scale);
+            
+            // Star 2 (bottom left)
+            drawStar(ctx, centerX - 70 * scale, centerY + 40 * scale, 5, 10 * scale, 5 * scale);
+            
+            // Star 3 (top left)
+            drawStar(ctx, centerX - 80 * scale, centerY - 50 * scale, 5, 8 * scale, 4 * scale);
+            
+            // Download the image
+            canvas.toBlob(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `icon-${size}x${size}.png`;
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+        }
+        
+        function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
+            let rot = Math.PI / 2 * 3;
+            let x = cx;
+            let y = cy;
+            const step = Math.PI / spikes;
+            
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - outerRadius);
+            
+            for (let i = 0; i < spikes; i++) {
+                x = cx + Math.cos(rot) * outerRadius;
+                y = cy + Math.sin(rot) * outerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+                
+                x = cx + Math.cos(rot) * innerRadius;
+                y = cy + Math.sin(rot) * innerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+            }
+            
+            ctx.lineTo(cx, cy - outerRadius);
+            ctx.closePath();
+            ctx.fill();
+        }
+        
+        // Generate all sizes
+        sizes.forEach((size, index) => {
+            setTimeout(() => generateIcon(size), index * 100);
+        });
+    </script>
+</body>
+</html>

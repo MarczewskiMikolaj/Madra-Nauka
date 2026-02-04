@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from cryptography.fernet import Fernet
 from datetime import datetime, timezone
@@ -343,6 +343,16 @@ sets, sets_generation = load_sets()
 def index():
     return render_template('index.html')
 
+@app.route('/manifest.json')
+def manifest():
+    """Serve PWA manifest"""
+    return app.send_static_file('manifest.json')
+
+@app.route('/service-worker.js')
+def service_worker():
+    """Serve service worker"""
+    return app.send_static_file('service-worker.js')
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -482,14 +492,26 @@ def dashboard():
                 activity_dates.add(data)
 
     streak = 0
-    day = datetime.now(timezone.utc).date()
+    today = datetime.now(timezone.utc).date()
+    today_str = today.isoformat()
+    
+    # Jeśli dzisiaj nie ma aktywności, zacznij od wczoraj
+    if today_str not in activity_dates:
+        day = today - timedelta(days=1)
+    else:
+        day = today
+    
     while day.isoformat() in activity_dates:
         streak += 1
         day = day - timedelta(days=1)
 
     # Zbierz daty należące do aktualnego streaka
     streak_dates = set()
-    day_iter = datetime.now(timezone.utc).date()
+    if today_str not in activity_dates:
+        day_iter = today - timedelta(days=1)
+    else:
+        day_iter = today
+    
     while day_iter.isoformat() in activity_dates:
         streak_dates.add(day_iter.isoformat())
         day_iter = day_iter - timedelta(days=1)
@@ -612,7 +634,15 @@ def profile():
             if data:
                 activity_dates.add(data)
     daily_streak = 0
-    _day = datetime.now(timezone.utc).date()
+    _today = datetime.now(timezone.utc).date()
+    _today_str = _today.isoformat()
+    
+    # Jeśli dzisiaj nie ma aktywności, zacznij od wczoraj
+    if _today_str not in activity_dates:
+        _day = _today - _timedelta(days=1)
+    else:
+        _day = _today
+    
     while _day.isoformat() in activity_dates:
         daily_streak += 1
         _day = _day - _timedelta(days=1)
@@ -627,8 +657,12 @@ def profile():
         month_grid.append(None)
     # Zbierz daty należące do aktualnego streaka
     streak_dates = set()
-    _iter = datetime.now(timezone.utc).date()
     from datetime import timedelta as _td
+    if _today_str not in activity_dates:
+        _iter = _today - _td(days=1)
+    else:
+        _iter = _today
+    
     while _iter.isoformat() in activity_dates:
         streak_dates.add(_iter.isoformat())
         _iter = _iter - _td(days=1)
@@ -1057,18 +1091,61 @@ def learn_set(set_id):
         rng = random.Random(time.time_ns())  # świeże losowanie przy każdym uruchomieniu
         rng.shuffle(order)
     
-    # Zapisz przygotowaną kolejność i resetuj stan sesji nauki
-    session[f'learn_{set_id}_order'] = order
-    session[f'learn_{set_id}_results'] = []
-    session[f'learn_{set_id}_current'] = 0
-    session[f'learn_{set_id}_mode'] = {'random': random_order, 'review': review_mode}
-    session.modified = True
+    # Nie zapisujemy wyników per karta w sesji (obsługa po stronie klienta)
     
     # Stwórz tymczasowy zestaw z kartami w odpowiedniej kolejności
     zestaw_temp = zestaw.copy()
     zestaw_temp['karty'] = [zestaw['karty'][i] for i in order]
     
-    return render_template('learn_set.html', username=session['username'], zestaw=zestaw_temp, current_index=0, order=order)
+    return render_template(
+        'learn_set.html',
+        username=session['username'],
+        zestaw=zestaw_temp,
+        current_index=0,
+        order=order,
+        random_order=random_order,
+        review_mode=review_mode
+    )
+
+@app.route('/zestawy/<set_id>/ucz-sie/submit', methods=['POST'])
+def learn_submit(set_id):
+    if 'username' not in session:
+        return jsonify({'error': 'unauthorized'}), 401
+
+    # Przeładuj dane z Cloud Storage
+    global sets, sets_generation
+    if USE_CLOUD_STORAGE:
+        sets, sets_generation = load_sets()
+
+    # Znajdź zestaw
+    zestaw = next((s for s in sets if s.get('id') == set_id), None)
+    if not zestaw:
+        return jsonify({'error': 'set_not_found'}), 404
+
+    data = request.get_json(silent=True) or {}
+    results = data.get('results') or []
+    order = data.get('order') or []
+    mode = data.get('mode') or {'random': False, 'review': False}
+
+    if not isinstance(results, list) or not isinstance(order, list):
+        return jsonify({'error': 'invalid_payload'}), 400
+
+    # Upewnij się, że długości wyników i kolejności są spójne
+    if len(order) == 0:
+        order = list(range(len(zestaw.get('karty', []) or [])))
+    if len(results) != len(order):
+        normalized = [None] * len(order)
+        for i, value in enumerate(results[:len(order)]):
+            normalized[i] = value
+        results = normalized
+
+    # Zapisz wyniki do sesji, aby użyć istniejącego podsumowania
+    session[f'learn_{set_id}_results'] = results
+    session[f'learn_{set_id}_order'] = order
+    session[f'learn_{set_id}_mode'] = mode
+    session.modified = True
+
+    return jsonify({'redirect': url_for('learn_summary', set_id=set_id)})
 
 @app.route('/zestawy/<set_id>/ucz-sie/<int:card_index>', methods=['GET', 'POST'])
 def learn_card(set_id, card_index):
@@ -1212,9 +1289,10 @@ def learn_summary(set_id):
     order = session.get(f'learn_{set_id}_order') or list(range(len(zestaw.get('karty', []))))
     last_mode = session.get(f'learn_{set_id}_mode', {'random': False, 'review': False})
     
-    understood_count = sum(1 for r in results if r)
-    not_understood_count = sum(1 for r in results if not r)
-    solved_total = len(results)
+    answered_results = [r for r in results if r is True or r is False]
+    understood_count = sum(1 for r in answered_results if r)
+    not_understood_count = sum(1 for r in answered_results if not r)
+    solved_total = len(answered_results)
     total_cards = len(zestaw.get('karty', []))
     unsolved_count = max(0, total_cards - solved_total)
     
@@ -1239,6 +1317,10 @@ def learn_summary(set_id):
             karta = zestaw['karty'][i]
             stats = karta.setdefault('statystyki', {})
             # Uzupełnij brakujące klucze
+            stats.setdefault('pokazane', 0)
+            stats.setdefault('rozumiem', 0)
+            stats.setdefault('nie_rozumiem', 0)
+            stats.setdefault('procent_sukcesu', 0)
             stats.setdefault('sessions_ok_streak', 0)
             stats.setdefault('fail_streak_sessions', 0)
             stats.setdefault('last_seen_date', None)
@@ -1248,8 +1330,10 @@ def learn_summary(set_id):
             stats.setdefault('opanowana', False)
 
             if session_res is not None:
+                stats['pokazane'] = stats.get('pokazane', 0) + 1
                 stats['last_seen_date'] = today
                 if session_res is True:
+                    stats['rozumiem'] = stats.get('rozumiem', 0) + 1
                     stats['sessions_ok_streak'] = stats.get('sessions_ok_streak', 0) + 1
                     stats['fail_streak_sessions'] = 0
                     stats['total_sessions_ok'] = stats.get('total_sessions_ok', 0) + 1
@@ -1263,6 +1347,7 @@ def learn_summary(set_id):
                         interval_days = 1
                     stats['next_due'] = (now_ts.date() + _td(days=interval_days)).isoformat()
                 else:
+                    stats['nie_rozumiem'] = stats.get('nie_rozumiem', 0) + 1
                     stats['fail_streak_sessions'] = stats.get('fail_streak_sessions', 0) + 1
                     stats['sessions_ok_streak'] = 0
                     # Tolerancja błędu: degraduj dopiero po 2 kolejnych sesjach z błędem
@@ -1391,42 +1476,38 @@ def test_set(set_id):
     else:
         count = min(count, len(valid_cards))
     
-    # Losuj pytania
-    test_cards = valid_cards if count == len(valid_cards) else random.sample(valid_cards, count)
+    # Losuj pytania (indeksy w valid_cards)
+    valid_indices = list(range(len(valid_cards)))
+    test_card_indices = valid_indices if count == len(valid_cards) else random.sample(valid_indices, count)
     
     # Dla każdej karty generuj pytanie z wielokrotnym wyborem
+    # Zapisuj tylko indeksy, aby zmniejszyć payload sesji
     questions = []
-    for i, card in enumerate(test_cards):
+    for i, card_index in enumerate(test_card_indices):
         # Poprawna odpowiedź
-        correct_answer = str(card['odpowiedz'])
+        correct_index = card_index
         
-        # Wygeneruj 3 losowe niepoprawne odpowiedzi z innych kart
-        # Zbierz unikalną pulę odpowiedzi (bez poprawnej)
-        answers_pool = list({
-            str(c['odpowiedz']) for c in valid_cards
-            if str(c['odpowiedz']) != correct_answer
-        })
-        # Uzupełnij do 3 błędnych odpowiedzi
-        wrong_answers = []
-        if len(answers_pool) >= 3:
-            wrong_answers = random.sample(answers_pool, 3)
+        # Wygeneruj 3 losowe niepoprawne odpowiedzi z innych kart (indeksy)
+        wrong_pool = [idx for idx in valid_indices if idx != correct_index]
+        if len(wrong_pool) >= 3:
+            wrong_indices = random.sample(wrong_pool, 3)
         else:
-            wrong_answers = answers_pool.copy()
-            # Jeśli za mało unikalnych, dopełnij powtarzającymi się wpisami
-            while len(wrong_answers) < 3:
-                wrong_answers.append('—')
+            wrong_indices = wrong_pool.copy()
+        
+        # Uzupełnij do 3 błędnych odpowiedzi placeholderami
+        while len(wrong_indices) < 3:
+            wrong_indices.append(None)
         
         # Wszystkie opcje (poprawna + niepoprawne) i tasowanie
-        # Zadbaj, by wszystkie opcje były stringami
-        all_answers = [correct_answer] + [str(w) for w in wrong_answers[:3]]
-        random.shuffle(all_answers)
+        options_indices = [correct_index] + wrong_indices[:3]
+        random.shuffle(options_indices)
+        correct_option = options_indices.index(correct_index)
         
         questions.append({
             'number': i + 1,
-            'question': card['tekst'],
-            'correct_answer': correct_answer,
-            'options': all_answers,
-            'card_index': valid_cards.index(card)
+            'card_index': card_index,
+            'options': options_indices,
+            'correct_option': correct_option
         })
     
     # Zapisz pytania w sesji
@@ -1466,21 +1547,60 @@ def test_question(set_id, question_index):
         print(f"DEBUG test_question: No questions or index out of range, redirecting to summary")
         return redirect(url_for('test_summary_route', set_id=set_id))
     
+    # Odbuduj listę poprawnych kart, aby odczytać treść i odpowiedzi
+    valid_cards = [
+        c for c in (zestaw.get('karty', []) or [])
+        if isinstance(c.get('tekst'), str) and c.get('tekst').strip()
+        and isinstance(c.get('odpowiedz'), str) and c.get('odpowiedz').strip()
+    ]
+
     current_question = questions[question_index]
+    card_index = current_question.get('card_index')
+    options_indices = current_question.get('options', [])
+    correct_option = current_question.get('correct_option')
+
+    if card_index is None or card_index >= len(valid_cards):
+        flash('Nieprawidłowe dane testu. Spróbuj uruchomić test ponownie.', 'error')
+        return redirect(url_for('view_set', set_id=set_id))
+
+    card = valid_cards[card_index]
+    rendered_options = []
+    for idx, option_index in enumerate(options_indices):
+        if option_index is None or option_index >= len(valid_cards):
+            option_text = '—'
+        else:
+            option_text = str(valid_cards[option_index].get('odpowiedz', '—'))
+        rendered_options.append({
+            'value': str(idx),
+            'text': option_text
+        })
+
+    question_payload = {
+        'number': current_question.get('number', question_index + 1),
+        'question': card.get('tekst', ''),
+        'options': rendered_options,
+        'correct_option': correct_option
+    }
     
     if request.method == 'POST':
         # Zapisz odpowiedź
         user_answer = request.form.get('answer')
-        is_correct = (user_answer == current_question['correct_answer'])
+        try:
+            selected_option = int(user_answer) if user_answer is not None else None
+        except ValueError:
+            selected_option = None
+
+        is_correct = (selected_option is not None and selected_option == question_payload['correct_option'])
         
         results_key = f'test_{set_id}_results'
         if results_key not in session:
             session[results_key] = []
         
         session[results_key].append({
-            'question': current_question['question'],
-            'correct_answer': current_question['correct_answer'],
-            'user_answer': user_answer,
+            'card_index': card_index,
+            'selected_option': selected_option,
+            'correct_option': question_payload['correct_option'],
+            'options': options_indices,
             'is_correct': is_correct
         })
         session.modified = True
@@ -1497,7 +1617,7 @@ def test_question(set_id, question_index):
     return render_template('test_set.html',
                          username=session['username'],
                          zestaw=zestaw,
-                         question=current_question,
+                         question=question_payload,
                          question_index=question_index,
                          total_questions=len(questions))
 
@@ -1525,9 +1645,47 @@ def test_summary_route(set_id):
         flash('Brak wyników testu.', 'error')
         return redirect(url_for('view_set', set_id=set_id))
     
+    # Odbuduj listę poprawnych kart, aby odczytać treść i odpowiedzi
+    valid_cards = [
+        c for c in (zestaw.get('karty', []) or [])
+        if isinstance(c.get('tekst'), str) and c.get('tekst').strip()
+        and isinstance(c.get('odpowiedz'), str) and c.get('odpowiedz').strip()
+    ]
+
+    # Zbuduj wyniki do wyświetlenia
+    display_results = []
+    for r in results:
+        card_index = r.get('card_index')
+        selected_option = r.get('selected_option')
+        correct_option = r.get('correct_option')
+        options_indices = r.get('options', [])
+        if card_index is None or card_index >= len(valid_cards):
+            continue
+        card = valid_cards[card_index]
+        question_text = card.get('tekst', '')
+        correct_answer = '—'
+        user_answer = None
+
+        if isinstance(options_indices, list) and 0 <= correct_option < len(options_indices):
+            correct_idx = options_indices[correct_option]
+            if correct_idx is not None and correct_idx < len(valid_cards):
+                correct_answer = str(valid_cards[correct_idx].get('odpowiedz', '—'))
+
+        if isinstance(options_indices, list) and selected_option is not None and 0 <= selected_option < len(options_indices):
+            selected_idx = options_indices[selected_option]
+            if selected_idx is not None and selected_idx < len(valid_cards):
+                user_answer = str(valid_cards[selected_idx].get('odpowiedz', '—'))
+
+        display_results.append({
+            'question': question_text,
+            'correct_answer': correct_answer,
+            'user_answer': user_answer,
+            'is_correct': r.get('is_correct', False)
+        })
+
     # Oblicz wynik
-    correct_count = sum(1 for r in results if r['is_correct'])
-    total = len(results)
+    correct_count = sum(1 for r in display_results if r['is_correct'])
+    total = len(display_results)
     percentage = (correct_count / total * 100) if total > 0 else 0
     
     # Zapisz wynik do historii
@@ -1554,7 +1712,7 @@ def test_summary_route(set_id):
     return render_template('test_summary.html',
                          username=session['username'],
                          zestaw=zestaw,
-                         results=results,
+                         results=display_results,
                          correct=correct_count,
                          total=total,
                          percentage=round(percentage, 1))
