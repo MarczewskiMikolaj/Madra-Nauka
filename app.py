@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_from_directory
 from werkzeug.security import generate_password_hash, check_password_hash
 from cryptography.fernet import Fernet
 from datetime import datetime, timezone
@@ -357,6 +357,12 @@ def service_worker():
 def favicon():
     """Serve favicon"""
     return app.send_static_file('favicon.ico')
+
+@app.route('/icons/<path:filename>')
+def icons(filename):
+    """Serve app icons"""
+    icons_dir = os.path.join(app.root_path, 'static', 'icons')
+    return send_from_directory(icons_dir, filename)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
