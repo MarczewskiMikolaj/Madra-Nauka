@@ -2,6 +2,8 @@
 
 Platforma do efektywnej nauki z flashcardami, testami i inteligentnym systemem powtórek. Progressive Web App działająca offline na iOS, Android i Desktop.
 
+Strona: http://madranauka.online/
+
 ## ✨ Główne funkcje
 
 - **Inteligentne powtórki** - algorytm SM-2 dostosowuje częstotliwość pokazywania kart
