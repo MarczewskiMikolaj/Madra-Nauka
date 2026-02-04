@@ -3,7 +3,16 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Nauka: {{ zestaw.nazwa }} - Fiszki</title>
+    <title>Nauka: {{ zestaw.nazwa }} - Mądra Nauka</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Mądra Nauka">
+    <link rel="manifest" href="{{ url_for('manifest') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192x192.png') }}">
+    
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/learn.css') }}">
 </head>
@@ -13,55 +22,95 @@
         <div class="bg-blob b"></div>
 
         <div class="card">
-            <a href="{{ url_for('learn_summary', set_id=zestaw.id) }}" style="margin-bottom: 20px; display: inline-block;">← Zakończ naukę</a>
+            <button id="finishEarly" class="btn ghost" style="margin-bottom: 20px; width: fit-content;">← Zakończ naukę</button>
             
             <h1>{{ zestaw.nazwa }}</h1>
             <p class="subtitle">Ucz się z fiszkami</p>
 
-            <div class="progress-text">
-                Fiszka {{ current_index + 1 }} z {{ zestaw.karty|length }}
-            </div>
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: {{ ((current_index) / zestaw.karty|length * 100)|round }}%;"></div>
+            <div id="syncStatus" style="display:none; margin: 12px 0; font-size: 13px; color: #fbbf24;">
+                Brak internetu — wyniki zostaną zapisane, gdy wrócisz online.
             </div>
 
-            {% set current_card = zestaw.karty[current_index] %}
+            <div class="progress-text" id="progressText"></div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+            </div>
 
             <div class="flashcard-container">
                 <div class="flashcard" id="flashcard" onclick="flipCard()">
                     <div class="flashcard-face flashcard-front">
                         <div class="flashcard-label">Pytanie</div>
-                        <div class="flashcard-content">
-                            {{ current_card.tekst }}
-                        </div>
+                        <div class="flashcard-content" id="questionText"></div>
                         <div class="flashcard-hint">👆 Kliknij, aby zobaczyć odpowiedź</div>
                     </div>
                     <div class="flashcard-face flashcard-back">
                         <div class="flashcard-label">Odpowiedź</div>
-                        <div class="flashcard-content">
-                            {{ current_card.odpowiedz }}
-                        </div>
+                        <div class="flashcard-content" id="answerText"></div>
                         <div class="flashcard-hint">👆 Kliknij, aby wrócić do pytania</div>
                     </div>
                 </div>
             </div>
 
             <div class="action-buttons" id="action-buttons">
-                <form method="POST" action="{{ url_for('learn_card', set_id=zestaw.id, card_index=current_index) }}">
-                    <input type="hidden" name="understood" value="false">
-                    <button type="submit" class="btn-action btn-not-understood">✗</button>
-                </form>
-                <form method="POST" action="{{ url_for('learn_card', set_id=zestaw.id, card_index=current_index) }}">
-                    <input type="hidden" name="understood" value="true">
-                    <button type="submit" class="btn-action btn-understood">✓</button>
-                </form>
+                <button type="button" class="btn-action btn-not-understood" onclick="markAnswer(false)">✗</button>
+                <button type="button" class="btn-action btn-understood" onclick="markAnswer(true)">✓</button>
+            </div>
+
+            <div id="finishPanel" style="display:none; margin-top: 16px; text-align: center;">
+                <p style="color: #94a3b8; margin-bottom: 12px;">To już wszystko! Zapisz wyniki.</p>
+                <button id="submitResults" class="btn primary" style="background: linear-gradient(90deg, #10b981, #059669);">Zapisz i pokaż podsumowanie</button>
             </div>
         </div>
     </div>
 
     <script>
+        const cards = {{ zestaw.karty | tojson }};
+        const order = {{ order | tojson }};
+        const mode = {
+            random: {{ 'true' if random_order else 'false' }},
+            review: {{ 'true' if review_mode else 'false' }}
+        };
+        const setId = "{{ zestaw.id }}";
+
         let isFlipped = false;
-        let isSubmitting = false;
+        let currentIndex = 0;
+        let results = Array(cards.length).fill(null);
+        const stateKey = `learn_state_${setId}`;
+
+        const progressText = document.getElementById('progressText');
+        const progressFill = document.getElementById('progressFill');
+        const questionText = document.getElementById('questionText');
+        const answerText = document.getElementById('answerText');
+        const finishPanel = document.getElementById('finishPanel');
+        const actionButtons = document.getElementById('action-buttons');
+        const syncStatus = document.getElementById('syncStatus');
+        const submitButton = document.getElementById('submitResults');
+        const finishEarlyButton = document.getElementById('finishEarly');
+
+        function updateProgress() {
+            const total = cards.length;
+            const indexDisplay = Math.min(currentIndex + 1, total);
+            progressText.textContent = `Fiszka ${indexDisplay} z ${total}`;
+            const percent = total > 0 ? ((currentIndex) / total) * 100 : 0;
+            progressFill.style.width = `${Math.min(percent, 100)}%`;
+        }
+
+        function renderCard() {
+            if (currentIndex >= cards.length) {
+                actionButtons.style.display = 'none';
+                finishPanel.style.display = 'block';
+                return;
+            }
+
+            const card = cards[currentIndex];
+            questionText.textContent = card.tekst || '';
+            answerText.textContent = card.odpowiedz || '';
+            updateProgress();
+
+            const flashcard = document.getElementById('flashcard');
+            flashcard.classList.remove('flipped');
+            isFlipped = false;
+        }
 
         function flipCard() {
             const card = document.getElementById('flashcard');
@@ -77,22 +126,39 @@
             }
         }
 
-        function submitNotUnderstood() {
-            if (isSubmitting) return;
-            const form = document.querySelector('.action-buttons form:first-child');
-            if (form) {
-                isSubmitting = true;
-                form.submit();
-            }
+        function markAnswer(understood) {
+            if (currentIndex >= cards.length) return;
+            results[currentIndex] = understood;
+            currentIndex += 1;
+            localStorage.setItem(stateKey, JSON.stringify({
+                currentIndex: currentIndex,
+                results: results
+            }));
+            renderCard();
         }
 
-        function submitUnderstood() {
-            if (isSubmitting) return;
-            const forms = document.querySelectorAll('.action-buttons form');
-            const form = forms[forms.length - 1];
-            if (form) {
-                isSubmitting = true;
-                form.submit();
+        async function submitResults() {
+            const payload = {
+                results: results,
+                order: order,
+                mode: mode
+            };
+
+            try {
+                const response = await fetch(`{{ url_for('learn_submit', set_id=zestaw.id) }}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error('submit_failed');
+                const data = await response.json();
+                localStorage.removeItem(`learn_pending_${setId}`);
+                localStorage.removeItem(stateKey);
+                window.location.href = data.redirect || "{{ url_for('learn_summary', set_id=zestaw.id) }}";
+            } catch (err) {
+                localStorage.setItem(`learn_pending_${setId}`, JSON.stringify(payload));
+                syncStatus.style.display = 'block';
             }
         }
 
@@ -108,12 +174,39 @@
                 flipCard();
             } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();
-                submitNotUnderstood();
+                markAnswer(false);
             } else if (e.key === 'ArrowRight') {
                 e.preventDefault();
-                submitUnderstood();
+                markAnswer(true);
             }
         });
+
+        submitButton.addEventListener('click', submitResults);
+        finishEarlyButton.addEventListener('click', submitResults);
+
+        // Spróbuj wysłać zaległe wyniki po odzyskaniu internetu
+        window.addEventListener('online', () => {
+            const pending = localStorage.getItem(`learn_pending_${setId}`);
+            if (pending) {
+                submitResults();
+            }
+        });
+
+        // Inicjalizacja
+        const storedState = localStorage.getItem(stateKey);
+        if (storedState) {
+            try {
+                const parsed = JSON.parse(storedState);
+                if (Array.isArray(parsed.results) && typeof parsed.currentIndex === 'number') {
+                    results = parsed.results.slice(0, cards.length);
+                    currentIndex = Math.min(parsed.currentIndex, cards.length);
+                }
+            } catch (e) {
+                localStorage.removeItem(stateKey);
+            }
+        }
+
+        renderCard();
     </script>
 </body>
 </html>
