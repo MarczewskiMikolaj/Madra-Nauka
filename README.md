@@ -18,3 +18,5 @@ Strona: http://madranauka.online/
 **Backend:** Flask, Google Cloud Storage, Fernet encryption  
 **Frontend:** Vanilla JS, HTML5/CSS3, Service Worker  
 **Deploy:** Google Cloud Run, Docker
+
+## DREAM BIG
