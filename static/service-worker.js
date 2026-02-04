@@ -7,8 +7,11 @@ const urlsToCache = [
   '/static/css/learn.css',
   '/static/css/sets.css',
   '/static/css/auth.css',
-  '/static/icons/icon-192x192.png',
-  '/static/icons/icon-512x512.png'
+  '/favicon.ico',
+  '/icons/icon-16x16.png',
+  '/icons/icon-32x32.png',
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png'
 ];
 
 // Install service worker and cache resources
