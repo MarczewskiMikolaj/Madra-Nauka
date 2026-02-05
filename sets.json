@@ -3178,6 +3178,67 @@
         }
       ],
       "days_completed": []
+    },
+    {
+      "id": "84f439e3c4e64ea09f08caafb84ebc23",
+      "autor": "test",
+      "nazwa": "test",
+      "data_utworzenia": "2026-02-05T21:00:40.499729+00:00",
+      "karty": [
+        {
+          "tekst": "test",
+          "odpowiedz": "test",
+          "statystyki": {
+            "pokazane": 4,
+            "rozumiem": 2,
+            "nie_rozumiem": 2,
+            "procent_sukcesu": 50.0,
+            "streak_rozumiem": 0,
+            "streak_nie_rozumiem": 0,
+            "opanowana": false,
+            "sessions_ok_streak": 0,
+            "fail_streak_sessions": 2,
+            "last_seen_date": "2026-02-05",
+            "total_sessions_ok": 2,
+            "next_due": "2026-02-11",
+            "leech": false
+          }
+        }
+      ],
+      "ostatnie_wyniki": [
+        false
+      ],
+      "data_ostatniej_nauki": "2026-02-05T21:04:42.724535+00:00",
+      "historia_nauki": [
+        {
+          "data": "2026-02-05",
+          "timestamp": "2026-02-05T21:00:56.423716+00:00",
+          "zrozumiane": 1,
+          "niezrozumiane": 0
+        },
+        {
+          "data": "2026-02-05",
+          "timestamp": "2026-02-05T21:04:22.889297+00:00",
+          "zrozumiane": 1,
+          "niezrozumiane": 0
+        },
+        {
+          "data": "2026-02-05",
+          "timestamp": "2026-02-05T21:04:35.290309+00:00",
+          "zrozumiane": 0,
+          "niezrozumiane": 1
+        },
+        {
+          "data": "2026-02-05",
+          "timestamp": "2026-02-05T21:04:42.724535+00:00",
+          "zrozumiane": 0,
+          "niezrozumiane": 1
+        }
+      ],
+      "days_completed": [
+        "2026-02-05"
+      ],
+      "next_review_date": "2026-02-06"
     }
   ]
 }
