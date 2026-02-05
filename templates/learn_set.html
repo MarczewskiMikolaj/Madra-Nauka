@@ -142,8 +142,14 @@
         }
 
         async function submitResults() {
+            // Wypełnij brakujące wyniki wartością null dla kart, których nie dotknięto
+            const completeResults = results.slice();
+            while (completeResults.length < cards.length) {
+                completeResults.push(null);
+            }
+
             const payload = {
-                results: results,
+                results: completeResults,
                 order: order,
                 mode: mode
             };
@@ -161,6 +167,7 @@
                 localStorage.removeItem(stateKey);
                 window.location.href = data.redirect || "{{ url_for('learn_summary', set_id=zestaw.id) }}";
             } catch (err) {
+                console.error('Submit error:', err);
                 localStorage.setItem(`learn_pending_${setId}`, JSON.stringify(payload));
                 syncStatus.style.display = 'block';
             }

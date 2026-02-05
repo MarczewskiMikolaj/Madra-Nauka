@@ -274,7 +274,7 @@
                         <div class="flashcard-item">
                             <span class="flashcard-number">Fiszka {{ loop.index }}</span>
                             {% if karta.statystyki and karta.statystyki.pokazane >= 3 %}
-                                {% if karta.statystyki.procent_sukcesu < 70 %}
+                                {% if karta.statystyki.procent_sukcesu < 40 %}
                                     <span class="flashcard-stats difficult">⚠️ Trudna ({{ karta.statystyki.procent_sukcesu|int }}%)</span>
                                 {% elif karta.statystyki.procent_sukcesu >= 90 %}
                                     <span class="flashcard-stats good">✓ Opanowana ({{ karta.statystyki.procent_sukcesu|int }}%)</span>
