@@ -891,18 +891,24 @@ def view_set(set_id):
     for idx, karta in enumerate(zestaw.get('karty', []), start=1):
         stats = karta.get('statystyki') or {}
         shown = stats.get('pokazane', 0)
-        if shown <= 0:
-            continue
         success = stats.get('procent_sukcesu', 0)
-        top_difficult_cards.append({
-            'index': idx,
-            'tekst': karta.get('tekst', ''),
-            'odpowiedz': karta.get('odpowiedz', ''),
-            'pokazane': shown,
-            'procent_sukcesu': success
-        })
+        opanowana = stats.get('opanowana', False)
+        
+        # Pokazuj tylko fiszki, które:
+        # - były pokazane co najmniej 3 razy
+        # - mają sukces < 40% (trudne)
+        # - NIE są opanowane
+        if shown >= 3 and success < 40 and not opanowana:
+            top_difficult_cards.append({
+                'index': idx,
+                'tekst': karta.get('tekst', ''),
+                'odpowiedz': karta.get('odpowiedz', ''),
+                'pokazane': shown,
+                'procent_sukcesu': success
+            })
 
-    top_difficult_cards = sorted(top_difficult_cards, key=lambda c: (c['procent_sukcesu'], c['pokazane']))[:6]
+    # Sortuj: najpierw najniższy procent, potem najwięcej pokazanych (najbardziej problematyczne)
+    top_difficult_cards = sorted(top_difficult_cards, key=lambda c: (c['procent_sukcesu'], -c['pokazane']))[:6]
     
     return render_template(
         'view_set.html',
@@ -1365,8 +1371,15 @@ def learn_summary(set_id):
                     if stats.get('opanowana') and stats['fail_streak_sessions'] >= 2:
                         stats['opanowana'] = False
 
-                # Nadanie opanowania wg sesji lub prób + skuteczność
+                # Przelicz procent sukcesu po aktualizacji liczników
                 pokazane = stats.get('pokazane', 0)
+                rozumiem = stats.get('rozumiem', 0)
+                if pokazane > 0:
+                    stats['procent_sukcesu'] = round((rozumiem / pokazane) * 100, 1)
+                else:
+                    stats['procent_sukcesu'] = 0
+                
+                # Nadanie opanowania wg sesji lub prób + skuteczność
                 procent = stats.get('procent_sukcesu', 0)
                 if not stats.get('opanowana') and (
                     stats.get('sessions_ok_streak', 0) >= 3 or (pokazane >= 5 and procent >= 85)
