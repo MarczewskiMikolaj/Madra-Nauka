@@ -88,15 +88,14 @@ def trigger_daily():
 
 
 def send_daily_notifications(force=False):
-    """Called every hour (via Cloud Scheduler). Sends push to users whose 8am local just passed.
-    If force=True, bypasses hour check (for manual testing)."""
-    result = {'ok': True, 'sent': 0, 'skipped_hour': 0, 'skipped_already_sent': 0, 'errors': 0, 'expired': 0}
+    """Called once daily by Cloud Scheduler. Sends push to all subscribers.
+    Deduplication via last_sent_date prevents double sends.
+    If force=True, bypasses last_sent_date check."""
+    result = {'ok': True, 'sent': 0, 'skipped_already_sent': 0, 'errors': 0, 'expired': 0}
     try:
         store.reload_sets()
         store.reload_users()
-        now_utc = datetime.now(timezone.utc)
-        current_utc_hour = now_utc.hour
-        today_str = now_utc.date().isoformat()
+        today_str = datetime.now(timezone.utc).date().isoformat()
 
         changed = False
         for user in store.users:
@@ -105,14 +104,7 @@ def send_daily_notifications(force=False):
                 continue
             username = user.get('login', '')
             for sub in subs:
-                # utc_offset from JS getTimezoneOffset(): (UTC - local) in minutes
-                # 8am local = 8am - (-utc_offset/60)h UTC = (8*60 + utc_offset) / 60 UTC
-                utc_offset = sub.get('utc_offset', 0)
-                target_utc_hour = (8 * 60 + utc_offset) // 60 % 24
-                if not force and current_utc_hour != target_utc_hour:
-                    result['skipped_hour'] += 1
-                    continue
-                if sub.get('last_sent_date') == today_str:
+                if not force and sub.get('last_sent_date') == today_str:
                     result['skipped_already_sent'] += 1
                     continue
 
