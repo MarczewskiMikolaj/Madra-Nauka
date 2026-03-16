@@ -134,13 +134,14 @@ def send_daily_notifications(force=False):
                     print(f'Push sent to {username}: {body}')
                 except WebPushException as e:
                     result['errors'] += 1
-                    if e.response and e.response.status_code in (404, 410):
+                    status_code = e.response.status_code if e.response else None
+                    print(f'Push error for {username}: status={status_code} {e}')
+                    if status_code in (401, 403, 404, 410):
                         sub['_expired'] = True
                         result['expired'] += 1
-                    elif e.response and e.response.status_code == 429:
-                        print(f'Push rate-limited for {username}, skipping: {e}')
+                    elif status_code == 429:
+                        print(f'Push rate-limited for {username}, skipping')
                         continue
-                    print(f'Push error for {username}: {e}')
 
         # Remove expired subscriptions
         for user in store.users:
