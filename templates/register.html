@@ -4,10 +4,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Rejestracja - Mądra Nauka</title>
-    <link rel="icon" type="image/x-icon" href="{{ url_for('favicon') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('icons', filename='icon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('icons', filename='icon-16x16.png') }}">
-    <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('icons', filename='icon-192x192.png') }}">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Mądra Nauka">
+    <link rel="manifest" href="{{ url_for('pwa.manifest') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('pwa.favicon') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('pwa.icons', filename='icon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('pwa.icons', filename='icon-16x16.png') }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('pwa.icons', filename='icon-192x192.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('pwa.icons', filename='icon-192x192.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
 </head>
@@ -30,7 +36,7 @@
                 {% endif %}
             {% endwith %}
 
-            <form method="POST" action="{{ url_for('register') }}">
+            <form method="POST" action="{{ url_for('auth.register') }}">
                 <div class="form-group">
                     <label for="username">Nazwa użytkownika</label>
                     <input type="text" id="username" name="username" required autofocus>
@@ -51,11 +57,11 @@
             </form>
 
             <div class="divider">
-                Masz już konto? <a href="{{ url_for('login') }}" class="link">Zaloguj się tutaj</a>
+                Masz już konto? <a href="{{ url_for('auth.login') }}" class="link">Zaloguj się tutaj</a>
             </div>
 
             <div class="back-link">
-                <a href="{{ url_for('index') }}">← Powrót do strony głównej</a>
+                <a href="{{ url_for('dashboard.index') }}">← Powrót do strony głównej</a>
             </div>
         </div>
     </div>
