@@ -10,18 +10,41 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Mądra Nauka">
-    <link rel="manifest" href="{{ url_for('manifest') }}">
-    <link rel="icon" type="image/x-icon" href="{{ url_for('favicon') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('icons', filename='icon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('icons', filename='icon-16x16.png') }}">
-    <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('icons', filename='icon-192x192.png') }}">
-    <link rel="apple-touch-icon" href="{{ url_for('icons', filename='icon-192x192.png') }}">
+    <link rel="manifest" href="{{ url_for('pwa.manifest') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('pwa.favicon') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('pwa.icons', filename='icon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('pwa.icons', filename='icon-16x16.png') }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('pwa.icons', filename='icon-192x192.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('pwa.icons', filename='icon-192x192.png') }}">
     
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/sets.css') }}">
     <style>
         .card { max-width: 1400px; }
+        .sort-toggle {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(15,23,42,0.6);
+            border: 1px solid rgba(148,163,184,0.15);
+            border-radius: 999px;
+            padding: 3px;
+            gap: 2px;
+        }
+        .sort-btn {
+            background: transparent;
+            border: none;
+            border-radius: 999px;
+            color: #94a3b8;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 5px 14px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+        .sort-btn:hover { color: #e2e8f0; background: rgba(148,163,184,0.1); }
+        .sort-btn.active { background: #6366f1; color: #fff; font-weight: 600; }
         .set-item-container {
             background: rgba(30,41,59,0.8);
             border: 1px solid rgba(148,163,184,0.1);
@@ -74,10 +97,18 @@
             font-weight: 600;
         }
         .review-pill.overdue {
-            background: rgba(239,68,68,0.14);
-            color: #ef4444;
-            border: 1px solid rgba(239,68,68,0.35);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: linear-gradient(135deg, rgba(245,158,11,0.22), rgba(251,191,36,0.12));
+            color: #fbbf24;
+            border: 1px solid rgba(245,158,11,0.45);
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 12px;
             font-weight: 700;
+            letter-spacing: 0.2px;
+            box-shadow: 0 0 0 2px rgba(245,158,11,0.10);
         }
         .mastery-pill.low {
             background: rgba(239,68,68,0.12);
@@ -402,16 +433,20 @@
         .due-section {
             padding: 12px 14px;
             border-radius: 10px;
-            background: linear-gradient(135deg, rgba(14,165,233,0.15), rgba(124,58,237,0.13));
-            border: 1px solid rgba(59,130,246,0.22);
+            background: linear-gradient(135deg, rgba(245,158,11,0.10), rgba(30,41,59,0.7));
+            border: 1px solid rgba(245,158,11,0.25);
             box-shadow: 0 8px 20px rgba(0,0,0,0.25);
             width: 100%;
         }
         .due-section h3 {
             margin: 0 0 8px;
-            color: #e2e8f0;
+            color: #fbbf24;
             font-size: 13px;
-            font-weight: 600;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            letter-spacing: 0.15px;
         }
         .due-list {
             list-style: none;
@@ -519,23 +554,40 @@
                     {% endif %}
                 {% endwith %}
 
+                <div id="notifBanner" style="display:none; background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.25); border-radius:10px; padding:12px 16px; margin-bottom:20px; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:20px;">🔔</span>
+                        <div>
+                            <div style="font-size:14px; font-weight:600; color:#f1f5f9;">Powiadomienia o powtórkach</div>
+                            <div id="notifStatus" style="font-size:12px; color:#94a3b8;">Włącz, aby przypominało o 8:00 co dzień</div>
+                        </div>
+                    </div>
+                    <button id="notifBtn" onclick="toggleNotifications()" style="padding:8px 16px; border-radius:8px; border:1px solid rgba(99,102,241,0.4); background:rgba(99,102,241,0.2); color:#a5b4fc; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;">Włącz</button>
+                </div>
+
                     <div class="section-header">
                         <div style="display: flex; flex-direction: column; gap: 12px;">
                             <div style="display:flex; align-items:center; gap:12px; justify-content: space-between;">
                                 <h2 style="margin:0;">Twoje zestawy do nauki</h2>
                                 <button class="mobile-menu-toggle" id="sidebarToggle">☰ Menu</button>
                             </div>
-                            <input type="text" id="searchInput" placeholder="🔍 Szukaj zestawu..." style="width: 280px; padding: 10px 14px; background: rgba(30,41,59,0.8); border: 1px solid rgba(148,163,184,0.1); border-radius: 10px; color: #f1f5f9; font-size: 13px; outline: none; transition: all 0.2s ease;" onfocus="this.style.borderColor='rgba(99,102,241,0.4)'" onblur="this.style.borderColor='rgba(148,163,184,0.1)'" oninput="filterSets()">
+                            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                <input type="text" id="searchInput" placeholder="🔍 Szukaj zestawu..." style="width: 280px; padding: 10px 14px; background: rgba(30,41,59,0.8); border: 1px solid rgba(148,163,184,0.1); border-radius: 10px; color: #f1f5f9; font-size: 13px; outline: none; transition: all 0.2s ease;" onfocus="this.style.borderColor='rgba(99,102,241,0.4)'" onblur="this.style.borderColor='rgba(148,163,184,0.1)'" oninput="filterSets()">
+                                <div class="sort-toggle" id="sortToggle">
+                                    <button class="sort-btn active" id="sortRecent" onclick="setSortOrder('recent')">Ostatnio używane</button>
+                                    <button class="sort-btn" id="sortAlpha" onclick="setSortOrder('alpha')">Alfabetycznie</button>
+                                </div>
+                            </div>
                         </div>
                         <div class="actions" style="align-self: flex-end; margin-top: 8px;">
-                            <a href="{{ url_for('create_set') }}" class="btn primary" style="background: linear-gradient(90deg, #22c55e, #16a34a);">+ Nowy zestaw</a>
+                            <a href="{{ url_for('sets.create_set') }}" class="btn primary" style="background: linear-gradient(90deg, #22c55e, #16a34a);">+ Nowy zestaw</a>
                         </div>
                     </div>
 
                     {% if zestawy and zestawy|length > 0 %}
                         <div class="sets-container" id="setsContainer">
                             {% for z in zestawy %}
-                                <div class="set-item-container">
+                                <div class="set-item-container" data-name="{{ z.nazwa | lower }}" data-last-used="{{ z.data_ostatniej_nauki or '' }}">
                                     <div class="set-info-section">
                                         <div class="set-title">{{ z.nazwa }}</div>
                                         <div class="set-meta">
@@ -549,7 +601,7 @@
                                                 {% set review_date = z.next_review_date %}
                                                 {% set today = z.get('today_date', '') %}
                                                 {% if today and review_date < today %}
-                                                    <span class="review-pill overdue">Pilna powtórka</span>
+                                                    <span class="review-pill overdue">⏰ Powtórka</span>
                                                 {% else %}
                                                     <span class="review-pill">Powtórka: {{ z.next_review_date }}</span>
                                                 {% endif %}
@@ -566,7 +618,7 @@
                                         <button onclick="openTestModal('{{ z.id }}')" class="btn primary" style="background: linear-gradient(90deg, #3b82f6, #2563eb); white-space: nowrap;">
                                             📝 Test
                                         </button>
-                                        <a href="{{ url_for('view_set', set_id=z.id) }}" class="btn primary" style="background: linear-gradient(90deg, #8b5cf6, #7c3aed); white-space: nowrap; text-decoration: none;">
+                                        <a href="{{ url_for('sets.view_set', set_id=z.id) }}" class="btn primary" style="background: linear-gradient(90deg, #8b5cf6, #7c3aed); white-space: nowrap; text-decoration: none;">
                                             👁️ Zobacz
                                         </a>
                                     </div>
@@ -586,8 +638,8 @@
                     </div>
 
                     <div class="user-actions" style="display:flex; gap:8px;">
-                        <a href="{{ url_for('profile') }}" class="btn-ghost-compact btn-top-profile" style="flex:1; justify-content:center;">👤 Profil</a>
-                        <a href="{{ url_for('logout') }}" class="btn-ghost-compact btn-top-logout" style="flex:1; justify-content:center;">↩ Wyloguj</a>
+                        <a href="{{ url_for('profile.profile') }}" class="btn-ghost-compact btn-top-profile" style="flex:1; justify-content:center;">👤 Profil</a>
+                        <a href="{{ url_for('auth.logout') }}" class="btn-ghost-compact btn-top-logout" style="flex:1; justify-content:center;">↩ Wyloguj</a>
                     </div>
 
                     <div class="user-panel module-panel">
@@ -622,16 +674,16 @@
 
                     {% if due_today_sets and due_today_sets|length > 0 %}
                     <section class="due-section">
-                        <h3>📌 Do powtórki dzisiaj</h3>
+                        <h3>⏰ Do powtórki dzisiaj</h3>
                         <ul class="due-list">
                             {% for zs in due_today_sets %}
-                            <li class="due-item" onclick="window.location.href='{{ url_for('view_set', set_id=zs['id']) }}'">
-                                <a href="{{ url_for('view_set', set_id=zs['id']) }}">{{ zs['nazwa'] }}</a>
+                            <li class="due-item" onclick="window.location.href='{{ url_for('sets.view_set', set_id=zs['id']) }}'">
+                                <a href="{{ url_for('sets.view_set', set_id=zs['id']) }}">{{ zs['nazwa'] }}</a>
                                 {% if zs.get('next_review_date') %}
                                     {% set review_date = zs.get('next_review_date') %}
                                     {% set today = zs.get('today_date', '') %}
                                     {% if today and review_date < today %}
-                                        <span class="review-pill overdue">Pilna powtórka</span>
+                                        <span class="review-pill overdue">⏰ Powtórka</span>
                                     {% else %}
                                         <span class="review-pill">{{ zs.get('next_review_date') }}</span>
                                     {% endif %}
@@ -655,31 +707,31 @@
             
             <div class="modal-options">
                 <label class="option-checkbox" onclick="selectTestOption(5)">
-                    <input type="radio" name="test_count" value="5" checked>
+                    <input type="radio" name="test_count" value="5" checked onchange="selectTestOption(5)">
                     <div class="option-info">
                         <strong>5 pytań</strong>
                         <span>Szybki test</span>
                     </div>
                 </label>
-                
+
                 <label class="option-checkbox" onclick="selectTestOption(10)">
-                    <input type="radio" name="test_count" value="10">
+                    <input type="radio" name="test_count" value="10" onchange="selectTestOption(10)">
                     <div class="option-info">
                         <strong>10 pytań</strong>
                         <span>Średni test</span>
                     </div>
                 </label>
-                
+
                 <label class="option-checkbox" onclick="selectTestOption(15)">
-                    <input type="radio" name="test_count" value="15">
+                    <input type="radio" name="test_count" value="15" onchange="selectTestOption(15)">
                     <div class="option-info">
                         <strong>15 pytań</strong>
                         <span>Długi test</span>
                     </div>
                 </label>
-                
+
                 <label class="option-checkbox" onclick="selectTestOption(-1)">
-                    <input type="radio" name="test_count" value="-1">
+                    <input type="radio" name="test_count" value="-1" onchange="selectTestOption(-1)">
                     <div class="option-info">
                         <strong>Wszystkie</strong>
                         <span>Pełny test ze wszystkich fiszek</span>
@@ -844,6 +896,7 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeLearnModal();
+                closeTestModal();
             }
         });
         
@@ -950,6 +1003,44 @@
             }
         }
         
+        // Sorting sets
+        function setSortOrder(order) {
+            localStorage.setItem('setsSortOrder', order);
+            applySortOrder(order);
+            document.getElementById('sortRecent').classList.toggle('active', order === 'recent');
+            document.getElementById('sortAlpha').classList.toggle('active', order === 'alpha');
+        }
+
+        function applySortOrder(order) {
+            const container = document.getElementById('setsContainer');
+            if (!container) return;
+            const cards = Array.from(container.querySelectorAll('.set-item-container'));
+            if (order === 'alpha') {
+                cards.sort((a, b) => {
+                    const na = a.getAttribute('data-name') || '';
+                    const nb = b.getAttribute('data-name') || '';
+                    return na.localeCompare(nb, 'pl');
+                });
+            } else {
+                cards.sort((a, b) => {
+                    const da = a.getAttribute('data-last-used') || '';
+                    const db = b.getAttribute('data-last-used') || '';
+                    if (da === '' && db === '') return 0;
+                    if (da === '') return 1;
+                    if (db === '') return -1;
+                    return db.localeCompare(da);
+                });
+            }
+            cards.forEach(card => container.appendChild(card));
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedSort = localStorage.getItem('setsSortOrder') || 'recent';
+            applySortOrder(savedSort);
+            document.getElementById('sortRecent').classList.toggle('active', savedSort === 'recent');
+            document.getElementById('sortAlpha').classList.toggle('active', savedSort === 'alpha');
+        });
+
         // Register Service Worker for PWA
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -962,6 +1053,96 @@
                     });
             });
         }
+    </script>
+    <script>
+(function() {
+    const VAPID_PUBLIC_KEY = 'VAPID_KEY_REMOVED';
+
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const raw = atob(base64);
+        return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+    }
+
+    const banner = document.getElementById('notifBanner');
+    const btn = document.getElementById('notifBtn');
+    const status = document.getElementById('notifStatus');
+
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+
+    banner.style.display = 'flex';
+
+    function updateUI(perm, subscribed) {
+        if (perm === 'denied') {
+            status.textContent = 'Powiadomienia zablokowane w ustawieniach przeglądarki';
+            btn.textContent = 'Zablokowane';
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+        } else if (subscribed) {
+            status.textContent = 'Będziesz przypominany o 8:00 każdego dnia';
+            btn.textContent = 'Wyłącz';
+        } else {
+            status.textContent = 'Włącz, aby przypominało o 8:00 co dzień';
+            btn.textContent = 'Włącz';
+            btn.disabled = false;
+            btn.style.opacity = '1';
+        }
+    }
+
+    async function getSubscription() {
+        const reg = await navigator.serviceWorker.ready;
+        return reg.pushManager.getSubscription();
+    }
+
+    // Init: check current state
+    (async function() {
+        const perm = Notification.permission;
+        const sub = await getSubscription();
+        updateUI(perm, !!sub);
+    })();
+
+    window.toggleNotifications = async function() {
+        const reg = await navigator.serviceWorker.ready;
+        const existing = await reg.pushManager.getSubscription();
+
+        if (existing) {
+            // Unsubscribe
+            await existing.unsubscribe();
+            await fetch('/push/unsubscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ endpoint: existing.endpoint }),
+            }).catch(err => console.error('Push error:', err));
+            updateUI(Notification.permission, false);
+            return;
+        }
+
+        // Subscribe
+        const perm = await Notification.requestPermission();
+        if (perm !== 'granted') {
+            updateUI(perm, false);
+            return;
+        }
+
+        const sub = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        });
+
+        const subJson = sub.toJSON();
+        await fetch('/push/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                endpoint: subJson.endpoint,
+                keys: subJson.keys,
+                utc_offset: new Date().getTimezoneOffset(),
+            }),
+        }).catch(err => console.error('Push error:', err));
+        updateUI('granted', true);
+    };
+})();
     </script>
 </body>
 </html>

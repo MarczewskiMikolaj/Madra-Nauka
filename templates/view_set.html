@@ -4,10 +4,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>{{ zestaw.nazwa }} - Mądra Nauka</title>
-    <link rel="icon" type="image/x-icon" href="{{ url_for('favicon') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('icons', filename='icon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('icons', filename='icon-16x16.png') }}">
-    <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('icons', filename='icon-192x192.png') }}">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Mądra Nauka">
+    <link rel="manifest" href="{{ url_for('pwa.manifest') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('pwa.favicon') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('pwa.icons', filename='icon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('pwa.icons', filename='icon-16x16.png') }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('pwa.icons', filename='icon-192x192.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('pwa.icons', filename='icon-192x192.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/sets.css') }}">
     <style>
@@ -208,11 +214,11 @@
 
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <a href="{{ url_for('dashboard') }}" class="btn ghost" style="width: fit-content;">← Powrót do panelu</a>
+                <a href="{{ url_for('dashboard.dashboard') }}" class="btn ghost" style="width: fit-content;">← Powrót do panelu</a>
                 <div style="display: flex; gap: 8px;">
                     <button onclick="openLearnModal()" class="btn primary" style="background: linear-gradient(90deg, #10b981, #059669);">🎯 Rozpocznij naukę</button>
                     <button onclick="openTestModal()" class="btn primary" style="background: linear-gradient(90deg, #3b82f6, #2563eb);">📝 Test</button>
-                    <a href="{{ url_for('edit_set', set_id=zestaw.id) }}" class="btn primary" style="background: linear-gradient(90deg, #8b5cf6, #7c3aed); text-decoration: none;">✏️ Edytuj</a>
+                    <a href="{{ url_for('sets.edit_set', set_id=zestaw.id) }}" class="btn primary" style="background: linear-gradient(90deg, #8b5cf6, #7c3aed); text-decoration: none;">✏️ Edytuj</a>
                 </div>
             </div>
             
@@ -268,10 +274,30 @@
 
             <div class="flashcards-list">
                 <h3 style="margin: 0 0 16px; font-size: 18px;">Wszystkie fiszki</h3>
-                
+
+                <input
+                    type="search"
+                    id="cardSearchInput"
+                    placeholder="Szukaj fiszki…"
+                    style="
+                        width: 100%;
+                        box-sizing: border-box;
+                        margin-bottom: 16px;
+                        padding: 10px 14px;
+                        background: rgba(15,23,42,0.7);
+                        color: #f1f5f9;
+                        border: 1px solid rgba(148,163,184,0.15);
+                        border-radius: 8px;
+                        font-size: 14px;
+                        outline: none;
+                        transition: border-color .2s ease;
+                    "
+                >
+                <p id="cardSearchEmpty" style="display:none; color:#94a3b8; text-align:center; padding: 20px 0;">Brak fiszek pasujących do wyszukiwania.</p>
+
                 {% if zestaw.karty and zestaw.karty|length > 0 %}
                     {% for karta in zestaw.karty %}
-                        <div class="flashcard-item">
+                        <div class="flashcard-item" data-search="{{ (karta.tekst or '') | lower }} {{ (karta.odpowiedz or '') | lower }}">
                             <span class="flashcard-number">Fiszka {{ loop.index }}</span>
                             {% if karta.statystyki and karta.statystyki.pokazane >= 3 %}
                                 {% if karta.statystyki.procent_sukcesu < 40 %}
@@ -322,7 +348,7 @@
         
         <div class="modal-actions">
             <button onclick="closeDeleteModal()" class="btn ghost">Anuluj</button>
-            <form method="POST" action="{{ url_for('delete_set', set_id=zestaw.id) }}" style="display: inline;">
+            <form method="POST" action="{{ url_for('sets.delete_set', set_id=zestaw.id) }}" style="display: inline;">
                 <button type="submit" class="btn primary" style="background: linear-gradient(90deg, #ef4444, #dc2626);">Usuń zestaw</button>
             </form>
         </div>
@@ -336,7 +362,7 @@
         
         <div class="modal-options">
             <label class="option-checkbox" onclick="selectTestOption(5)">
-                <input type="radio" name="test_count" value="5" checked>
+                <input type="radio" name="test_count" value="5" checked onchange="selectTestOption(5)">
                 <div class="option-info">
                     <strong>5 pytań</strong>
                     <span>Szybki test</span>
@@ -344,7 +370,7 @@
             </label>
             
             <label class="option-checkbox" onclick="selectTestOption(10)">
-                <input type="radio" name="test_count" value="10">
+                <input type="radio" name="test_count" value="10" onchange="selectTestOption(10)">
                 <div class="option-info">
                     <strong>10 pytań</strong>
                     <span>Średni test</span>
@@ -352,7 +378,7 @@
             </label>
             
             <label class="option-checkbox" onclick="selectTestOption(15)">
-                <input type="radio" name="test_count" value="15">
+                <input type="radio" name="test_count" value="15" onchange="selectTestOption(15)">
                 <div class="option-info">
                     <strong>15 pytań</strong>
                     <span>Długi test</span>
@@ -360,7 +386,7 @@
             </label>
             
             <label class="option-checkbox" onclick="selectTestOption(-1)">
-                <input type="radio" name="test_count" value="-1">
+                <input type="radio" name="test_count" value="-1" onchange="selectTestOption(-1)">
                 <div class="option-info">
                     <strong>Wszystkie</strong>
                     <span>Pełny test ze wszystkich fiszek</span>
@@ -509,7 +535,7 @@
             params.append('random', randomOrder ? '1' : '0');
             if (reviewMode) params.append('review', '1');
             
-            window.location.href = "{{ url_for('learn_set', set_id=zestaw.id) }}" + 
+            window.location.href = "{{ url_for('learn.learn_set', set_id=zestaw.id) }}" + 
                 (params.toString() ? '?' + params.toString() : '');
         }
         
@@ -549,7 +575,7 @@
         }
         
         function startTest() {
-            window.location.href = "{{ url_for('test_set', set_id=zestaw.id) }}" + `?count=${selectedTestCount}`;
+            window.location.href = "{{ url_for('test.test_set', set_id=zestaw.id) }}" + `?count=${selectedTestCount}`;
         }
         
         document.getElementById('testModal').addEventListener('click', function(e) {
@@ -557,6 +583,38 @@
                 closeTestModal();
             }
         });
+
+        // Real-time card search/filter
+        (function () {
+            const input = document.getElementById('cardSearchInput');
+            const emptyMsg = document.getElementById('cardSearchEmpty');
+            if (!input) return;
+
+            input.addEventListener('focus', function () {
+                this.style.borderColor = 'rgba(99,102,241,0.5)';
+            });
+            input.addEventListener('blur', function () {
+                this.style.borderColor = 'rgba(148,163,184,0.15)';
+            });
+
+            input.addEventListener('input', function () {
+                const query = this.value.toLowerCase().trim();
+                const cards = document.querySelectorAll('.flashcards-list .flashcard-item');
+                let visibleCount = 0;
+
+                cards.forEach(function (card) {
+                    const searchText = card.getAttribute('data-search') || '';
+                    if (!query || searchText.includes(query)) {
+                        card.style.display = '';
+                        visibleCount++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                emptyMsg.style.display = (cards.length > 0 && visibleCount === 0) ? 'block' : 'none';
+            });
+        })();
     </script>
 </body>
 </html>

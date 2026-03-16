@@ -4,10 +4,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Edytuj: {{ zestaw.nazwa }} - Mądra Nauka</title>
-    <link rel="icon" type="image/x-icon" href="{{ url_for('favicon') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('icons', filename='icon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('icons', filename='icon-16x16.png') }}">
-    <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('icons', filename='icon-192x192.png') }}">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Mądra Nauka">
+    <link rel="manifest" href="{{ url_for('pwa.manifest') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('pwa.favicon') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('pwa.icons', filename='icon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('pwa.icons', filename='icon-16x16.png') }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('pwa.icons', filename='icon-192x192.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('pwa.icons', filename='icon-192x192.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/sets.css') }}">
@@ -17,10 +23,10 @@
         .section-header { margin-bottom: 12px; }
         .section-header h3 { font-size: 18px; margin: 0 0 4px; color: #f1f5f9; }
         .section-desc { font-size: 13px; color: #94a3b8; }
-        .card-row { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr auto; 
-            gap: 12px; 
+        .card-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 12px;
             margin-bottom: 12px;
             padding: 12px;
             background: rgba(15,23,42,0.6);
@@ -74,7 +80,12 @@
                 {% endif %}
             {% endwith %}
 
-            <form method="POST" action="{{ url_for('edit_set', set_id=zestaw.id) }}">
+            <form method="POST" action="{{ url_for('sets.edit_set', set_id=zestaw.id) }}" onsubmit="this.querySelector('button[type=submit]').disabled=true">
+                <div class="form-actions" style="margin-top: 0; margin-bottom: 24px;">
+                    <a href="{{ url_for('dashboard.dashboard') }}" class="btn ghost">Anuluj</a>
+                    <button type="submit" class="btn primary">Zapisz zmiany</button>
+                </div>
+
                 <div class="form-section">
                     <div class="form-group">
                         <label for="nazwa">Nazwa zestawu</label>
@@ -107,10 +118,6 @@
                     <button type="button" id="add-card" class="add-card-btn">+ Dodaj kolejną fiszkę</button>
                 </div>
 
-                <div class="form-actions">
-                    <a href="{{ url_for('dashboard') }}" class="btn ghost">Anuluj</a>
-                    <button type="submit" class="btn primary">Zapisz zmiany</button>
-                </div>
             </form>
         </div>
     </div>
@@ -133,7 +140,7 @@
         const addBtn = document.getElementById('add-card');
         const container = document.getElementById('cards-container');
         const tpl = document.getElementById('card-template');
-        
+
         addBtn.addEventListener('click', function (e) {
             e.preventDefault();
             const clone = tpl.content.cloneNode(true);
@@ -142,9 +149,9 @@
                 this.closest('.card-row').remove();
             });
             container.appendChild(clone);
+            container.querySelector('.card-row:last-child input[name="tekst[]"]').focus();
         });
-        
-        // Obsługa usuwania dla istniejących rzędów
+
         document.addEventListener('click', function(e) {
             if (e.target.classList.contains('remove-btn')) {
                 const rows = container.querySelectorAll('.card-row');

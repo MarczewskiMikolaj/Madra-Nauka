@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Brak połączenia - Mądra Nauka</title>
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Mądra Nauka">
+    <link rel="manifest" href="{{ url_for('pwa.manifest') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('pwa.favicon') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('pwa.icons', filename='icon-192x192.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .offline-icon { font-size: 64px; margin-bottom: 16px; }
+        .offline-title { font-size: 26px; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+        .offline-desc { font-size: 15px; color: #94a3b8; margin-bottom: 32px; max-width: 320px; line-height: 1.6; }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="bg-blob a"></div>
+        <div class="bg-blob b"></div>
+        <div class="card" style="text-align: center; max-width: 480px;">
+            <div class="offline-icon">📶</div>
+            <div class="offline-title">Brak połączenia</div>
+            <p class="offline-desc">Nie możemy połączyć się z serwerem. Sprawdź połączenie z internetem i spróbuj ponownie.</p>
+            <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                <button onclick="window.location.reload()" class="btn primary">Spróbuj ponownie</button>
+                <a href="{{ url_for('dashboard.dashboard') }}" class="btn ghost">Powrót do panelu</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

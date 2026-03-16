@@ -31,6 +31,37 @@
   width: 100%;
   max-width: 600px;
   height: 320px;
+  position: relative;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.swipe-label {
+  position: absolute;
+  top: 20px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 2px solid;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 10;
+  transition: opacity 0.05s linear;
+}
+
+.swipe-label-yes {
+  right: 16px;
+  color: #0ea672;
+  border-color: #0ea672;
+}
+
+.swipe-label-no {
+  left: 16px;
+  color: #e74c3c;
+  border-color: #e74c3c;
 }
 
 .flashcard {
@@ -39,7 +70,7 @@
   height: 100%;
   transition: transform 0.6s;
   transform-style: preserve-3d;
-  cursor: pointer;
+  cursor: grab;
 }
 
 .flashcard.flipped {
@@ -228,6 +259,25 @@
 .back-link {
   margin-top: 24px;
   text-align: center;
+}
+
+/* Card enter animations (slide-in after swipe) */
+@keyframes cardSlideFromLeft {
+  from { transform: translateX(-70px); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+
+@keyframes cardSlideFromRight {
+  from { transform: translateX(70px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+.flashcard-container.card-enter-left {
+  animation: cardSlideFromLeft 0.28s ease-out forwards;
+}
+
+.flashcard-container.card-enter-right {
+  animation: cardSlideFromRight 0.28s ease-out forwards;
 }
 
 /* Mobile Responsive */
