@@ -77,16 +77,20 @@ def _count_due_sets(username):
 @notifications.route('/push/trigger-daily', methods=['POST'])
 def trigger_daily():
     """Called by Cloud Scheduler every hour via HTTP POST.
-    Secured by a shared secret in the Authorization header."""
+    Secured by a shared secret in the Authorization header.
+    Optional query param ?force=1 bypasses hour check (for manual testing)."""
     auth = request.headers.get('Authorization', '')
     if auth != f'Bearer {SCHEDULER_SECRET}':
         return jsonify({'error': 'unauthorized'}), 401
-    send_daily_notifications()
-    return jsonify({'ok': True})
+    force = request.args.get('force') == '1'
+    result = send_daily_notifications(force=force)
+    return jsonify(result)
 
 
-def send_daily_notifications():
-    """Called every hour (via Cloud Scheduler). Sends push to users whose 8am local just passed."""
+def send_daily_notifications(force=False):
+    """Called every hour (via Cloud Scheduler). Sends push to users whose 8am local just passed.
+    If force=True, bypasses hour check (for manual testing)."""
+    result = {'ok': True, 'sent': 0, 'skipped_hour': 0, 'skipped_already_sent': 0, 'errors': 0, 'expired': 0}
     try:
         store.reload_sets()
         store.reload_users()
@@ -105,9 +109,11 @@ def send_daily_notifications():
                 # 8am local = 8am - (-utc_offset/60)h UTC = (8*60 + utc_offset) / 60 UTC
                 utc_offset = sub.get('utc_offset', 0)
                 target_utc_hour = (8 * 60 + utc_offset) // 60 % 24
-                if current_utc_hour != target_utc_hour:
+                if not force and current_utc_hour != target_utc_hour:
+                    result['skipped_hour'] += 1
                     continue
                 if sub.get('last_sent_date') == today_str:
+                    result['skipped_already_sent'] += 1
                     continue
 
                 due_count = _count_due_sets(username)
@@ -132,10 +138,13 @@ def send_daily_notifications():
                     )
                     sub['last_sent_date'] = today_str
                     changed = True
+                    result['sent'] += 1
+                    print(f'Push sent to {username}: {body}')
                 except WebPushException as e:
+                    result['errors'] += 1
                     if e.response and e.response.status_code in (404, 410):
-                        # Subscription expired — mark for removal
                         sub['_expired'] = True
+                        result['expired'] += 1
                     elif e.response and e.response.status_code == 429:
                         print(f'Push rate-limited for {username}, skipping: {e}')
                         continue
@@ -153,3 +162,6 @@ def send_daily_notifications():
             store.save_and_reload_users()
     except Exception as e:
         print(f'send_daily_notifications error: {e}')
+        result['ok'] = False
+        result['error'] = str(e)
+    return result
