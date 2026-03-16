@@ -1057,7 +1057,10 @@
     <script>
 (function() {
     let VAPID_PUBLIC_KEY = '';
-    fetch('/push/vapid-public-key').then(r => r.json()).then(d => { VAPID_PUBLIC_KEY = d.key; });
+    fetch('/push/vapid-public-key').then(r => r.json()).then(d => {
+        VAPID_PUBLIC_KEY = d.key;
+        if (btn) btn.disabled = false;
+    });
 
     function urlBase64ToUint8Array(base64String) {
         const padding = '='.repeat((4 - base64String.length % 4) % 4);
