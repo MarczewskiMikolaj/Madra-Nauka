@@ -860,7 +860,9 @@
 
     <script>
     (function() {
-        const VAPID_PUBLIC_KEY = 'VAPID_KEY_REMOVED';
+        let VAPID_PUBLIC_KEY = '';
+        // Pobierz klucz VAPID z serwera
+        fetch('/push/vapid-public-key').then(r => r.json()).then(d => { VAPID_PUBLIC_KEY = d.key; });
 
         function urlBase64ToUint8Array(base64String) {
             const padding = '='.repeat((4 - base64String.length % 4) % 4);
