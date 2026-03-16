@@ -861,8 +861,13 @@
     <script>
     (function() {
         let VAPID_PUBLIC_KEY = '';
-        // Pobierz klucz VAPID z serwera
-        fetch('/push/vapid-public-key').then(r => r.json()).then(d => { VAPID_PUBLIC_KEY = d.key; });
+        // Pobierz klucz VAPID z serwera — przycisk aktywny dopiero po pobraniu
+        fetch('/push/vapid-public-key').then(r => r.json()).then(d => {
+            VAPID_PUBLIC_KEY = d.key;
+            if (btn) btn.disabled = false;
+        }).catch(() => {
+            if (status) status.textContent = 'Nie udało się pobrać klucza push';
+        });
 
         function urlBase64ToUint8Array(base64String) {
             const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -915,6 +920,10 @@
         })();
 
         window.profileToggleNotifications = async function() {
+            if (!VAPID_PUBLIC_KEY) {
+                status.textContent = 'Ładowanie klucza push... Spróbuj ponownie za chwilę.';
+                return;
+            }
             try {
                 const reg = await navigator.serviceWorker.ready;
                 const existing = await reg.pushManager.getSubscription();
