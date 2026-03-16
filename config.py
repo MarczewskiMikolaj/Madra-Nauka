@@ -4,8 +4,7 @@ import os
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'your-secret-key-change-this-in-production')
 
-# Encryption key - in production, store this securely (environment variable, key management service)
-ENCRYPTION_KEY = b'ENCRYPTION_KEY_REMOVED'  # Example key - change in production
+ENCRYPTION_KEY = os.environ.get('ENCRYPTION_KEY', 'ENCRYPTION_KEY_REMOVED').encode()
 cipher = Fernet(ENCRYPTION_KEY)
 
 USERS_FILE = 'users.json'
@@ -20,6 +19,6 @@ USE_CLOUD_STORAGE = os.environ.get("USE_CLOUD_STORAGE", "false").lower() == "tru
 
 SCHEDULER_SECRET = os.environ.get('SCHEDULER_SECRET', 'change-me-in-production')
 
-VAPID_PUBLIC_KEY = 'VAPID_KEY_REMOVED'
-VAPID_PRIVATE_KEY = '-----BEGIN EC PRIVATE KEY-----\nPRIVATE_KEY_REMOVED\nPRIVATE_KEY_REMOVED2\nPRIVATE_KEY_REMOVED3\n-----END EC PRIVATE KEY-----\n'
-VAPID_CLAIMS = {'sub': 'mailto:admin@madranaucka.pl'}
+VAPID_PUBLIC_KEY = os.environ.get('VAPID_PUBLIC_KEY', '')
+VAPID_PRIVATE_KEY = os.environ.get('VAPID_PRIVATE_KEY', '')
+VAPID_CLAIMS = {'sub': os.environ.get('VAPID_CLAIMS_SUB', 'mailto:admin@madranauka.online')}
