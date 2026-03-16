@@ -4,7 +4,7 @@ import os
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'your-secret-key-change-this-in-production')
 
-ENCRYPTION_KEY = os.environ.get('ENCRYPTION_KEY', 'ENCRYPTION_KEY_REMOVED').encode()
+ENCRYPTION_KEY = os.environ.get('ENCRYPTION_KEY', '').encode()
 cipher = Fernet(ENCRYPTION_KEY)
 
 USERS_FILE = 'users.json'
