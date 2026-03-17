@@ -162,7 +162,7 @@ def send_daily_notifications(force=False):
                             'endpoint': endpoint,
                             'keys': keys,
                         },
-                        data=json.dumps({'title': 'Mądra Nauka 📚', 'body': body}),
+                        data=json.dumps({'title': 'Czas na powtórkę! 📚', 'body': body}),
                         vapid_private_key=VAPID_PRIVATE_KEY,
                         vapid_claims=claims,
                         content_encoding='aes128gcm',

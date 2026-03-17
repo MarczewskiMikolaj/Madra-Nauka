@@ -105,7 +105,7 @@ self.addEventListener('message', event => {
 });
 
 self.addEventListener('push', event => {
-  let data = { title: 'Mądra Nauka 📚', body: 'Czas na powtórkę!' };
+  let data = { title: 'Czas na powtórkę! 📚', body: 'Sprawdź swoje zestawy!' };
   if (event.data) {
     try { data = JSON.parse(event.data.text()); } catch(e) {}
   }
