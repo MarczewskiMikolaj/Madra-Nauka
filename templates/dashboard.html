@@ -225,11 +225,20 @@
                 width: 100% !important;
             }
             .calendar-popover {
-                left: 50%;
-                transform: translateX(-50%);
+                position: static;
+                opacity: 1;
+                pointer-events: auto;
+                transform: none;
+                box-shadow: none;
+                border: none;
+                padding: 8px 0;
+                background: transparent;
                 min-width: unset;
-                width: 90vw;
-                max-width: 300px;
+                width: 100%;
+                max-width: none;
+            }
+            .streak-wrapper:hover .calendar-popover {
+                /* already visible inline, no change needed */
             }
             .calendar-weekdays {
                 gap: 2px;
@@ -1075,18 +1084,13 @@
 
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
 
-    banner.style.display = 'flex';
-
     function updateUI(perm, subscribed) {
         if (perm === 'denied') {
-            status.textContent = 'Powiadomienia zablokowane w ustawieniach przeglądarki';
-            btn.textContent = 'Zablokowane';
-            btn.disabled = true;
-            btn.style.opacity = '0.5';
+            banner.style.display = 'none';
         } else if (subscribed) {
-            status.textContent = 'Będziesz przypominany o 8:00 każdego dnia';
-            btn.textContent = 'Wyłącz';
+            banner.style.display = 'none';
         } else {
+            banner.style.display = 'flex';
             status.textContent = 'Włącz, aby przypominało o 8:00 co dzień';
             btn.textContent = 'Włącz';
             btn.disabled = false;

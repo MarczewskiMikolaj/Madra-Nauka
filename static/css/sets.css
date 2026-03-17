@@ -30,6 +30,16 @@
   background: rgba(231, 76, 60, 0.2);
 }
 
+.card-row .remove-btn:active {
+  transform: scale(0.95);
+  background: rgba(231, 76, 60, 0.3);
+}
+
+.card-row .remove-btn:focus-visible {
+  outline: 2px solid var(--danger);
+  outline-offset: 2px;
+}
+
 .add-card-btn {
   background: rgba(79, 124, 255, 0.1);
   color: var(--primary);
@@ -46,6 +56,16 @@
 
 .add-card-btn:hover {
   background: rgba(79, 124, 255, 0.2);
+}
+
+.add-card-btn:active {
+  transform: scale(0.98);
+  background: rgba(79, 124, 255, 0.3);
+}
+
+.add-card-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 .form-section {

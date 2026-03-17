@@ -156,10 +156,12 @@
                     
                     <div class="options-container">
                         {% for option in question.options %}
+                        {% if option.text and option.text != '—' %}
                         <label class="option-item">
                             <input type="radio" name="answer" value="{{ option.value }}" required>
                             <span class="option-text">{{ option.text }}</span>
                         </label>
+                        {% endif %}
                         {% endfor %}
                     </div>
                 </div>

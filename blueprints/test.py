@@ -55,19 +55,17 @@ def test_set(set_id):
         # Poprawna odpowiedź
         correct_index = card_index
 
-        # Wygeneruj 3 losowe niepoprawne odpowiedzi z innych kart (indeksy)
+        # Wygeneruj losowe niepoprawne odpowiedzi z innych kart (indeksy)
+        # Dynamicznie dostosuj liczbę opcji do dostępnych kart (max 4)
         wrong_pool = [idx for idx in valid_indices if idx != correct_index]
-        if len(wrong_pool) >= 3:
-            wrong_indices = random.sample(wrong_pool, 3)
+        num_wrong = min(3, len(wrong_pool))
+        if num_wrong > 0:
+            wrong_indices = random.sample(wrong_pool, num_wrong)
         else:
-            wrong_indices = wrong_pool.copy()
-
-        # Uzupełnij do 3 błędnych odpowiedzi placeholderami
-        while len(wrong_indices) < 3:
-            wrong_indices.append(None)
+            wrong_indices = []
 
         # Wszystkie opcje (poprawna + niepoprawne) i tasowanie
-        options_indices = [correct_index] + wrong_indices[:3]
+        options_indices = [correct_index] + wrong_indices
         random.shuffle(options_indices)
         correct_option = options_indices.index(correct_index)
 

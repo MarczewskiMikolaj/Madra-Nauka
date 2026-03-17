@@ -71,6 +71,11 @@
   transition: transform 0.6s;
   transform-style: preserve-3d;
   cursor: grab;
+  touch-action: manipulation;
+}
+
+.flashcard-container.is-dragging .flashcard {
+  cursor: grabbing;
 }
 
 .flashcard.flipped {
@@ -110,6 +115,10 @@
   font-weight: 600;
   color: var(--text);
   line-height: 1.4;
+  overflow-y: auto;
+  word-break: break-word;
+  max-height: calc(100% - 60px);
+  width: 100%;
 }
 
 .flashcard-hint {
@@ -330,6 +339,10 @@
   
   .flashcard-content {
     font-size: 1.1rem;
+  }
+
+  .flashcard-hint {
+    font-size: 0.72rem;
   }
   
   .btn-action {

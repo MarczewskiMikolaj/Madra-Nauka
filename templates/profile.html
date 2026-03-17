@@ -440,7 +440,7 @@
 
                 <div class="stat-card success">
                     <div class="stat-icon">✅</div>
-                    <div class="stat-value">{{ sets_solved_today }}</div>
+                    <div class="stat-value">{{ sessions_today }}</div>
                     <div class="stat-label">Sesje dzisiaj</div>
                 </div>
 
@@ -744,10 +744,10 @@
                         {% else %}
                             {% set bar_height = 0 %}
                         {% endif %}
-                        <div class="chart-bar" style="height: {% if day.count > 0 %}{{ bar_height }}%{% else %}0{% endif %};">
+                        <div class="chart-bar" style="height: {% if day.count > 0 %}{{ bar_height }}%{% else %}0{% endif %};{% if day.is_today %} background: linear-gradient(180deg, #818cf8, #6366f1); box-shadow: 0 0 12px rgba(99,102,241,0.4);{% endif %}">
                             {% if day.count > 0 %}<span class="chart-value">{{ day.count }}</span>{% endif %}
                         </div>
-                        <div class="chart-label">{{ day.day }}</div>
+                        <div class="chart-label" style="{% if day.is_today %}color: #a5b4fc; font-weight: 700;{% endif %}">{% if day.is_today %}Dziś{% else %}{{ day.day }}{% endif %}</div>
                     </div>
                     {% endfor %}
                 </div>
