@@ -1,4 +1,5 @@
 import json
+import copy
 from datetime import datetime, timezone
 from flask import Blueprint, request, jsonify, session
 from pywebpush import webpush, WebPushException
@@ -74,6 +75,31 @@ def _count_due_sets(username):
     return count
 
 
+@notifications.route('/push/debug-subs', methods=['POST'])
+def debug_subs():
+    """Show stored subscriptions (endpoint prefix + keys presence). Secured by Bearer token."""
+    auth = request.headers.get('Authorization', '')
+    if auth != f'Bearer {SCHEDULER_SECRET}':
+        return jsonify({'error': 'unauthorized'}), 401
+    store.reload_users()
+    info = []
+    for user in store.users:
+        subs = user.get('push_subscriptions', [])
+        if not subs:
+            continue
+        username = user.get('login', '')
+        for sub in subs:
+            keys = sub.get('keys') or {}
+            info.append({
+                'user': username,
+                'endpoint_prefix': sub.get('endpoint', '')[:80],
+                'has_p256dh': bool(keys.get('p256dh')),
+                'has_auth': bool(keys.get('auth')),
+                'last_sent_date': sub.get('last_sent_date'),
+            })
+    return jsonify({'subscriptions': info, 'count': len(info)})
+
+
 @notifications.route('/push/trigger-daily', methods=['POST'])
 def trigger_daily():
     """Called by Cloud Scheduler every hour via HTTP POST.
@@ -119,24 +145,42 @@ def send_daily_notifications(force=False):
                     body = f'Masz {due_count} zestawów do powtórki dzisiaj!'
 
                 try:
+                    endpoint = sub['endpoint']
+                    keys = sub.get('keys') or {}
+                    if not keys.get('p256dh') or not keys.get('auth'):
+                        print(f'Push skip {username}: missing keys p256dh/auth, endpoint={endpoint[:80]}')
+                        sub['_expired'] = True
+                        result['errors'] += 1
+                        result['expired'] += 1
+                        continue
+
+                    # Deep copy claims so pywebpush doesn't mutate the shared dict
+                    claims = copy.deepcopy(VAPID_CLAIMS)
+
                     webpush(
                         subscription_info={
-                            'endpoint': sub['endpoint'],
-                            'keys': sub.get('keys') or {},
+                            'endpoint': endpoint,
+                            'keys': keys,
                         },
                         data=json.dumps({'title': 'Mądra Nauka 📚', 'body': body}),
                         vapid_private_key=VAPID_PRIVATE_KEY,
-                        vapid_claims=VAPID_CLAIMS,
+                        vapid_claims=claims,
+                        content_encoding='aes128gcm',
                     )
                     sub['last_sent_date'] = today_str
                     changed = True
                     result['sent'] += 1
-                    print(f'Push sent to {username}: {body}')
+                    print(f'Push sent to {username} endpoint={endpoint[:80]}')
                 except WebPushException as e:
                     result['errors'] += 1
                     status_code = e.response.status_code if e.response else None
-                    print(f'Push error for {username}: status={status_code} {e}')
-                    if status_code in (401, 403, 404, 410):
+                    resp_body = ''
+                    try:
+                        resp_body = e.response.text[:500] if e.response else ''
+                    except Exception:
+                        pass
+                    print(f'Push error for {username}: status={status_code} body={resp_body} endpoint={sub.get("endpoint", "")[:80]}')
+                    if status_code in (400, 401, 403, 404, 410):
                         sub['_expired'] = True
                         result['expired'] += 1
                     elif status_code == 429:
