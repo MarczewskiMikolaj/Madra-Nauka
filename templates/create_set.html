@@ -200,6 +200,12 @@
                 }
             }
         });
+
+        // Re-enable submit button on page load (in case server redirected back with error)
+        document.addEventListener('DOMContentLoaded', function() {
+            const submitBtn = document.querySelector('button[type=submit]');
+            if (submitBtn) submitBtn.disabled = false;
+        });
     </script>
 </body>
 </html>

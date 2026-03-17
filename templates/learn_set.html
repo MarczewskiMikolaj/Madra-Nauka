@@ -47,12 +47,12 @@
                     <div class="flashcard-face flashcard-front">
                         <div class="flashcard-label">Pytanie</div>
                         <div class="flashcard-content" id="questionText"></div>
-                        <div class="flashcard-hint">👆 Kliknij / Spacja, aby zobaczyć odpowiedź</div>
+                        <div class="flashcard-hint">Kliknij / Spacja = odwróć&ensp;|&ensp;← Nie rozumiem&ensp;|&ensp;→ Rozumiem</div>
                     </div>
                     <div class="flashcard-face flashcard-back">
                         <div class="flashcard-label">Odpowiedź</div>
                         <div class="flashcard-content" id="answerText"></div>
-                        <div class="flashcard-hint">👆 Kliknij / Spacja, aby wrócić do pytania</div>
+                        <div class="flashcard-hint">Kliknij / Spacja = odwróć&ensp;|&ensp;← Nie rozumiem&ensp;|&ensp;→ Rozumiem</div>
                     </div>
                 </div>
             </div>
@@ -299,6 +299,7 @@
                 isDragging   = true;
                 isHorizontal = null;
                 didSwipe     = false;
+                container.classList.add('is-dragging');
             }, { passive: true });
 
             container.addEventListener('touchmove', function(e) {
@@ -306,17 +307,19 @@
                 if (currentIndex >= cards.length) return;
                 const dx = e.touches[0].clientX - startX;
                 const dy = e.touches[0].clientY - startY;
-                if (isHorizontal === null && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+                if (isHorizontal === null && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) {
                     isHorizontal = Math.abs(dx) > Math.abs(dy);
                 }
-                if (!isHorizontal) return;
-                e.preventDefault();
-                applyDrag(dx);
+                if (isHorizontal) {
+                    e.preventDefault();
+                    applyDrag(dx);
+                }
             }, { passive: false });
 
             container.addEventListener('touchend', function(e) {
                 if (!isDragging) return;
                 isDragging = false;
+                container.classList.remove('is-dragging');
                 if (!isHorizontal) return;
                 const dx = e.changedTouches[0].clientX - startX;
                 if (Math.abs(dx) >= THRESHOLD) {
@@ -335,7 +338,7 @@
                 isDragging   = true;
                 didSwipe     = false;
                 mouseDragged = false;
-                container.style.cursor = 'grabbing';
+                container.classList.add('is-dragging');
             });
 
             document.addEventListener('mousemove', function(e) {
@@ -348,7 +351,7 @@
             document.addEventListener('mouseup', function(e) {
                 if (!isDragging) return;
                 isDragging = false;
-                container.style.cursor = '';
+                container.classList.remove('is-dragging');
                 const dx = e.clientX - startX;
                 if (Math.abs(dx) >= MOUSE_THRESHOLD) {
                     didSwipe = true;

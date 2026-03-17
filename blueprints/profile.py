@@ -34,7 +34,7 @@ def profile():
     mastered_cards = 0
     leech_cards = 0
     lifetime_sessions = 0
-    sets_solved_today = 0
+    sessions_today = 0
     weekly_stats = defaultdict(int)
     set_solve_counts = defaultdict(int)
     activity_dates = set()
@@ -71,7 +71,7 @@ def profile():
             data = wpis.get('data')
             if data:
                 if data == today:
-                    sets_solved_today += 1
+                    sessions_today += 1
                 weekly_stats[data] += 1
                 set_solve_counts[sid] += 1
                 activity_dates.add(data)
@@ -115,7 +115,7 @@ def profile():
         count = weekly_stats.get(day, 0)
         day_weekday = day_date.weekday()
         day_name = polish_days[day_weekday]
-        chart_data.append({'day': day_name, 'count': count, 'date': day})
+        chart_data.append({'day': day_name, 'count': count, 'date': day, 'is_today': i == 0})
 
     # Top 3 najczęściej rozwiązywanych zestawów
     sorted_sets = sorted(set_solve_counts.items(), key=lambda x: x[1], reverse=True)
@@ -195,7 +195,7 @@ def profile():
         mastered_cards=mastered_cards,
         leech_cards=leech_cards,
         lifetime_sessions=lifetime_sessions,
-        sets_solved_today=sets_solved_today,
+        sessions_today=sessions_today,
         chart_data=chart_data,
         top_sets=top_sets,
         set_stats=set_stats,

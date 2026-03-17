@@ -550,13 +550,13 @@
         
         // Close modal on backdrop click
         document.getElementById('learnModal').addEventListener('click', function(e) {
-            if (e.target === this) {
+            if (e.target === e.currentTarget) {
                 closeLearnModal();
             }
         });
-        
+
         document.getElementById('deleteModal').addEventListener('click', function(e) {
-            if (e.target === this) {
+            if (e.target === e.currentTarget) {
                 closeDeleteModal();
             }
         });
@@ -579,7 +579,7 @@
         }
         
         document.getElementById('testModal').addEventListener('click', function(e) {
-            if (e.target === this) {
+            if (e.target === e.currentTarget) {
                 closeTestModal();
             }
         });

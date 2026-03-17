@@ -28,7 +28,7 @@
             <p class="offline-desc">Nie możemy połączyć się z serwerem. Sprawdź połączenie z internetem i spróbuj ponownie.</p>
             <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
                 <button onclick="window.location.reload()" class="btn primary">Spróbuj ponownie</button>
-                <a href="{{ url_for('dashboard.dashboard') }}" class="btn ghost">Powrót do panelu</a>
+                <a href="/dashboard" onclick="event.preventDefault(); if(navigator.onLine) window.location.href='/dashboard'; else window.history.back();" class="btn ghost">Powrót</a>
             </div>
         </div>
     </div>
