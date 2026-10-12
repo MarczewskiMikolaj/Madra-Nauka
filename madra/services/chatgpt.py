@@ -322,18 +322,6 @@ def permitted(record):
     )
 
 
-def usage_consent(record):
-    return record.get("allow_plan_and_credits") is True
-
-
-def set_usage_consent(uid, allowed):
-    with locked(uid):
-        record = load(uid)
-        record["allow_plan_and_credits"] = bool(allowed)
-        record["usage_consent_updated_at"] = time.time()
-        save(uid, record)
-
-
 def access_token(uid):
     with locked(uid):
         record = load(uid)

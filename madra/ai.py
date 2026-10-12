@@ -3,6 +3,7 @@ import threading
 import time
 from datetime import datetime, timezone
 from uuid import uuid4
+from urllib.parse import urlsplit, parse_qs
 from flask import (
     Blueprint,
     abort,
@@ -31,10 +32,9 @@ def connection_info(uid):
         return {
             "connected": chatgpt.permitted(record),
             "email": record.get("email", ""),
-            "usage_consent": chatgpt.usage_consent(record),
         }
     except ValueError:
-        return {"connected": False, "email": "", "usage_consent": False}
+        return {"connected": False, "email": ""}
 
 
 def local_only():
@@ -72,33 +72,9 @@ def settings():
 @login_required
 def connect():
     local_only()
-    if request.form.get("usage_consent") != "yes":
-        flash(
-            "Zaznacz zgodę na używanie puli Codex / ChatGPT Work i dostępnych kredytów, aby połączyć AI.",
-            "error",
-        )
-        return redirect(url_for("ai.settings"))
-    chatgpt.set_usage_consent(g.user["id"], True)
     return redirect(
         chatgpt.begin(g.user["id"], current_app.config["CHATGPT_CALLBACK_URL"])
     )
-
-
-@bp.post("/konto/ai/zgoda")
-@login_required
-def update_usage_consent():
-    local_only()
-    allowed = request.form.get("usage_consent") == "yes"
-    chatgpt.set_usage_consent(g.user["id"], allowed)
-    flash(
-        (
-            "Zapisano zgodę na korzystanie z puli i dostępnych kredytów."
-            if allowed
-            else "Wycofano zgodę. Nowe generowanie jest zablokowane; już wysłane zadania mogą nadal zużywać pulę lub kredyty."
-        ),
-        "success",
-    )
-    return redirect(url_for("ai.settings"))
 
 
 @bp.get("/konto/ai/pomocnik")
@@ -140,6 +116,25 @@ def callback():
 
 def finish_callback(params):
     try:
+        if params.get("callback_url"):
+            callback = urlsplit(params["callback_url"].strip())
+            expected = urlsplit(current_app.config["CHATGPT_CALLBACK_URL"])
+            if (
+                len(params["callback_url"]) > 8000
+                or callback.scheme != expected.scheme
+                or callback.netloc != expected.netloc
+                or callback.path != expected.path
+                or callback.fragment
+            ):
+                raise ValueError(
+                    "Wklej pełny adres strony, na którą przekierowało logowanie ChatGPT."
+                )
+            values = parse_qs(callback.query)
+            params = {
+                key: values[key][0]
+                for key in ("code", "state", "client_id", "error")
+                if key in values
+            }
         record = chatgpt.finish(g.user["id"], params)
         if chatgpt.permitted(record):
             flash(
@@ -228,10 +223,6 @@ def run_job(app, job_id, uid, upload_id, model, goal):
         if app.config.get("CLOUD_STATE_BUCKET"):
             threading.Thread(target=heartbeat, daemon=True).start()
         try:
-            if not chatgpt.usage_consent(chatgpt.load(uid)):
-                raise ValueError(
-                    "Brak zgody na używanie puli i dostępnych kredytów. Udziel zgody w Połączeniu AI."
-                )
             source = (
                 get_db()
                 .execute(
@@ -318,12 +309,6 @@ def generate_materials(uid):
     try:
         info = connection_info(g.user["id"])
         if not info["connected"]:
-            return redirect(url_for("ai.settings"))
-        if not info["usage_consent"]:
-            flash(
-                "Najpierw udziel zgody na używanie puli Codex / ChatGPT Work i dostępnych kredytów.",
-                "error",
-            )
             return redirect(url_for("ai.settings"))
         choices = chatgpt.models(g.user["id"])
         model = FIXED_MODEL

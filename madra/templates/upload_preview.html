@@ -49,7 +49,7 @@
                     </div>
                 </div>
             {% if running %}<div class="workbench-action"><p>AI pracuje nad tym materiałem.</p><a class="button primary" href="{{ url_for('ai.job',jid=running.id) }}">Zobacz postęp</a></div>
-        {% elif info.connected and info.usage_consent and models %}
+        {% elif info.connected and models %}
             <form method="post"
                   action="{{ url_for('ai.generate_materials',uid=source.id) }}"
                   class="form-stack ai-generation-form">
@@ -68,14 +68,13 @@
                     </div>
                 </div>
                 <div class="generation-footer">
-                    <p>AI otrzyma cały oryginalny plik i Twój cel. PDF-y analizuje także wizualnie. Korzystasz ze wspólnej puli Codex / ChatGPT Work i dostępnych kredytów ChatGPT / Codex. Nowy wynik zastąpi niezapisane opracowanie. <a href="https://chatgpt.com/settings/usage"
+                    <p>AI otrzyma cały oryginalny plik i Twój cel. PDF-y analizuje także wizualnie. Nowy wynik zastąpi niezapisane opracowanie. <a href="https://chatgpt.com/settings/usage"
     target="_blank"
     rel="noopener">Sprawdź użycie i limit aplikacji</a>.</p>
                     <button class="button primary">{{ icon('spark', 17) }} Przygotuj materiały z AI</button>
                 </div>
             </form>
-        {% elif info.connected and info.usage_consent %}<div class="workbench-action"><p>GPT-5.6 Terra nie jest dostępny dla tego połączenia ChatGPT. Sprawdź połączenie AI.</p><a class="button secondary" href="{{ url_for('ai.settings') }}">Połączenie AI</a></div>
-        {% elif info.connected and not info.usage_consent %}<div class="workbench-action"><p>Generowanie wymaga zgody na używanie puli Codex / ChatGPT Work i dostępnych kredytów.</p><a class="button primary" href="{{ url_for('ai.settings') }}">Udziel zgody</a></div>
+        {% elif info.connected %}<div class="workbench-action"><p>GPT-5.6 Terra nie jest dostępny dla tego połączenia ChatGPT. Sprawdź połączenie AI.</p><a class="button secondary" href="{{ url_for('ai.settings') }}">Połączenie AI</a></div>
 {% else %}<div class="workbench-action"><p>Połącz ChatGPT, aby AI przeanalizowało plik i przygotowało notatkę oraz ćwiczenia.</p><a class="button primary" href="{{ url_for('ai.settings') }}">Połącz ChatGPT {{ icon('arrow', 17) }}</a></div>{% endif %}
     </section>
     <div class="review-context">

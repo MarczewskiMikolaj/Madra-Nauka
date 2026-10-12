@@ -172,7 +172,9 @@ class CloudTests(unittest.TestCase):
 
     def test_cloud_oauth_relay_preserves_local_callback_and_requires_csrf(self):
         page = self.client.get("/konto/ai")
-        self.assertIn(b"madra-login.py", page.data)
+        self.assertNotIn(b"madra-login.py", page.data)
+        self.assertNotIn(b"usage_consent", page.data)
+        self.assertIn(b"callback_url", page.data)
         helper = self.client.get("/konto/ai/pomocnik")
         self.assertIn(b"127.0.0.1", helper.data)
         self.assertIn(b"https://madranauka.online/konto/ai/powrot", helper.data)
@@ -200,6 +202,36 @@ class CloudTests(unittest.TestCase):
             )
             self.assertEqual(response.status_code, 302)
             self.assertEqual(finish.call_args.args[1]["state"], pending["state"])
+
+    def test_manual_callback_recovery_validates_url_and_preserves_state(self):
+        with patch(
+            "madra.ai.chatgpt.finish",
+            return_value={
+                "tokens": {"scope": "chatgpt.tokens.use.direct", "access_token": "test"}
+            },
+        ) as finish:
+            self.post(
+                "/konto/ai/powrot",
+                {
+                    "callback_url": "https://evil.example/auth/callback?code=code&state=state"
+                },
+            )
+            finish.assert_not_called()
+            response = self.post(
+                "/konto/ai/powrot",
+                {
+                    "callback_url": "http://127.0.0.1:8085/auth/callback?code=synthetic-code&state=synthetic-state&client_id=synthetic-client"
+                },
+            )
+            self.assertEqual(response.status_code, 302)
+            self.assertEqual(
+                finish.call_args.args[1],
+                {
+                    "code": "synthetic-code",
+                    "state": "synthetic-state",
+                    "client_id": "synthetic-client",
+                },
+            )
 
     def test_export_does_not_include_credential_objects(self):
         with self.app.app_context():

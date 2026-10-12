@@ -157,36 +157,16 @@ class AITests(unittest.TestCase):
             },
         )
 
-    def test_connection_requires_explicit_consent(self):
+    def test_connection_starts_without_local_consent_checkbox(self):
         with patch(
             "madra.ai.chatgpt.begin", return_value="https://auth.openai.com/test"
         ) as begin:
             response = self.post("/konto/ai/polacz", {})
-            self.assertIn("/konto/ai", response.location)
-            begin.assert_not_called()
-            response = self.post("/konto/ai/polacz", {"usage_consent": "yes"})
             self.assertEqual(response.location, "https://auth.openai.com/test")
             begin.assert_called_once()
-        with self.app.app_context():
-            self.assertTrue(chatgpt.usage_consent(chatgpt.load(self.uid)))
-
-    def test_revoking_consent_blocks_generation_and_preserves_connection(self):
-        source = self.source()
-        with self.app.app_context():
-            self.connection()
-        self.post("/konto/ai/zgoda", {})
-        with self.app.app_context():
-            record = chatgpt.load(self.uid)
-            self.assertFalse(chatgpt.usage_consent(record))
-            self.assertTrue(chatgpt.permitted(record))
-        with patch("madra.ai.chatgpt.models") as models:
-            response = self.post("/pliki/" + source + "/generuj-ai", {"model": "test"})
-            self.assertIn("/konto/ai", response.location)
-            models.assert_not_called()
-        self.assertEqual(self.count("ai_jobs"), 0)
-        self.post("/konto/ai/zgoda", {"usage_consent": "yes"})
-        with self.app.app_context():
-            self.assertTrue(chatgpt.usage_consent(chatgpt.load(self.uid)))
+        page = self.client.get("/konto/ai").get_data(as_text=True)
+        self.assertNotIn("usage_consent", page)
+        self.assertNotIn("Wspólna pula", page)
 
     def test_authorization_pkce_and_secret_storage(self):
         with self.app.app_context():
@@ -482,8 +462,6 @@ class AITests(unittest.TestCase):
 
     def test_job_failure_preserves_old_draft(self):
         uid = self.source()
-        with self.app.app_context():
-            chatgpt.set_usage_consent(self.uid, True)
         with self.app.app_context(), transaction() as db:
             before = db.execute(
                 "SELECT draft_json FROM uploads WHERE id=?", (uid,)
