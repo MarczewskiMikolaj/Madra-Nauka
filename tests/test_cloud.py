@@ -11,7 +11,7 @@ from google.api_core.exceptions import NotFound, PreconditionFailed
 from madra import create_app
 from madra.db import get_db, transaction
 from madra.services import chatgpt
-from madra.services.cloud_state import CloudState, StateConflict
+from madra.services.cloud_state import CloudState, StateConflict, StateUnavailable
 
 
 class FakeClient:
@@ -19,6 +19,7 @@ class FakeClient:
         self.objects = {}
         self.serial = 0
         self.fail_write = False
+        self.replace_on_download = 0
 
     def bucket(self, name):
         return self
@@ -35,6 +36,12 @@ class FakeClient:
                 self.generation = client.objects[name][1]
 
             def download_as_bytes(self, if_generation_match, **kwargs):
+                if client.replace_on_download:
+                    client.replace_on_download -= 1
+                    data, _ = client.objects[name]
+                    client.serial += 1
+                    client.objects[name] = (data, client.serial)
+                    raise NotFound("Old generation was replaced")
                 data, generation = client.objects[name]
                 if generation != if_generation_match:
                     raise PreconditionFailed("Stale read")
@@ -156,6 +163,41 @@ class CloudTests(unittest.TestCase):
                 [row[0] for row in get_db().execute("SELECT id FROM workspaces")],
                 ["kept"],
             )
+
+    def test_replaced_snapshot_download_retries_instead_of_opening_empty_database(self):
+        self.cloud.replace_on_download = 1
+        response = self.client.get("/biblioteka")
+        self.assertEqual(response.status_code, 200)
+        with self.app.app_context(), transaction() as db:
+            self.cloud.replace_on_download = 1
+            db.execute(
+                "UPDATE users SET username='StillPresent' WHERE id=?", (self.uid,)
+            )
+        with self.app.app_context():
+            self.assertEqual(
+                get_db().execute("SELECT username FROM users").fetchone()[0],
+                "StillPresent",
+            )
+
+    def test_continuously_replaced_snapshot_reports_conflict_without_erasing_data(self):
+        self.cloud.replace_on_download = 3
+        self.assertEqual(self.client.get("/biblioteka").status_code, 409)
+        with self.app.app_context():
+            self.assertEqual(
+                get_db().execute("SELECT count(*) FROM users").fetchone()[0], 1
+            )
+
+    def test_missing_live_snapshot_is_unavailable_and_cannot_be_written(self):
+        saved = self.cloud.objects.pop("madra-v2/state.sqlite3")
+        self.assertEqual(self.client.get("/biblioteka").status_code, 503)
+        with self.app.app_context():
+            with self.assertRaises(StateUnavailable):
+                with transaction():
+                    self.fail(
+                        "Missing database must not become a writable empty database"
+                    )
+        self.assertNotIn("madra-v2/state.sqlite3", self.cloud.objects)
+        self.cloud.objects["madra-v2/state.sqlite3"] = saved
 
     def test_failed_cloud_write_does_not_report_a_successful_upload(self):
         self.cloud.fail_write = True

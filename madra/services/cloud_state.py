@@ -38,14 +38,21 @@ class CloudState:
             blob = self.bucket.blob(self.prefix + "/" + name)
             try:
                 blob.reload(timeout=30)
+            except NotFound:
+                return None, 0
+            except Exception:
+                current_app.logger.warning("Cloud state read failed")
+                raise StateUnavailable() from None
+            try:
                 generation = int(blob.generation)
                 return (
                     blob.download_as_bytes(if_generation_match=generation, timeout=30),
                     generation,
                 )
-            except NotFound:
-                return None, 0
-            except PreconditionFailed:
+            except (NotFound, PreconditionFailed):
+                # Replacement deletes the old generation when versioning is off.
+                # A download of that generation can return 404, even though the
+                # object still exists. Reload its current generation and retry.
                 continue
             except Exception:
                 current_app.logger.warning("Cloud state read failed")

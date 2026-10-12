@@ -2,29 +2,37 @@ import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
 from flask import current_app, g
-from .services.cloud_state import cloud_state
+from .services.cloud_state import cloud_state, StateUnavailable
 
 
-def get_db():
+def get_db(*, allow_missing=False):
     if "db" not in g:
         store = cloud_state()
-        g.db = sqlite3.connect(
+        db = sqlite3.connect(
             ":memory:" if store else current_app.config["DATABASE"],
             timeout=10,
             isolation_level=None,
         )
         if store:
-            refresh_cloud_db(g.db)
-        g.db.row_factory = sqlite3.Row
-        g.db.execute("PRAGMA foreign_keys=ON")
-        g.db.execute("PRAGMA busy_timeout=10000")
+            try:
+                refresh_cloud_db(db, allow_missing=allow_missing)
+            except BaseException:
+                db.close()
+                raise
+        db.row_factory = sqlite3.Row
+        db.execute("PRAGMA foreign_keys=ON")
+        db.execute("PRAGMA busy_timeout=10000")
+        g.db = db
     return g.db
 
 
-def refresh_cloud_db(db):
+def refresh_cloud_db(db, *, allow_missing=False):
     data, generation = cloud_state().read("state.sqlite3")
     if data:
         db.deserialize(data)
+    elif not allow_missing:
+        current_app.logger.warning("Cloud database snapshot is missing")
+        raise StateUnavailable()
     g.cloud_generation = generation
     db.execute("PRAGMA foreign_keys=ON")
 
@@ -62,7 +70,7 @@ def transaction():
 
 
 def init_db():
-    db = get_db()
+    db = get_db(allow_missing=True)
     if not cloud_state():
         db.execute("PRAGMA journal_mode=WAL")
     migrated = False
