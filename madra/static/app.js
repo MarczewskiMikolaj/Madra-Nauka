@@ -57,6 +57,19 @@ if ("caches" in window) {
 }
 
 const fileDrop = document.querySelector("[data-file-drop]");
+document.querySelectorAll("[data-file-picker]").forEach((picker) => {
+  const input = picker.querySelector('input[type="file"]');
+  const name = picker.querySelector("[data-picker-name]");
+  const emptyName = name.textContent;
+  const update = () => {
+    name.textContent = input.files[0]?.name || emptyName;
+  };
+  input.addEventListener("change", update);
+  input.form?.addEventListener("reset", () => {
+    name.textContent = emptyName;
+  });
+  update();
+});
 if (fileDrop) {
   const input = fileDrop.querySelector('input[type="file"]');
   const name = fileDrop.querySelector("[data-file-name]");

@@ -80,6 +80,7 @@ def init_db():
         (3, "003_ai_jobs.sql"),
         (4, "004_original_files.sql"),
         (5, "005_ai_progress.sql"),
+        (6, "006_account_settings.sql"),
     ]:
         if db.execute("PRAGMA user_version").fetchone()[0] < version:
             migrated = True

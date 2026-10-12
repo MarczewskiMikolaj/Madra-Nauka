@@ -54,6 +54,15 @@
 {% macro csrf() %}
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 {% endmacro %}
+{% macro account_avatar(user, large=false) %}
+    <span class="avatar{% if large %} avatar-large{% endif %}">
+        {% if user.has_avatar %}
+            <img src="{{ url_for('account.avatar') }}" alt="" width="{{ 96 if large else 34 }}" height="{{ 96 if large else 34 }}">
+        {% else %}
+            {{ 'O' if user.is_demo else user.username[0]|upper }}
+        {% endif %}
+    </span>
+{% endmacro %}
 {% macro start(scope_name='',scope_id='',label='Rozpocznij sesję',budget=10) %}
     <form action="{{ url_for('study.start') }}"
           method="post"

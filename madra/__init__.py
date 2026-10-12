@@ -72,10 +72,18 @@ def create_app(test_config=None):
         app.config["SECRET_KEY"] = secret_path.read_text().strip()
     Path(app.config["DATABASE"]).parent.mkdir(parents=True, exist_ok=True)
     app.teardown_appcontext(db.close_db)
-    from . import auth, library, study, planning, uploads, ai
+    from . import auth, library, study, planning, uploads, ai, account
     from .services import migration
 
-    for blueprint in (auth.bp, library.bp, study.bp, planning.bp, uploads.bp, ai.bp):
+    for blueprint in (
+        auth.bp,
+        library.bp,
+        study.bp,
+        planning.bp,
+        uploads.bp,
+        ai.bp,
+        account.bp,
+    ):
         app.register_blueprint(blueprint)
     auth.init_app(app)
     migration.init_app(app)

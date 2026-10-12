@@ -24,6 +24,11 @@ from .services.learning import now_iso
 
 bp = Blueprint("auth", __name__)
 
+USER_QUERY = """SELECT users.*,
+    COALESCE(user_profiles.session_version, 0) AS session_version,
+    user_profiles.avatar_png IS NOT NULL AS has_avatar
+    FROM users LEFT JOIN user_profiles ON users.id=user_profiles.user_id"""
+
 
 def csrf_token():
     if "csrf" not in session:
@@ -48,11 +53,15 @@ def init_app(app):
         if session.get("user_id"):
             g.user = (
                 get_db()
-                .execute("SELECT * FROM users WHERE id=?", (session["user_id"],))
+                .execute(USER_QUERY + " WHERE users.id=?", (session["user_id"],))
                 .fetchone()
             )
-            if not g.user:
+            if (
+                not g.user
+                or session.get("session_version", 0) != g.user["session_version"]
+            ):
                 session.clear()
+                g.user = None
         if request.method in ("POST", "PUT", "PATCH", "DELETE"):
             token = request.form.get("csrf_token") or request.headers.get(
                 "X-CSRF-Token", ""
@@ -87,14 +96,22 @@ def login():
             abort(429)
         user = (
             get_db()
-            .execute("SELECT * FROM users WHERE username=? AND is_demo=0", (username,))
+            .execute(USER_QUERY + " WHERE username=? AND is_demo=0", (username,))
             .fetchone()
         )
         if user and check_password_hash(user["password_hash"], password):
             with transaction() as db:
+                # Recheck after acquiring the write lock (including a cloud refresh).
+                user = db.execute(
+                    USER_QUERY + " WHERE users.id=? AND username=? AND is_demo=0",
+                    (user["id"], username),
+                ).fetchone()
+                if not user or not check_password_hash(user["password_hash"], password):
+                    abort(409)
                 db.execute("DELETE FROM login_attempts WHERE key=?", (key,))
             session.clear()
             session["user_id"] = user["id"]
+            session["session_version"] = user["session_version"]
             return redirect(url_for("planning.today"))
         with transaction() as db:
             if not attempt or timestamp - attempt["first_at"] >= 900:

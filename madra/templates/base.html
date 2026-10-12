@@ -1,4 +1,4 @@
-{% from 'macros.html' import icon,csrf %}
+{% from 'macros.html' import icon,csrf,account_avatar %}
 <!DOCTYPE html>
 <html lang="pl">
     <head>
@@ -47,10 +47,10 @@
                     </div>
                     <a class="export-link" href="{{ url_for('planning.export') }}">{{ icon('download', 17) }} Eksportuj swoje dane</a>
                     <div class="account">
-                        <span class="avatar">{{ 'O' if g.user.is_demo else g.user.username[0]|upper }}</span>
+                        {{ account_avatar(g.user) }}
                         <div>
                             <strong>{{ 'Odkrywca' if g.user.is_demo else g.user.username }}</strong>
-                            <small>{{ 'Przestrzeń demonstracyjna' if g.user.is_demo else 'Moje konto' }}</small>
+                            <small><a href="{{ url_for('account.settings') }}">{{ 'Przestrzeń demonstracyjna' if g.user.is_demo else 'Ustawienia konta' }}</a></small>
                         </div>
                         <form action="{{ url_for('auth.logout') }}" method="post">
                             {{ csrf() }}
@@ -72,7 +72,7 @@
             {% if g.user %}
                 <header class="topbar">
                     <span>
-                        {{ {'today':'Moja nauka','library':'Moje materiały','goals':'Kierunek nauki','progress':'Moje postępy','ai':'Połączenie AI'}.get(nav,'Moja nauka') }}
+                        {{ {'today':'Moja nauka','library':'Moje materiały','goals':'Kierunek nauki','progress':'Moje postępy','ai':'Połączenie AI','account':'Ustawienia konta'}.get(nav,'Moja nauka') }}
                     </span>
                     <div class="topbar-right">
                         <span class="topbar-detail">
@@ -85,10 +85,11 @@
                         </span>
                         <details class="account-menu">
                             <summary aria-label="Menu konta">
-                                <span class="avatar">{{ 'O' if g.user.is_demo else g.user.username[0]|upper }}</span>
+                                {{ account_avatar(g.user) }}
                             </summary>
                             <div>
                                 <strong>{{ 'Konto demonstracyjne' if g.user.is_demo else g.user.username }}</strong>
+                                <a href="{{ url_for('account.settings') }}">Ustawienia konta</a>
                                 <a href="{{ url_for('ai.settings') }}">ChatGPT / AI</a>
                             <a href="{{ url_for('planning.export') }}">Eksportuj dane</a>
                                 <form action="{{ url_for('auth.logout') }}" method="post">

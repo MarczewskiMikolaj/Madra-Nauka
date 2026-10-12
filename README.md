@@ -22,6 +22,7 @@ Przy pierwszym uruchomieniu aplikacja tworzy bazę `instance/madra.sqlite3` i lo
 ## Działające MVP
 
 - konta, logowanie, wylogowanie, oddzielne dane użytkowników;
+- ustawienia konta: zmiana nazwy do logowania, zmiana hasła z potwierdzeniem obecnego i wylogowaniem pozostałych sesji, wgrywanie oraz usuwanie awatara;
 - biblioteka przedmiotów i tematów; wyszukiwanie przedmiotów;
 - notatki tekstowe i linki HTTP/HTTPS;
 - pięć typów ćwiczeń, edycja z zachowaniem ID i historii, archiwizacja;

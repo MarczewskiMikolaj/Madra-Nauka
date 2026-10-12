@@ -109,6 +109,47 @@ class CloudTests(unittest.TestCase):
             session["csrf"] = "test-csrf"
         return self.client.post(path, data={"csrf_token": "test-csrf", **data})
 
+    def test_profile_avatar_and_password_survive_restart(self):
+        from PIL import Image
+
+        image = io.BytesIO()
+        Image.new("RGB", (300, 200), "blue").save(image, format="PNG")
+        image.seek(0)
+        self.assertEqual(
+            self.post("/konto/awatar", {"avatar": (image, "avatar.png")}).status_code,
+            302,
+        )
+        avatar = self.client.get("/konto/awatar").data
+        self.assertEqual(
+            self.post("/konto/profil", {"username": "NewCloudName"}).status_code, 302
+        )
+        self.assertEqual(
+            self.post(
+                "/konto/haslo",
+                {
+                    "current_password": "test-password-123",
+                    "new_password": "changed-password-456",
+                    "confirm_password": "changed-password-456",
+                },
+            ).status_code,
+            302,
+        )
+        restarted = self.make_app()
+        client = restarted.test_client()
+        with client.session_transaction() as session:
+            session["csrf"] = "test-csrf"
+        response = client.post(
+            "/login",
+            data={
+                "csrf_token": "test-csrf",
+                "username": "NewCloudName",
+                "password": "changed-password-456",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(client.get("/konto/awatar").data, avatar)
+        self.assertIn(b"NewCloudName", client.get("/konto").data)
+
     def test_account_upload_and_encrypted_connection_survive_new_instance(self):
         response = self.post(
             "/materialy/wgraj",
