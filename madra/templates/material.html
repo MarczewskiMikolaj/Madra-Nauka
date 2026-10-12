@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% from 'macros.html' import note_reader,icon %}
+{% block title %}{{ material.title }} · Mądra Nauka{% endblock %}
+{% block content %}
+    <a class="breadcrumb" href="{{ url_for('library.topic',tid=topic.id) }}">Biblioteka / {{ topic.name }}</a>
+    <div class="page-heading">
+        <div>
+            <h1>{{ material.title }}</h1>
+            <p>Notatka do nauki</p>
+        </div>
+        <a class="button secondary"
+           href="{{ url_for('library.material_form',mid=material.id) }}">Edytuj notatkę</a>
+    </div>
+    {% if material.kind == "note" %}{{ note_reader(material.content, material.id) }}{% else %}<a class="source-link"
+   href="{{ material.content }}"
+   target="_blank"
+   rel="noopener noreferrer">Otwórz źródło {{ icon('arrow', 16) }}</a>{% endif %}
+{% endblock %}

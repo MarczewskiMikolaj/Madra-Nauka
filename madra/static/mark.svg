@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <title>Mądra Nauka</title>
+  <rect width="64" height="64" rx="16" fill="#304bdb"/>
+  <path d="M13 17 25 20 32 30v23L25 44l-12-3Z" fill="#fff"/>
+  <path d="m51 17-12 3-7 10v23l7-9 12-3Z" fill="#dce4ff"/>
+  <path d="m19 27 6 2m-6 6 6 2" stroke="#304bdb" stroke-width="2" stroke-linecap="round"/>
+  <path d="m45 27-6 2m6 6-6 2" stroke="#304bdb" stroke-width="2" stroke-linecap="round"/>
+</svg>

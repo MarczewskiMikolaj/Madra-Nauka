@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% from 'macros.html' import icon,csrf,start,result_menu %}
+{% block title %}
+    {{ topic.name }} · Mądra Nauka
+{% endblock %}
+{% block content %}
+    <a class="breadcrumb"
+       href="{{ url_for('library.workspace',wid=topic.workspace_id) }}">Biblioteka / {{ topic.workspace_name }}</a>
+    <div class="page-heading">
+        <div>
+            <h1>{{ topic.name }}</h1>
+            <p>{{ topic.description }}</p>
+        </div>
+        <div class="actions">
+            <a class="button primary"
+               href="{{ url_for('uploads.upload',topic_id=topic.id) }}">Wgraj plik</a>
+            <a class="button secondary"
+               href="{{ url_for('library.topic_form',tid=topic.id) }}">Edytuj temat</a>
+            {% if activities %}
+                {{ start('topic_id',topic.id) }}
+            {% endif %}
+        </div>
+    </div>
+    {% if sources %}
+        <section class="material"><h2>Pliki źródłowe</h2>{% for source in sources %}<p><a href="{{ url_for('uploads.preview',uid=source.id) }}">{{ source.filename }}</a> · <a href="{{ url_for('uploads.download',uid=source.id) }}">Pobierz</a></p>{% endfor %}</section>
+    {% endif %}
+    {{ result_menu(activities, materials|length) }}
+    <div class="topic-columns topic-organized">
+        <section class="result-section" id="result-notes">
+            <div class="section-heading">
+                <h2>Notatki i źródła</h2>
+                <a class="button secondary"
+                   href="{{ url_for('library.material_form',tid=topic.id) }}">{{ icon('plus', 17) }} Dodaj materiał</a>
+            </div>
+            {% for material in materials %}
+                <article class="material">
+                    <div class="between">
+                        <span class="small muted">{{ icon(material.kind,16) }} {{ 'Notatka' if material.kind=='note' else 'Link' }}</span>
+                        <a class="small"
+                           href="{{ url_for('library.material_form',mid=material.id) }}">Edytuj</a>
+                    </div>
+                    <h3>{{ material.title }}</h3>
+                    {% if material.kind=="link" %}
+                        <a class="source-link"
+                           href="{{ material.content }}"
+                           target="_blank"
+                           rel="noopener noreferrer">{{ material.content }} {{ icon('arrow', 16) }}</a>
+                    {% else %}
+                        <p class="material-excerpt">{{ (material.content|note_chapters)[0].content[:250] }}{% if material.content|length > 250 %}…{% endif %}</p><a class="button secondary"
+   href="{{ url_for('library.material',mid=material.id) }}">Czytaj notatkę i rozdziały</a>
+                    {% endif %}
+                </article>
+            {% else %}
+                <div class="empty-state">
+                    <h3>Zacznij od materiału.</h3>
+                    <p>Zapisz własną notatkę albo dodaj link do źródła.</p>
+                </div>
+            {% endfor %}
+        </section>
+        <section>
+            <div class="section-heading">
+                <h2>
+                    Ćwiczenia
+                    <span class="count-badge">{{ activities|length }}</span>
+                </h2>
+                <a class="button primary"
+                   href="{{ url_for('library.activity_form',tid=topic.id) }}">
+                    {{ icon('plus', 17) }} Dodaj ćwiczenie
+                </a>
+            </div>
+            {% for kind,label in [('open','Pytania otwarte'),('quiz','Quizy'),('exercise','Zadania'),('flashcard','Fiszki'),('cloze','Uzupełnianie luk')] %}
+                {% set group = activities|selectattr('kind','equalto',kind)|list %}
+                {% if group %}<section class="result-section result-group" id="result-{{ kind }}"><div class="result-group-heading"><h3>{{ label }} <span class="count-badge">{{ group|length }}</span></h3></div><div class="result-activity-grid">
+                    {% for activity in group %}
+                        <article class="activity-card">
+                            <div class="between">
+                                <span class="kind-pill {{ activity.kind }}">{{ kinds[activity.kind] }}</span>
+                                <span class="small muted">{{ activity.minutes }} min</span>
+                            </div>
+                            <h3>{{ activity.prompt }}</h3>
+                            {% if activity.upload_id %}<p class="small muted">Źródło: <a href="{{ url_for('uploads.preview',uid=activity.upload_id) }}">{{ activity.source_filename }}</a> · {{ activity.source_label }}</p>{% endif %}
+                            <details>
+                                <summary>Odpowiedź wzorcowa</summary>
+                                <div class="note-content">{{ activity.answer }}</div>
+                            </details>
+                            <div class="activity-footer">
+                                <span class="small muted">
+                                    {{ activity.reason }}
+                                    {% if activity.reviews %}
+                                        · {{ activity.reviews }} prób
+                                    {% endif %}
+                                </span>
+                                <a class="small"
+                                   href="{{ url_for('library.activity_form',aid=activity.id) }}">Edytuj</a>
+                                <form action="{{ url_for('library.archive_activity',aid=activity.id) }}"
+                                      method="post"
+                                      data-confirm="Zarchiwizować ćwiczenie? Historia pozostanie zachowana.">
+                                    {{ csrf() }}
+                                    <button class="text-button muted small">Archiwizuj</button>
+                                </form>
+                            </div>
+                        </article>
+                    {% endfor %}
+                    </div>
+                    </section>
+                {% endif %}
+            {% endfor %}
+            {% if not activities %}
+                <div class="empty-state">
+                    <h3>Sprawdź, co już rozumiesz.</h3>
+                    <p>Przygotuj pytanie, fiszkę lub zadanie. Możesz korzystać z kilku metod w jednym temacie.</p>
+                </div>
+            {% endif %}
+        </section>
+    </div>
+{% endblock %}

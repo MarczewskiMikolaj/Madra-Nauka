@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% from 'macros.html' import icon,scores as render_scores %}
+{% block title %}
+    Postępy · Mądra Nauka
+{% endblock %}
+{% block content %}
+    <div class="page-heading">
+        <div>
+            <h1>Zobacz, co już zrobiłeś.</h1>
+            <p>Każda próba się liczy. Także ta, która kończy się pytaniem.</p>
+        </div>
+        <a class="button secondary" href="{{ url_for('planning.export') }}">{{ icon('download', 18) }} Eksportuj dane</a>
+    </div>
+    <div class="stats-strip">
+        <div>
+            <strong>{{ reviews|length }}</strong>
+            <span>zapisanych odpowiedzi</span>
+        </div>
+        <div>
+            <strong>{{ sessions }}</strong>
+            <span>ukończonych sesji</span>
+        </div>
+        <div>
+            <strong>
+                {{ practiced }}
+                <small>/ {{ total }}</small>
+            </strong>
+            <span>podjętych ćwiczeń</span>
+        </div>
+        <div>
+            <strong>{{ streak }}</strong>
+            <span>dni z rzędu</span>
+        </div>
+    </div>
+    <div class="section-heading">
+        <h2>Trzy wymiary nauki</h2>
+    </div>
+    {{ render_scores(scores) }}
+    <p class="small muted">
+        Wskaźnik opiera się na ostatniej ocenie każdego ćwiczenia: jeszcze raz = 0%, trudno = 50%, dobrze lub łatwo = 100%. Niepodjęte ćwiczenia liczą się jako 0%. Quizy ocenia aplikacja; inne ćwiczenia oceniasz sam.
+    </p>
+    <div class="progress-columns">
+        <section class="panel">
+            <div class="section-heading">
+                <h2>Ostatnie 7 dni</h2>
+                <span class="small muted">Liczba odpowiedzi</span>
+            </div>
+            <div class="week-chart">
+                {% for day in week %}
+                    <div class="chart-column">
+                        <strong>{{ day.count }}</strong>
+                        <div class="chart-track">
+                            <span style="height:{{ (day.count/maximum*100)|round }}%"></span>
+                        </div>
+                        <span>{{ day.label }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+        <section>
+            <div class="section-heading">
+                <h2>Ostatnie sesje</h2>
+            </div>
+            <div class="session-history">
+                {% for study in history %}
+                    <a href="{{ url_for('study.session_page',sid=study.id) }}"
+                       class="history-row">
+                        <span class="history-icon">{{ icon('check' if study.status=='completed' else 'clock',18) }}</span>
+                        <div>
+                            <strong>{{ study.title }}</strong>
+                            <small>
+                                {{ study.answer_count }} odpowiedzi · {{ {'active':'W trakcie','completed':'Ukończona','ended':'Zakończona wcześniej'}[study.status] }}
+                            </small>
+                        </div>
+                        {{ icon('arrow', 16) }}
+                    </a>
+                {% else %}
+                    <div class="empty-state">
+                        <h3>Tu zobaczysz swoje pierwsze kroki.</h3>
+                        <p>Zacznij sesję, aby zapisać odpowiedzi.</p>
+                        <a href="{{ url_for('planning.today') }}">Przejdź do nauki</a>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% from 'macros.html' import csrf,icon %}
+{% block title %}Wgraj materiały · Mądra Nauka{% endblock %}
+{% block content %}
+    <div class="settings-page">
+        <a class="breadcrumb" href="{{ url_for('library.index') }}">Biblioteka / Nowy materiał</a>
+        <div class="page-heading">
+            <div>
+                <h1>Czego dziś się nauczysz?</h1>
+                <p>Dodaj plik. Z niego przygotujesz notatkę i ćwiczenia.</p>
+            </div>
+        </div>
+        <div class="upload-layout">
+            <form class="upload-card form-stack"
+                  method="post"
+                  enctype="multipart/form-data"
+                  data-upload-form>
+                {{ csrf() }}
+            {% if topic %}<input type="hidden" name="topic_id" value="{{ topic.id }}"><div class="destination-note">{{ icon('book', 18) }}<span>Temat<strong>{{ topic.name }}</strong></span></div>
+        {% else %}<div><label for="workspace">Gdzie zapisać materiał?</label><select id="workspace" name="workspace_id"><option value="">Nowy przedmiot z tego pliku</option>{% for space in spaces %}<option value="{{ space.id }}">{{ space.name }}</option>{% endfor %}</select></div>{% endif %}
+        <div class="file-drop" data-file-drop>
+            <label for="file" class="sr-only">Plik do opracowania</label>
+            <input type="file"
+                   name="file"
+                   id="file"
+                   accept=".pdf,.docx,.txt,.md"
+                   required
+                   aria-describedby="file-help">
+            <span class="file-drop-icon">{{ icon('upload', 28) }}</span><strong data-file-name>Wybierz plik lub przeciągnij go tutaj</strong><span class="muted" data-file-description>Notatki, dokument lub podręcznik</span><span class="file-types">PDF <i></i> DOCX <i></i> TXT <i></i> MD</span>
+        </div>
+        <p class="field-help" id="file-help">Do 10 MB i 100 stron PDF. Obsługujemy także skany PDF. Dokumenty z ilustracjami najlepiej wgrywać jako PDF; DOCX jest analizowany tekstowo.</p>
+        <button class="button primary upload-submit">Wgraj i przejrzyj materiał {{ icon('arrow', 18) }}</button>
+    </form>
+    <aside class="upload-explainer">
+        <h2>Od źródła do zrozumienia.</h2>
+        <ol class="workflow-list">
+            <li>
+                <span>1</span>
+                <div>
+                    <h3>Dodaj materiał</h3>
+                    <p>Zachowamy cały oryginalny plik do analizy AI.</p>
+                </div>
+            </li>
+            <li>
+                <span>2</span>
+                <div>
+                    <h3>Opracuj go z AI</h3>
+                    <p>Połącz ChatGPT i podaj, czego chcesz się nauczyć.</p>
+                </div>
+            </li>
+            <li>
+                <span>3</span>
+                <div>
+                    <h3>Sprawdź i rozpocznij naukę</h3>
+                    <p>Zapisz wybrane ćwiczenia do swojej biblioteki.</p>
+                </div>
+            </li>
+        </ol>
+        <div class="upload-tip">
+            {{ icon('spark', 19) }}
+            <p>AI przygotuje notatki, objaśnienia, przykłady, quizy i zadania na podstawie pliku. Połącz ChatGPT, aby rozpocząć analizę.</p>
+        </div>
+    </aside>
+</div>
+</div>
+{% endblock %}

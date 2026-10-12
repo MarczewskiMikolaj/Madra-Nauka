@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% from 'macros.html' import csrf,icon %}
+{% block title %}Połączenie ChatGPT · Mądra Nauka{% endblock %}
+{% block content %}
+    <div class="settings-page">
+        <a class="breadcrumb" href="{{ url_for('library.index') }}">Biblioteka / Połączenie AI</a>
+        <div class="page-heading">
+            <div>
+                <h1>Twój materiał. Lepsze opracowanie.</h1>
+                <p>Połącz ChatGPT i zamień swoje notatki w materiał do nauki.</p>
+            </div>
+        </div>
+        <div class="connection-layout">
+            <section class="connection-card">
+                <div class="connection-heading"><span class="integration-symbol">{{ icon('spark', 26) }}</span><div><h2>ChatGPT</h2><span class="connection-status {% if info.connected %}connected{% endif %}"><i></i>{{ 'Połączono' if info.connected else 'Niepołączony' }}</span></div></div>
+                {% if info.connected %}
+                    <p class="connection-lead">{{ 'Możesz już opracowywać swoje pliki.' if info.usage_consent else 'Udziel zgody, aby rozpocząć generowanie.' }}</p>
+                    <p class="connection-email">{{ info.email }}</p>
+                    <div class="connection-benefits">
+                        <p>{{ icon('check', 18) }} Materiały tworzy GPT-5.6 Terra</p>
+                        <p>{{ icon('check', 18) }} Objaśnienia i ćwiczenia z Twoich źródeł</p>
+                        <p>{{ icon('check', 18) }} Podgląd przed zapisaniem</p>
+                    </div>
+                    <form method="post"
+                          action="{{ url_for('ai.update_usage_consent') }}"
+                          class="usage-consent-form">
+                        {{ csrf() }}
+                        <label class="usage-consent"><input type="checkbox"
+       name="usage_consent"
+       value="yes"
+       {% if info.usage_consent %}checked{% endif %}><span>Zgadzam się na używanie puli Codex / ChatGPT Work oraz dostępnych kredytów ChatGPT / Codex do generowania materiałów.</span></label>
+                        <p class="small muted">Odznaczenie zgody blokuje nowe generowanie. Już wysłane zadania mogą nadal zużywać pulę lub kredyty.</p>
+                        <button class="button secondary">Zapisz zgodę</button>
+                    </form>
+                    {% if info.usage_consent %}<a class="button primary connection-cta"
+   href="{{ url_for('library.index') }}">Wybierz materiał {{ icon('arrow', 18) }}</a>{% endif %}
+                    <form method="post"
+                          action="{{ url_for('ai.disconnect') }}"
+                          class="disconnect-form">
+                        {{ csrf() }}<button class="text-button muted">Odłącz ChatGPT</button>
+                    </form>
+                {% else %}
+                    <p class="connection-lead">Korzystaj z planu, który już masz.</p>
+                    <p class="connection-description">Dla uprawnionych kont Plus i Pro. Zaloguj się w OpenAI i zezwól na używanie planu w Mądrej Nauce.</p>
+                    <div class="connection-benefits">
+                        <p>{{ icon('check', 18) }} Bez wpisywania klucza API</p>
+                        <p>{{ icon('check', 18) }} Stały model: GPT-5.6 Terra</p>
+                        <p>{{ icon('check', 18) }} Dostęp w ramach limitów Twojego planu</p>
+                    </div>
+                    {% if local_auth %}<form method="post" action="{{ url_for('ai.connect') }}">{{ csrf() }}<label class="usage-consent"><input type="checkbox" name="usage_consent" value="yes" required><span>Zgadzam się na używanie puli Codex / ChatGPT Work oraz dostępnych kredytów ChatGPT / Codex do generowania materiałów.</span></label><button class="button chatgpt-button connection-cta">Kontynuuj z ChatGPT {{ icon('arrow', 18) }}</button></form>
+{% else %}<p class="notice">Połączenie ChatGPT jest dostępne w lokalnej wersji aplikacji.</p>{% endif %}
+<p class="connection-caption">Przejdziesz na stronę OpenAI, aby potwierdzić połączenie.</p>
+{% endif %}
+<div class="connection-description">
+    <p><strong>Wspólna pula Codex / ChatGPT Work</strong></p>
+    <p>Generowanie korzysta z tej puli, a nie z limitu zwykłych rozmów ChatGPT. OpenAI może też wykorzystać dostępne kredyty ChatGPT / Codex. Limit ustawiony dla Mądrej Nauki może nadal zablokować generowanie mimo posiadania kredytów.</p>
+    <p class="small muted">Zgoda dotyczy łącznie planu i kredytów. OpenAI decyduje, z której puli rozliczyć użycie; to połączenie nie udostępnia osobnego przełącznika wydawania kredytów. Kredyty API na platform.openai.com są osobnym saldem i nie są używane przez to połączenie.</p>
+</div>
+<div class="connection-footer"><a href="https://chatgpt.com/settings/usage"
+   target="_blank"
+   rel="noopener noreferrer">Zarządzaj użyciem w ChatGPT {{ icon('arrow', 14) }}</a></div>
+</section>
+<aside class="learning-example">
+    <div class="example-heading"><span>{{ icon('note', 17) }} Przykład opracowania</span><span class="example-subject">Biologia</span></div>
+    <h2>Fotosynteza</h2>
+    <p class="example-intro">Zrozum proces, a potem sprawdź, czy potrafisz go wyjaśnić.</p>
+    <div class="example-note">
+        <span class="example-number">01</span>
+        <div>
+            <h3>Najpierw zrozumienie</h3>
+            <p>Roślina przekształca energię światła w energię chemiczną, którą magazynuje w związkach organicznych.</p>
+        </div>
+    </div>
+    <div class="example-question">
+        <div class="between"><span class="kind-pill open">Pytanie otwarte</span>{{ icon('spark', 16) }}</div>
+        <h3>Dlaczego światło jest potrzebne do fotosyntezy?</h3>
+        <p>Wyjaśnij rolę energii własnymi słowami.</p>
+    </div>
+    <div class="example-methods"><span>{{ icon('book', 16) }} Objaśnienia</span><span>{{ icon('target', 16) }} Ćwiczenia</span><span>{{ icon('undo', 16) }} Powtórki</span></div>
+</aside>
+</div>
+<details class="privacy-details">
+    <summary>{{ icon('link', 16) }} Co udostępniasz przy połączeniu?</summary>
+    <p>Aplikacja nie otrzymuje Twojego hasła ani dostępu do rozmów. Dopiero gdy uruchomisz generowanie, oryginalny plik i cel nauki zostaną wysłane do OpenAI. Po wyczerpaniu limitu planu nie przechodzimy automatycznie na płatne API.</p>
+</details>
+</div>
+{% endblock %}

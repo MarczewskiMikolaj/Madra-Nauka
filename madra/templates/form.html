@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% from 'macros.html' import csrf,icon %}
+{% set names = {"workspace": "przedmiot", "topic": "temat", "material": "materiał", "activity": "ćwiczenie"} %}
+{% macro value(name,default='') -%}
+    {{- request.form.get(name,record[name] if record else default) -}}
+{%- endmacro %}
+{% block title %}
+    {{ 'Edytuj' if record else 'Dodaj' }} {{ names[form_type] }} · Mądra Nauka
+{% endblock %}
+{% block content %}
+    <div class="form-page">
+        <a class="breadcrumb"
+           href="{% if topic %}{{ url_for('library.topic',tid=topic.id) }}{% elif space %}{{ url_for('library.workspace',wid=space.id) }}{% else %}{{ url_for('library.index') }}{% endif %}">
+            ← {{ topic.name if topic else (space.name if space else 'Biblioteka') }}
+        </a>
+        <div class="page-heading">
+            <div>
+                <h1>{{ 'Edytuj' if record else 'Dodaj' }} {{ names[form_type] }}.</h1>
+                <p>
+                    {% if form_type=="activity" %}
+                        Jedno konkretne pytanie. Jedna okazja, żeby zrozumieć więcej.
+                    {% elif form_type=="material" %}
+                        Zapisz to, co pomoże Ci wrócić do tematu.
+                    {% elif form_type=="topic" %}
+                        Mały, konkretny fragment wiedzy jest łatwiejszy do przećwiczenia.
+                    {% else %}
+                        Przedmiot, umiejętność albo obszar, który Cię ciekawi.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        <form method="post" class="panel form-stack editor">
+            {{ csrf() }}
+            {% if form_type in ("workspace","topic") %}
+                <label>
+                    Nazwa
+                    <input name="name"
+                           required
+                           maxlength="{{ 100 if form_type=='workspace' else 150 }}"
+                           value="{{ value('name') }}"
+                           placeholder="{{ 'np. Biologia, Python, Angielski' if form_type=='workspace' else 'np. Komórka i energia' }}">
+                </label>
+                <label>
+                    Opis
+                    <span class="muted small">opcjonalnie</span>
+                    <textarea name="description"
+                              rows="3"
+                              maxlength="2000"
+                              placeholder="Co chcesz tutaj zrozumieć?">{{ value('description') }}</textarea>
+                </label>
+                {% if form_type=="workspace" %}
+                    <label>
+                        Kolor przedmiotu
+                        <select name="color">
+                            {% for key,label in colors.items() %}
+                                <option value="{{ key }}"
+                                        {% if request.form.get('color',record.color if record else 'blue')==key %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                {% endif %}
+            {% elif form_type=="material" %}
+                <label>
+                    Rodzaj materiału
+                    <select name="kind" id="material-kind">
+                        <option value="note"
+                                {% if request.form.get('kind',record.kind if record else 'note')=='note' %}selected{% endif %}>
+                            Notatka
+                        </option>
+                        <option value="link"
+                                {% if request.form.get('kind',record.kind if record else 'note')=='link' %}selected{% endif %}>
+                            Link do źródła
+                        </option>
+                    </select>
+                </label>
+                <label>
+                    Tytuł
+                    <input name="title"
+                           required
+                           maxlength="200"
+                           value="{{ value('title') }}"
+                           placeholder="np. Najważniejsze idee">
+                </label>
+                <label>
+                    Treść notatki lub pełny adres źródła
+                    <textarea name="content"
+                              rows="12"
+                              required
+                              maxlength="150000"
+                              placeholder="Zapisz własną notatkę albo wklej https://…">{{ value('content') }}</textarea>
+                </label>
+                <p class="small muted">
+                    Notatka zachowuje akapity i jest wyświetlana jako tekst. Link musi zaczynać się od http:// lub https://.
+                </p>
+            {% else %}
+                <div class="two-fields">
+                    <label>
+                        Typ ćwiczenia
+                        <select name="kind" id="activity-kind">
+                            {% for key,label in kinds.items() %}
+                                <option value="{{ key }}"
+                                        {% if request.form.get('kind',record.kind if record else 'open')==key %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label>
+                        Szacowany czas (min)
+                        <input type="number"
+                               name="minutes"
+                               min="1"
+                               max="15"
+                               required
+                               value="{{ value('minutes', 2) }}">
+                    </label>
+                </div>
+                <div class="form-hint" id="kind-hint">Pytanie otwarte pomaga wyjaśnić temat własnymi słowami.</div>
+                <label>
+                    Pytanie lub polecenie
+                    <textarea name="prompt"
+                              required
+                              rows="4"
+                              maxlength="10000"
+                              placeholder="np. Wyjaśnij, dlaczego…">{{ value('prompt') }}</textarea>
+                </label>
+                <div id="quiz-options">
+                    <label>
+                        Opcje quizu
+                        <textarea name="options"
+                                  rows="5"
+                                  placeholder="Jedna opcja w każdym wierszu">{{ request.form.get('options',options) }}</textarea>
+                    </label>
+                    <p class="small muted">Dodaj 2–6 różnych opcji. Poprawna odpowiedź poniżej musi dokładnie odpowiadać jednej z nich.</p>
+                </div>
+                <label>
+                    Odpowiedź wzorcowa
+                    <textarea name="answer"
+                              required
+                              rows="5"
+                              maxlength="10000"
+                              placeholder="Odpowiedź, rozwiązanie lub wyjaśnienie, z którym porównasz swoją próbę.">{{ value('answer') }}</textarea>
+                </label>
+                {% if record %}
+                    <p class="small muted">Edycja zachowuje historię ćwiczenia. Trwająca sesja korzysta z wcześniejszej wersji treści.</p>
+                {% endif %}
+            {% endif %}
+            <div class="form-actions">
+                <button class="button primary">Zapisz {{ names[form_type] }} {{ icon('check', 18) }}</button>
+                <a class="button quiet"
+                   href="{% if topic %}{{ url_for('library.topic',tid=topic.id) }}{% elif space %}{{ url_for('library.workspace',wid=space.id) }}{% else %}{{ url_for('library.index') }}{% endif %}">
+                    Anuluj
+                </a>
+            </div>
+        </form>
+    </div>
+{% endblock %}

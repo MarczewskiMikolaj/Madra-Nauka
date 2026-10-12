@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% from 'macros.html' import csrf,icon,result_menu,note_reader %}
+{% block title %}Sprawdź materiały · Mądra Nauka{% endblock %}
+{% block content %}
+    <div class="review-page">
+        <a class="breadcrumb" href="{{ url_for('library.index') }}">Biblioteka / Opracowanie materiału</a>
+        <div class="page-heading">
+            <div>
+                <h1>{{ title }}</h1>
+                <p class="file-meta">{{ icon('note', 16) }} {{ source.filename }} <span>{{ draft.activities|length }} ćwiczeń</span></p>
+            </div>
+            <a class="button secondary"
+               href="{{ url_for('uploads.download',uid=source.id) }}">{{ icon('download', 16) }} Oryginał</a>
+        </div>
+        {% if source.imported_at %}
+            <div class="saved-material-panel">
+                <span class="saved-icon">{{ icon('check', 26) }}</span>
+                <div>
+                    <h2>Materiał jest w Twojej bibliotece.</h2>
+                    <p>Otwórz notatkę albo przejdź do ćwiczeń w temacie.</p>
+                    {% for material in saved_notes %}<a class="button secondary"
+   href="{{ url_for('library.material',mid=material.id) }}">Czytaj notatkę: {{ material.title }}</a>{% endfor %}
+                    <a class="button primary"
+                       href="{{ url_for('library.topic',tid=source.topic_id) }}">Przejdź do tematu {{ icon('arrow', 18) }}</a>
+                </div>
+            </div>
+            {% for material in saved_notes %}<section class="note-editor saved-note-preview"><h2>{{ material.title }}</h2>{{ note_reader(material.content, material.id) }}</section>{% endfor %}
+        {% else %}
+            {% if draft.get("generator") == "ai" %}<div class="notice"><strong>Opracowanie jest gotowe.</strong> <a href="#result-notes">Czytaj notatkę i przejrzyj rozdziały</a></div>{% endif %}
+            {% if last_job and last_job.state=="failed" and not running %}
+                <div class="notice" role="alert">
+                    <strong>Ostatnie opracowanie nie zostało ukończone.</strong>
+                    <p>{{ last_job.error }}</p>
+                    {% if "subscription_sharing_usage" in last_job.error %}
+                        <p>Plik pozostaje dostępny. Najpierw sprawdź dostępność użycia planu, potem ponów analizę.</p>
+                        <a class="button primary"
+                           href="https://chatgpt.com/settings/usage"
+                           target="_blank"
+                           rel="noopener">Sprawdź użycie i limity ChatGPT</a>
+            {% else %}<p>Plik pozostaje dostępny. Możesz ponowić analizę poniżej.</p>{% endif %}
+                </div>
+            {% endif %}
+            <section class="ai-workbench">
+                <div class="workbench-heading">
+                    <span class="integration-symbol">{{ icon('spark', 23) }}</span>
+                    <div>
+                        <h2>Opracowanie z AI</h2>
+                        <p>Obszerna notatka, wyjaśnienia i ćwiczenia dopasowane do Twojego celu.</p>
+                    </div>
+                </div>
+            {% if running %}<div class="workbench-action"><p>AI pracuje nad tym materiałem.</p><a class="button primary" href="{{ url_for('ai.job',jid=running.id) }}">Zobacz postęp</a></div>
+        {% elif info.connected and info.usage_consent and models %}
+            <form method="post"
+                  action="{{ url_for('ai.generate_materials',uid=source.id) }}"
+                  class="form-stack ai-generation-form">
+                {{ csrf() }}
+                <div class="generation-fields">
+                    <div>
+                        <label for="goal">Czego chcesz się nauczyć?</label><textarea id="goal"
+          name="goal"
+          rows="2"
+          maxlength="1000"
+          placeholder="Np. zrozumieć temat od podstaw i przygotować się do sprawdzianu">{{ draft.get('goal','') }}</textarea>
+                    </div>
+                    <div>
+                        <span class="small muted">Model AI</span>
+                        <p><strong>GPT-5.6 Terra</strong></p>
+                    </div>
+                </div>
+                <div class="generation-footer">
+                    <p>AI otrzyma cały oryginalny plik i Twój cel. PDF-y analizuje także wizualnie. Korzystasz ze wspólnej puli Codex / ChatGPT Work i dostępnych kredytów ChatGPT / Codex. Nowy wynik zastąpi niezapisane opracowanie. <a href="https://chatgpt.com/settings/usage"
+    target="_blank"
+    rel="noopener">Sprawdź użycie i limit aplikacji</a>.</p>
+                    <button class="button primary">{{ icon('spark', 17) }} Przygotuj materiały z AI</button>
+                </div>
+            </form>
+        {% elif info.connected and info.usage_consent %}<div class="workbench-action"><p>GPT-5.6 Terra nie jest dostępny dla tego połączenia ChatGPT. Sprawdź połączenie AI.</p><a class="button secondary" href="{{ url_for('ai.settings') }}">Połączenie AI</a></div>
+        {% elif info.connected and not info.usage_consent %}<div class="workbench-action"><p>Generowanie wymaga zgody na używanie puli Codex / ChatGPT Work i dostępnych kredytów.</p><a class="button primary" href="{{ url_for('ai.settings') }}">Udziel zgody</a></div>
+{% else %}<div class="workbench-action"><p>Połącz ChatGPT, aby AI przeanalizowało plik i przygotowało notatkę oraz ćwiczenia.</p><a class="button primary" href="{{ url_for('ai.settings') }}">Połącz ChatGPT {{ icon('arrow', 17) }}</a></div>{% endif %}
+    </section>
+    <div class="review-context">
+        <span class="review-status">{{ icon('note', 15) }} {{ 'Opracowanie AI z pliku' if draft.get("generator")=='ai' else 'Plik gotowy do analizy AI' }}</span>
+        <p>{{ 'Sprawdź opracowanie w oryginale przed zapisaniem. Wskazania źródeł pochodzą od AI.' if draft.get("generator")=='ai' else 'AI przygotuje całą notatkę, odpowiedzi i ćwiczenia. Nie tworzymy automatycznych pytań z wyrwanych fragmentów.' }}</p>
+    </div>
+    {% if draft.get("generator")=="ai" %}
+        <form method="post" class="review-editor form-stack">
+            {{ csrf() }}
+            {{ result_menu(draft.activities) }}
+            <section class="note-editor result-section" id="result-notes">
+                <div class="editor-section-heading">
+                    <h2>Notatka do nauki</h2>
+                    <span>Możesz ją poprawić</span>
+                </div>
+                {{ note_reader(request.form.get('guide',draft.guide), 'draft') }}
+                <details class="result-note-edit">
+                    <summary>Edytuj tytuł i notatkę</summary>
+                    <label for="title">Nazwa tematu / notatki</label><input id="title"
+       name="title"
+       maxlength="150"
+       required
+       value="{{ request.form.get('title',title) }}"><label for="guide" class="sr-only">Notatka do nauki</label><textarea id="guide" name="guide" rows="10" required maxlength="50000">{{ request.form.get('guide',draft.guide) }}</textarea>
+                </details>
+            </section>
+            <div class="section-heading">
+                <h2>Ćwiczenia <span class="count-badge">{{ draft.activities|length }}</span></h2>
+                <span class="muted small">Zaznacz te, które chcesz zachować</span>
+            </div>
+            {% for kind,label in [('open','Pytania otwarte'),('quiz','Quizy'),('exercise','Zadania'),('flashcard','Fiszki'),('cloze','Uzupełnianie luk')] %}
+                {% set group = draft.activities|selectattr('kind','equalto',kind)|list %}
+                {% if group %}
+                    <section class="result-section result-group" id="result-{{ kind }}">
+                        <div class="result-group-heading">
+                            <h3>{{ label }} <span class="count-badge">{{ group|length }}</span></h3>
+                            <div class="result-selection">
+                                <button type="button" class="text-button small" data-select-group="all">Zaznacz wszystkie</button><button type="button"
+        class="text-button small muted"
+        data-select-group="none">Odznacz</button>
+                            </div>
+                        </div>
+                        <div class="review-exercises">
+                            {% for activity in draft.activities %}
+                                {% set i = loop.index0 %}
+                                {% if activity.kind == kind %}
+                                    <article class="review-exercise"><div class="exercise-selection"><label class="upload-checkbox"><input type="checkbox"
+       name="selected"
+       value="{{ i }}"
+       {% if request.method=='GET' or i|string in request.form.getlist('selected') %}checked{% endif %}><span class="sr-only">Zapisz ćwiczenie {{ loop.index }}</span></label><span class="exercise-index">{{ '%02d'|format(loop.index) }}</span><span class="kind-pill {{ activity.kind }}">{{ kinds[activity.kind] }}</span><span class="exercise-time">{{ activity.minutes }} min</span></div><h3>{{ activity.prompt }}</h3><p class="exercise-source">{{ icon('note', 13) }} {{ activity.label }}</p>
+                                        <details class="exercise-edit">
+                                            <summary>Sprawdź odpowiedź i edytuj {{ icon('arrow', 14) }}</summary>
+                                            <div class="exercise-fields">
+                                                {% if activity.get("evidence") %}<blockquote><span>Wskazanie źródła przez AI — sprawdź w pliku</span>{{ activity.evidence }}</blockquote>{% endif %}
+                                                <label for="prompt-{{ i }}">Polecenie {{ loop.index }}</label><textarea id="prompt-{{ i }}" name="prompt_{{ i }}" rows="3" maxlength="10000">{{ request.form.get('prompt_'~i,activity.prompt) }}</textarea>
+                                                {% if activity.kind=="quiz" %}<label for="options-{{ i }}">Warianty {{ loop.index }} (po jednym w wierszu)</label><textarea id="options-{{ i }}" name="options_{{ i }}" rows="4">{{ request.form.get('options_'~i, activity.options|join('\n')) }}</textarea>{% endif %}
+                                                <label for="answer-{{ i }}">Odpowiedź {{ loop.index }}</label><textarea id="answer-{{ i }}" name="answer_{{ i }}" rows="3" maxlength="10000">{{ request.form.get('answer_'~i,activity.answer) }}</textarea>
+                                            </div>
+                                        </details>
+                                    </article>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </section>
+                {% endif %}
+            {% endfor %}
+            <div class="review-save-bar">
+                <p>Gotowe do nauki?<span>Zapisz notatkę i zaznaczone ćwiczenia.</span></p>
+                <button class="button primary">Zapisz materiały i wybrane ćwiczenia {{ icon('check', 17) }}</button>
+            </div>
+        </form>
+    {% endif %}
+    <form method="post"
+          action="{{ url_for('uploads.discard',uid=source.id) }}"
+          class="upload-discard">
+        {{ csrf() }}<button class="text-button muted">Usuń plik i propozycje</button>
+    </form>
+{% endif %}
+</div>
+{% endblock %}

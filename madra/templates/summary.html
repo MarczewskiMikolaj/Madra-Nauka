@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% from 'macros.html' import csrf,icon %}
+{% block title %}
+    Podsumowanie · Mądra Nauka
+{% endblock %}
+{% block content %}
+    <section class="summary-panel">
+        <span class="summary-symbol">{{ icon('check', 36) }}</span>
+        <p class="muted">{{ study.title }}</p>
+        <h1>{{ 'Kolejny krok za Tobą.' if items else 'Do tego tematu możesz wrócić.' }}</h1>
+        <p>Wszystkie ocenione odpowiedzi są już zapisane. Możesz zakończyć na dziś albo wybrać kolejną porcję nauki.</p>
+        <div class="summary-numbers">
+            <div>
+                <strong>{{ items|length }}</strong>
+                <span>odpowiedzi z {{ total }}</span>
+            </div>
+            <div>
+                <strong>{{ success }}</strong>
+                <span>dobrze lub łatwo</span>
+            </div>
+            <div>
+                <strong>{{ items|length-success }}</strong>
+                <span>do utrwalenia</span>
+            </div>
+        </div>
+        <div class="actions centered">
+            <a class="button primary" href="{{ url_for('planning.today') }}">Wróć do planu {{ icon('arrow', 18) }}</a>
+            <a class="button secondary" href="{{ url_for('planning.progress') }}">Zobacz postępy</a>
+        </div>
+        {% if items %}
+            <form class="undo-summary"
+                  action="{{ url_for('study.undo',sid=study.id) }}"
+                  method="post">
+                {{ csrf() }}
+                <button class="text-button muted">{{ icon('undo', 17) }} Popraw ostatnią ocenę</button>
+            </form>
+        {% endif %}
+    </section>
+{% endblock %}

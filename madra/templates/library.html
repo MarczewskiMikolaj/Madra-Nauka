@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% from 'macros.html' import icon %}
+{% block title %}
+    Biblioteka · Mądra Nauka
+{% endblock %}
+{% block content %}
+    <div class="page-heading">
+        <div>
+            <h1>Twoja biblioteka.</h1>
+            <p>Materiały, które pomagają Ci zrozumieć więcej.</p>
+        </div>
+        <div class="actions"><a class="button secondary" href="{{ url_for('uploads.upload') }}">Wgraj plik</a><a class="button primary" href="{{ url_for('library.workspace_form') }}">{{ icon('plus', 18) }} Dodaj przedmiot</a></div>
+    </div>
+    {% if uploads %}<section class="material"><h2>Twoje pliki</h2>{% for upload in uploads %}<p><a href="{{ url_for('uploads.preview',uid=upload.id) }}">{{ upload.filename }}</a> <span class="small muted">· {% if upload.imported_at %}Zapisano materiały{% elif upload.ai_state=="running" %}AI pracuje — otwórz postęp{% elif upload.ai_state=="failed" %}Błąd opracowania — otwórz szczegóły{% elif upload.generator=="ai" %}Opracowanie AI do sprawdzenia{% else %}Czeka na analizę AI{% endif %}</span></p>{% endfor %}</section>{% endif %}
+    <form class="search-form" method="get">
+        {{ icon('search', 20) }}
+        <label class="sr-only" for="search">Szukaj przedmiotu</label>
+        <input id="search"
+               name="q"
+               placeholder="Szukaj przedmiotu lub umiejętności…"
+               value="{{ query }}">
+        <button class="button quiet">Szukaj</button>
+    </form>
+    <div class="subject-grid">
+        {% for space in spaces %}
+            <a class="subject-card {{ space.color }}"
+               href="{{ url_for('library.workspace',wid=space.id) }}">
+                <div class="between">
+                    <span class="subject-symbol">{{ icon('book', 25) }}</span>
+                    {{ icon('arrow', 19) }}
+                </div>
+                <h2>{{ space.name }}</h2>
+                <p>{{ space.description or 'Miejsce na Twoje tematy, materiały i ćwiczenia.' }}</p>
+                <div class="subject-meta">
+                    <span>{{ space.topic_count }} tematów</span>
+                    <span>{{ space.material_count }} materiałów</span>
+                    <span>{{ space.activity_count }} ćwiczeń</span>
+                </div>
+            </a>
+        {% else %}
+            <div class="empty-state full-width">
+                {{ icon('book', 36) }}
+                <h2>{{ 'Brak pasujących przedmiotów' if query else 'Zacznij od tego, czego chcesz się nauczyć.' }}</h2>
+                <p>
+                    {{ 'Spróbuj innej nazwy lub wyczyść wyszukiwanie.' if query else 'Dodaj biologię, programowanie, język albo dowolny obszar, który Cię ciekawi.' }}
+                </p>
+                <a class="button primary" href="{{ url_for('library.workspace_form') }}">Dodaj przedmiot</a>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

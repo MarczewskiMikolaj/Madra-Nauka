@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% from 'macros.html' import icon,csrf %}
+{% block title %}
+    Sesja nauki · Mądra Nauka
+{% endblock %}
+{% block content %}
+    <div class="study-wrapper">
+        <div class="study-top">
+            <a class="breadcrumb" href="{{ url_for('planning.today') }}">← Zapisz przerwę i wróć później</a>
+            <span class="small muted">{{ study.title }}</span>
+        </div>
+        <div class="between">
+            <span class="small">Ćwiczenie {{ item.position+1 }} z {{ total }}</span>
+            <span class="small muted">{{ activity.minutes }} min · {{ dimensions[activity.dimension] }}</span>
+        </div>
+        <div class="meter study-meter">
+            <span style="width:{{ (item.position/total*100)|round }}%"></span>
+        </div>
+        <section class="study-card">
+            <div class="between">
+                <span class="kind-pill {{ activity.kind }}">{{ kinds[activity.kind] }}</span>
+                <span class="small muted">{{ activity.reason }}</span>
+            </div>
+            <p class="study-source">{{ activity.workspace_name }} / {{ activity.topic_name }}</p>
+            <h1>{{ activity.prompt }}</h1>
+            {% if not item.revealed %}
+                <form action="{{ url_for('study.reveal',sid=study.id) }}"
+                      method="post"
+                      class="form-stack">
+                    {{ csrf() }}
+                    <input type="hidden" name="item_id" value="{{ item.id }}">
+                    {% if activity.kind=="quiz" %}
+                        <fieldset class="quiz-options">
+                            <legend class="sr-only">Wybierz odpowiedź</legend>
+                            {% for option in activity.options %}
+                                <label class="quiz-option">
+                                    <input type="radio" name="response" value="{{ option }}" required>
+                                    <span>{{ option }}</span>
+                                </label>
+                            {% endfor %}
+                        </fieldset>
+                        <button class="button primary">Sprawdź odpowiedź {{ icon('check', 18) }}</button>
+                    {% elif activity.kind=="flashcard" %}
+                        <p class="muted">Spróbuj przypomnieć sobie odpowiedź przed jej odkryciem.</p>
+                        <button class="button primary">Pokaż odpowiedź {{ icon('arrow', 18) }}</button>
+                    {% else %}
+                        <label>
+                            {{ 'Uzupełnij lukę' if activity.kind=='cloze' else 'Twoja próba odpowiedzi' }}
+                            <textarea name="response"
+                                      rows="{{ 2 if activity.kind=='cloze' else 5 }}"
+                                      required
+                                      maxlength="10000"
+                                      placeholder="{{ 'Brakujące słowo lub wyrażenie' if activity.kind=='cloze' else 'Zapisz swoje rozumowanie. Jeśli nie wiesz, napisz „nie wiem”.' }}"></textarea>
+                        </label>
+                        <p class="small muted">
+                            {{ 'Kod jest zapisywany jako tekst i nie jest wykonywany.' if activity.kind=='exercise' else 'Najpierw własna odpowiedź, potem porównanie ze wzorcem.' }}
+                        </p>
+                        <button class="button primary">Porównaj z odpowiedzią {{ icon('arrow', 18) }}</button>
+                    {% endif %}
+                </form>
+            {% else %}
+                {% if item.response %}
+                    <div class="response-block">
+                        <span class="small muted">Twoja odpowiedź</span>
+                        <div class="note-content">{{ item.response }}</div>
+                    </div>
+                {% endif %}
+                <div class="answer-block">
+                    <span class="small">
+                        {% if activity.kind=="quiz" %}
+                            {{ 'Poprawna odpowiedź!' if item.objective_correct else 'Warto wrócić do tego pytania.' }}
+                        {% else %}
+                            Odpowiedź wzorcowa
+                        {% endif %}
+                    </span>
+                    <div class="note-content">{{ activity.answer }}</div>
+                </div>
+                <form action="{{ url_for('study.grade',sid=study.id) }}" method="post">
+                    {{ csrf() }}
+                    <input type="hidden" name="item_id" value="{{ item.id }}">
+                    {% if activity.kind=="quiz" %}
+                        <p class="small muted">
+                            Wynik quizu jest oceniany automatycznie. {{ 'Następna powtórka będzie później.' if item.objective_correct else 'To pytanie wróci do powtórki jutro.' }}
+                        </p>
+                        <button class="button primary">Zapisz wynik i kontynuuj {{ icon('arrow', 18) }}</button>
+                    {% else %}
+                        <p class="grade-question">Jak oceniasz swoją odpowiedź?</p>
+                        <div class="grade-buttons">
+                            <button name="grade" value="0" class="grade again">
+                                <strong>Jeszcze raz</strong>
+                                <small>Nie pamiętam / nie rozumiem</small>
+                            </button>
+                            <button name="grade" value="1" class="grade hard">
+                                <strong>Trudno</strong>
+                                <small>Z pomocą lub częściowo</small>
+                            </button>
+                            <button name="grade" value="2" class="grade good">
+                                <strong>Dobrze</strong>
+                                <small>Samodzielnie i poprawnie</small>
+                            </button>
+                            <button name="grade" value="3" class="grade easy">
+                                <strong>Łatwo</strong>
+                                <small>Pewnie, bez wahania</small>
+                            </button>
+                        </div>
+                        <p class="small muted">Twoja ocena ustala kolejną powtórkę. Wynik zapisze się od razu.</p>
+                    {% endif %}
+                </form>
+            {% endif %}
+        </section>
+        <div class="study-bottom">
+            {% if last %}
+                <form action="{{ url_for('study.undo',sid=study.id) }}" method="post">
+                    {{ csrf() }}
+                    <button class="text-button">{{ icon('undo', 17) }} Cofnij ostatnią ocenę</button>
+                </form>
+            {% else %}
+                <span></span>
+            {% endif %}
+            <form action="{{ url_for('study.end',sid=study.id) }}" method="post">
+                {{ csrf() }}
+                <button class="text-button muted">Zakończ wcześniej</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

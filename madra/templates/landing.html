@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% from 'macros.html' import icon,csrf %}
+{% block content %}
+    <section class="welcome">
+        <div class="welcome-copy">
+            <span class="soft-label">Miejsce dla Twojej ciekawości</span>
+            <h1>
+                Od pierwszego pytania
+                <br>
+                do własnej odpowiedzi.
+            </h1>
+            <p>
+                Zbierz materiały. Zrozum temat. Sprawdź się na różne sposoby. Mądra Nauka pomaga zamienić wiedzę w codzienny plan działania.
+            </p>
+            <div class="actions">
+                <a class="button primary" href="{{ url_for('auth.register') }}">Stwórz swoją przestrzeń {{ icon('arrow', 18) }}</a>
+                {% if config.ALLOW_DEMO %}
+                    <form action="{{ url_for('auth.demo') }}" method="post">
+                        {{ csrf() }}
+                        <button class="button secondary">Wypróbuj na przykładzie</button>
+                    </form>
+                {% endif %}
+            </div>
+            <p class="small muted">Notatki, pytania otwarte, zadania, quizy i fiszki. W jednym miejscu.</p>
+        </div>
+        <div class="welcome-preview">
+            <div class="preview-heading">
+                {{ icon('sun', 22) }} Twój plan na dziś
+                <span>10 min</span>
+            </div>
+            <div class="preview-row">
+                <span class="type-icon open">?</span>
+                <div>
+                    <strong>Wyjaśnij własnymi słowami</strong>
+                    <small>Dlaczego mięśnie potrzebują energii?</small>
+                </div>
+            </div>
+            <div class="preview-row">
+                <span class="type-icon exercise">⌘</span>
+                <div>
+                    <strong>Zastosuj to w praktyce</strong>
+                    <small>Rozwiąż krótkie zadanie z Pythona</small>
+                </div>
+            </div>
+            <div class="preview-row">
+                <span class="type-icon flashcard">↔</span>
+                <div>
+                    <strong>Utrwal najważniejsze</strong>
+                    <small>Wróć do tego, co już znasz</small>
+                </div>
+            </div>
+            <div class="preview-footer">{{ icon('check', 18) }} Każda odpowiedź przybliża Cię do celu.</div>
+        </div>
+    </section>
+    <div class="welcome-features">
+        <article>
+            {{ icon('book', 26) }}
+            <h3>Twój materiał</h3>
+            <p>Przedmioty i tematy, notatki i źródła. Wiedza uporządkowana po Twojemu.</p>
+        </article>
+        <article>
+            {{ icon('spark', 26) }}
+            <h3>Różne sposoby nauki</h3>
+            <p>Ćwicz pamięć, zrozumienie i zastosowanie. Wybierz więcej niż jeden sposób.</p>
+        </article>
+        <article>
+            {{ icon('target', 26) }}
+            <h3>Konkretny kierunek</h3>
+            <p>Ustal termin i czas. Zobacz, co już przećwiczyłeś i do czego wrócić.</p>
+        </article>
+    </div>
+{% endblock %}

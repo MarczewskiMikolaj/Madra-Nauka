@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% from 'macros.html' import icon,csrf,goal_card,start %}
+{% block title %}
+    Cele · Mądra Nauka
+{% endblock %}
+{% block content %}
+    <div class="page-heading">
+        <div>
+            <h1>Nadaj nauce kierunek.</h1>
+            <p>Konkretny cel, spokojne tempo i małe kroki do przodu.</p>
+        </div>
+    </div>
+    <div class="goals-layout">
+        <section>
+            {% for goal in goals %}
+                <div class="goal-detail">
+                    {{ goal_card(goal) }}
+                    <div class="goal-guidance">
+                        {% if not goal.total %}
+                            <p>Dodaj ćwiczenia do tego przedmiotu, żeby zobaczyć zakres przygotowań.</p>
+                        {% elif goal.completed %}
+                            <p>Cel oznaczony jako zakończony. Możesz nadal utrwalać materiał.</p>
+                        {% elif goal.days<0 %}
+                            <p>Termin minął. Wróć do materiału we własnym tempie.</p>
+                        {% else %}
+                            <p>
+                                Około
+                                <strong>{{ goal.estimated_remaining }} min</strong>
+                                na pierwszą próbę pozostałych ćwiczeń.
+                                {% if goal.feasible %}
+                                    Ten zakres mieści się w Twoim budżecie.
+                                {% else %}
+                                    Zakres przekracza dostępny czas. Zwiększ budżet lub ogranicz materiał.
+                                {% endif %}
+                            </p>
+                        {% endif %}
+                        <p class="small muted">
+                            Pokrycie oznacza podjęte ćwiczenia. Nie jest oceną gotowości do egzaminu; powtórki wymagają dodatkowego czasu.
+                        </p>
+                        <div class="actions">
+                            {% if goal.total %}
+                                {{ start('workspace_id',goal.workspace_id,'Ucz się do celu') }}
+                            {% endif %}
+                            <form action="{{ url_for('planning.toggle_goal',gid=goal.id) }}"
+                                  method="post">
+                                {{ csrf() }}
+                                <button class="button secondary">{{ 'Przywróć cel' if goal.completed else 'Oznacz jako zakończony' }}</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    {{ icon('target', 36) }}
+                    <h2>Co chcesz osiągnąć?</h2>
+                    <p>Ustal termin i dostępny czas. Po sesji zobaczysz, jaką część ćwiczeń już podjąłeś.</p>
+                </div>
+            {% endfor %}
+        </section>
+        <aside class="panel goal-form">
+            <h2>Nowy cel</h2>
+            {% if spaces %}
+                <form action="{{ url_for('planning.add_goal') }}"
+                      method="post"
+                      class="form-stack">
+                    {{ csrf() }}
+                    <label>
+                        Nazwa celu
+                        <input name="title"
+                               required
+                               maxlength="150"
+                               placeholder="np. Sprawdzian z biologii">
+                    </label>
+                    <label>
+                        Przedmiot
+                        <select name="workspace_id">
+                            {% for space in spaces %}
+                                <option value="{{ space.id }}">{{ space.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label>
+                        Termin
+                        <input type="date" name="target_date" required>
+                    </label>
+                    <label>
+                        Czas dziennie (min)
+                        <input type="number"
+                               name="daily_minutes"
+                               value="20"
+                               min="5"
+                               max="180"
+                               required>
+                    </label>
+                    <button class="button primary">Dodaj cel {{ icon('plus', 18) }}</button>
+                </form>
+            {% else %}
+                <p>Najpierw dodaj przedmiot w bibliotece.</p>
+                <a class="button primary" href="{{ url_for('library.workspace_form') }}">Dodaj przedmiot</a>
+            {% endif %}
+        </aside>
+    </div>
+{% endblock %}

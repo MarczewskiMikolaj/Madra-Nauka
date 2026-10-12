@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% from 'macros.html' import csrf,icon %}
+{% block title %}
+    {{ 'Załóż konto' if register else 'Logowanie' }} · Mądra Nauka
+{% endblock %}
+{% block content %}
+    <div class="auth-layout">
+        <div class="auth-intro">
+            <span class="soft-label">Twoja przestrzeń, Twój rytm</span>
+            <h1>{{ 'Zrób miejsce na nową wiedzę.' if register else 'Dobrze Cię widzieć.' }}</h1>
+            <p>
+                {{ 'Zacznij od jednego tematu. Zbierz materiały i wybierz, jak chcesz się uczyć.' if register else 'Wróć do swoich materiałów, celów i kolejnej małej porcji nauki.' }}
+            </p>
+        </div>
+        <section class="panel auth-panel">
+            <h2>{{ 'Załóż konto' if register else 'Zaloguj się' }}</h2>
+            <form method="post" class="form-stack">
+                {{ csrf() }}
+                <label>
+                    Nazwa użytkownika
+                    <input name="username"
+                           required
+                           {% if register %}minlength="3" maxlength="40"{% endif %}
+                           autocomplete="username"
+                           value="{{ request.form.get('username', '') }}">
+                </label>
+                <label>
+                    Hasło
+                    <input type="password"
+                           name="password"
+                           required
+                           {% if register %}minlength="8" maxlength="256" autocomplete="new-password"{% else %}autocomplete="current-password"{% endif %}>
+                </label>
+                {% if register %}
+                    <label>
+                        Powtórz hasło
+                        <input type="password"
+                               name="confirm_password"
+                               required
+                               minlength="8"
+                               autocomplete="new-password">
+                    </label>
+                    <p class="small muted">Co najmniej 8 znaków. Dane zapisują się w Twojej prywatnej przestrzeni.</p>
+                {% endif %}
+                <button class="button primary">{{ 'Utwórz konto' if register else 'Zaloguj się' }} {{ icon('arrow', 18) }}</button>
+            </form>
+            <p class="small">
+                {{ 'Masz już konto?' if register else 'Dopiero zaczynasz?' }}
+                <a href="{{ url_for('auth.login' if register else 'auth.register') }}">
+                    {{ 'Zaloguj się' if register else 'Załóż konto' }}
+                </a>
+            </p>
+        </section>
+    </div>
+{% endblock %}

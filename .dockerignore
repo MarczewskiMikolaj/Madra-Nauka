@@ -20,3 +20,13 @@ README.md
 *.swp
 *.swo
 *~
+instance
+output
+legacy
+graphify-out
+docs
+tests
+users.json
+sets.json
+.playwright
+.playwright-cli

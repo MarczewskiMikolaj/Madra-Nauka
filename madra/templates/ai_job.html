@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from 'macros.html' import icon %}
+{% block title %}Opracowanie materiału · Mądra Nauka{% endblock %}
+{% block extra_head %}
+    {% if job.state=="running" %}<meta http-equiv="refresh" content="3">{% endif %}
+{% endblock %}
+{% block content %}
+    <div class="settings-page">
+        <section class="connection-card" aria-live="polite">
+            <h1>{{ 'AI opracowuje Twój plik' if job.state=='running' else 'Nie udało się ukończyć opracowania' }}</h1>
+            {% if job.state=="running" %}
+                {% set stage = progress.get('stage','queued') %}
+                {% set stages = [('queued', 'Przygotowanie zadania'), ('sending', 'Wysyłanie oryginalnego pliku'), ('analyzing', 'OpenAI przetwarza plik i przygotowuje odpowiedź'), ('writing', 'Tworzenie notatek i ćwiczeń'), ('validating', 'Sprawdzanie kompletności i poprawności wyniku')] %}
+                <ol class="workflow-list">
+                    {% for key,label in stages %}
+                        <li {% if key==stage %}aria-current="step"{% endif %}><span>{{ icon('spark', 17) if key==stage else loop.index }}</span><div><h3>{{ label }}</h3>{% if key==stage %}<p>Aktualny etap</p>{% endif %}</div></li>
+                    {% endfor %}
+                </ol>
+                <p><strong>Czas oczekiwania: {{ elapsed }}</strong></p>
+                {% if progress.get("output_chars",0) %}<p>Otrzymano {{ progress.output_chars }} znaków odpowiedzi. Wynik będzie dostępny po ukończeniu i sprawdzeniu.</p>{% endif %}
+                <p class="small muted">{{ job.model }} · Bez limitu czasu generowania</p>
+                <p>Ten ekran aktualizuje się co 3 sekundy. Możesz wrócić do biblioteki — AI będzie pracować dalej. Etapy wynikają ze zdarzeń OpenAI; dostawca nie udostępnia postępu analizy poszczególnych stron.</p>
+            {% else %}
+                <div class="notice" role="alert">{{ job.error }}</div>
+                {% if "subscription_sharing_usage" in job.error %}<p><a class="button primary"
+   href="https://chatgpt.com/settings/usage"
+   target="_blank"
+   rel="noopener">Sprawdź użycie i limity ChatGPT</a></p>{% endif %}
+                <p>Oryginalny plik i dotychczasowe opracowanie pozostają zachowane.</p>
+            {% endif %}
+            <a class="button secondary"
+               href="{{ url_for('uploads.preview',uid=job.upload_id) }}">Wróć do pliku</a>
+        </section>
+    </div>
+{% endblock %}

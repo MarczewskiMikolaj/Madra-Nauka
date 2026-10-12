@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+    <section class="empty-state error-page">
+        <span class="error-code">{{ code }}</span>
+        <h1>{{ message }}</h1>
+        <p>Twoje wcześniej zapisane wyniki pozostają w aplikacji.</p>
+        <a class="button primary"
+           href="{{ url_for('planning.today') if g.user else url_for('planning.landing') }}">Wróć do początku</a>
+    </section>
+{% endblock %}
