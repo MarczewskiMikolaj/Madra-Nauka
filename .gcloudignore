@@ -31,3 +31,13 @@ sets.json
 # Documentation
 README.md
 CLAUDE.md
+
+
+# Private local state and generated artifacts
+instance/
+output/
+.playwright/
+.playwright-cli/
+graphify-out/
+legacy/
+docs/

@@ -2,34 +2,70 @@ import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
 from flask import current_app, g
+from .services.cloud_state import cloud_state
 
 
 def get_db():
     if "db" not in g:
+        store = cloud_state()
         g.db = sqlite3.connect(
-            current_app.config["DATABASE"], timeout=10, isolation_level=None
+            ":memory:" if store else current_app.config["DATABASE"],
+            timeout=10,
+            isolation_level=None,
         )
+        if store:
+            refresh_cloud_db(g.db)
         g.db.row_factory = sqlite3.Row
         g.db.execute("PRAGMA foreign_keys=ON")
         g.db.execute("PRAGMA busy_timeout=10000")
     return g.db
 
 
+def refresh_cloud_db(db):
+    data, generation = cloud_state().read("state.sqlite3")
+    if data:
+        db.deserialize(data)
+    g.cloud_generation = generation
+    db.execute("PRAGMA foreign_keys=ON")
+
+
+def publish_cloud_db(db):
+    g.cloud_generation = cloud_state().write(
+        "state.sqlite3", db.serialize(), g.cloud_generation
+    )
+
+
 @contextmanager
 def transaction():
-    db = get_db()
-    db.execute("BEGIN IMMEDIATE")
+    store = cloud_state()
+    if store:
+        store.lock.acquire()
     try:
-        yield db
-        db.execute("COMMIT")
-    except BaseException:
-        db.execute("ROLLBACK")
-        raise
+        db = get_db()
+        if store:
+            refresh_cloud_db(db)
+        db.execute("BEGIN IMMEDIATE")
+        try:
+            yield db
+            db.execute("COMMIT")
+            if store:
+                publish_cloud_db(db)
+        except BaseException:
+            if db.in_transaction:
+                db.execute("ROLLBACK")
+            elif store:
+                refresh_cloud_db(db)
+            raise
+    finally:
+        if store:
+            store.lock.release()
 
 
 def init_db():
     db = get_db()
-    db.execute("PRAGMA journal_mode=WAL")
+    if not cloud_state():
+        db.execute("PRAGMA journal_mode=WAL")
+    migrated = False
     for version, filename in [
         (1, "001_initial.sql"),
         (2, "002_uploads.sql"),
@@ -38,9 +74,12 @@ def init_db():
         (5, "005_ai_progress.sql"),
     ]:
         if db.execute("PRAGMA user_version").fetchone()[0] < version:
+            migrated = True
             db.executescript(
                 (Path(__file__).with_name("migrations") / filename).read_text()
             )
+    if cloud_state() and migrated:
+        publish_cloud_db(db)
 
 
 def close_db(_error=None):

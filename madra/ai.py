@@ -12,6 +12,7 @@ from flask import (
     redirect,
     render_template,
     request,
+    Response,
     url_for,
 )
 from .auth import login_required
@@ -37,6 +38,8 @@ def connection_info(uid):
 
 
 def local_only():
+    if current_app.config.get("PUBLIC_URL"):
+        return
     if not current_app.config["CHATGPT_LOCAL_AUTH"] or request.remote_addr not in (
         "127.0.0.1",
         "::1",
@@ -58,7 +61,9 @@ def settings():
         "ai_settings.html",
         info=info,
         models=choices,
-        local_auth=current_app.config["CHATGPT_LOCAL_AUTH"],
+        local_auth=current_app.config["CHATGPT_LOCAL_AUTH"]
+        or bool(current_app.config.get("PUBLIC_URL")),
+        cloud_auth=bool(current_app.config.get("PUBLIC_URL")),
         nav="ai",
     )
 
@@ -96,12 +101,46 @@ def update_usage_consent():
     return redirect(url_for("ai.settings"))
 
 
+@bp.get("/konto/ai/pomocnik")
+@login_required
+def login_helper():
+    if not current_app.config.get("PUBLIC_URL"):
+        abort(404)
+    from .services.login_helper import helper_script
+
+    return Response(
+        helper_script(current_app.config["PUBLIC_URL"]),
+        mimetype="text/x-python",
+        headers={"Content-Disposition": 'attachment; filename="madra-login.py"'},
+    )
+
+
+@bp.get("/konto/ai/powrot")
+@login_required
+def cloud_callback_page():
+    if not current_app.config.get("PUBLIC_URL"):
+        abort(404)
+    return render_template("ai_callback.html", nav="ai")
+
+
+@bp.post("/konto/ai/powrot")
+@login_required
+def cloud_callback_finish():
+    if not current_app.config.get("PUBLIC_URL"):
+        abort(404)
+    return finish_callback(request.form)
+
+
 @bp.get("/auth/callback")
 @login_required
 def callback():
     local_only()
+    return finish_callback(request.args)
+
+
+def finish_callback(params):
     try:
-        record = chatgpt.finish(g.user["id"], request.args)
+        record = chatgpt.finish(g.user["id"], params)
         if chatgpt.permitted(record):
             flash(
                 "ChatGPT połączony. Możesz opracować pliki z użyciem swojego planu.",
@@ -148,6 +187,7 @@ def run_job(app, job_id, uid, upload_id, model, goal):
                                 "stage": stage,
                                 "output_chars": output_chars,
                                 "updated_at": now_iso(),
+                                "heartbeat_at": now_iso(),
                             }
                         ),
                         job_id,
@@ -163,6 +203,30 @@ def run_job(app, job_id, uid, upload_id, model, goal):
                 )
                 last_stage = stage
 
+        stopped = threading.Event()
+
+        def heartbeat():
+            while not stopped.wait(30):
+                with app.app_context():
+                    try:
+                        with transaction() as db:
+                            row = db.execute(
+                                "SELECT progress_json FROM ai_jobs WHERE id=? AND state='running'",
+                                (job_id,),
+                            ).fetchone()
+                            if not row:
+                                return
+                            value = json.loads(row["progress_json"])
+                            value["heartbeat_at"] = now_iso()
+                            db.execute(
+                                "UPDATE ai_jobs SET progress_json=? WHERE id=? AND state='running'",
+                                (json.dumps(value), job_id),
+                            )
+                    except Exception:
+                        app.logger.warning("AI heartbeat write failed: job=%s", job_id)
+
+        if app.config.get("CLOUD_STATE_BUCKET"):
+            threading.Thread(target=heartbeat, daemon=True).start()
         try:
             if not chatgpt.usage_consent(chatgpt.load(uid)):
                 raise ValueError(
@@ -236,6 +300,9 @@ def run_job(app, job_id, uid, upload_id, model, goal):
                     "UPDATE ai_jobs SET state='failed',error=?,finished_at=? WHERE id=?",
                     (message, now_iso(), job_id),
                 )
+
+        finally:
+            stopped.set()
 
 
 @bp.post("/pliki/<uid>/generuj-ai")
@@ -319,6 +386,29 @@ def job(jid):
     if row["state"] == "completed":
         return redirect(url_for("uploads.preview", uid=row["upload_id"]))
     progress = json.loads(row["progress_json"])
+    if current_app.config.get("CLOUD_STATE_BUCKET") and row["state"] == "running":
+        heartbeat_at = progress.get("heartbeat_at") or row["created_at"]
+        if (
+            datetime.now(timezone.utc) - datetime.fromisoformat(heartbeat_at)
+        ).total_seconds() > 180:
+            with transaction() as db:
+                latest = db.execute(
+                    "SELECT progress_json FROM ai_jobs WHERE id=? AND state='running'",
+                    (jid,),
+                ).fetchone()
+                if latest:
+                    stamp = (
+                        json.loads(latest["progress_json"]).get("heartbeat_at")
+                        or row["created_at"]
+                    )
+                    if (
+                        datetime.now(timezone.utc) - datetime.fromisoformat(stamp)
+                    ).total_seconds() > 180:
+                        db.execute(
+                            "UPDATE ai_jobs SET state='failed',error='Serwer przerwał zadanie. Plik jest zachowany; możesz ponowić generowanie.',finished_at=? WHERE id=? AND state='running'",
+                            (now_iso(), jid),
+                        )
+            return redirect(url_for("uploads.preview", uid=row["upload_id"]))
     elapsed = max(
         0,
         int(
@@ -337,6 +427,8 @@ def job(jid):
 
 
 def init_app(app):
+    if app.config.get("CLOUD_STATE_BUCKET"):
+        return
     # Threads do not survive server restart. Preserve drafts and make retry possible.
     with app.app_context(), transaction() as db:
         db.execute(

@@ -110,3 +110,15 @@ document.querySelectorAll('.chapter-toc a').forEach((link) => {
     if (chapter) chapter.open = true;
   });
 });
+
+const cloudCallback = document.getElementById("cloud-oauth-callback");
+if (cloudCallback) {
+  const params = new URLSearchParams(location.hash.slice(1));
+  history.replaceState(null, "", location.pathname);
+  if (params.get("state") && (params.get("code") || params.get("error"))) {
+    for (const key of ["code", "state", "client_id", "error"]) cloudCallback.elements[key].value = params.get(key) || "";
+    cloudCallback.requestSubmit();
+  } else {
+    document.getElementById("callback-status").textContent = "Brak odpowiedzi logowania. Wróć do Połączenia AI i spróbuj ponownie.";
+  }
+}

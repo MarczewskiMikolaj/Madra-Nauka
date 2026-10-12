@@ -47,6 +47,7 @@
                         <p>{{ icon('check', 18) }} Stały model: GPT-5.6 Terra</p>
                         <p>{{ icon('check', 18) }} Dostęp w ramach limitów Twojego planu</p>
                     </div>
+                    {% if cloud_auth %}<div class="notice"><strong>Połączenie z Twoim komputerem</strong><p>1. Pobierz pomocnik i uruchom go w terminalu: <code>python3 madra-login.py</code>.</p><p>2. Zostaw terminal otwarty i kliknij Kontynuuj z ChatGPT. Po logowaniu wrócisz do aplikacji.</p><a class="button secondary" href="{{ url_for('ai.login_helper') }}">Pobierz pomocnik logowania</a></div>{% endif %}
                     {% if local_auth %}<form method="post" action="{{ url_for('ai.connect') }}">{{ csrf() }}<label class="usage-consent"><input type="checkbox" name="usage_consent" value="yes" required><span>Zgadzam się na używanie puli Codex / ChatGPT Work oraz dostępnych kredytów ChatGPT / Codex do generowania materiałów.</span></label><button class="button chatgpt-button connection-cta">Kontynuuj z ChatGPT {{ icon('arrow', 18) }}</button></form>
 {% else %}<p class="notice">Połączenie ChatGPT jest dostępne w lokalnej wersji aplikacji.</p>{% endif %}
 <p class="connection-caption">Przejdziesz na stronę OpenAI, aby potwierdzić połączenie.</p>

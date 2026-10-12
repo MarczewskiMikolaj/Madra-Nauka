@@ -17,4 +17,4 @@ ENV PORT=8080
 ENV MADRA_ENV=production
 ENV MADRA_DATABASE_PATH=/data/madra.sqlite3
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--threads", "2", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--threads", "4", "--timeout", "120", "app:app"]

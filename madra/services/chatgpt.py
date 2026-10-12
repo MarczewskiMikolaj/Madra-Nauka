@@ -95,6 +95,21 @@ def cipher():
 
 
 def load(uid):
+    from .cloud_state import cloud_state
+    from flask import g
+
+    if cloud_state():
+        data, version = cloud_state().read("auth/" + uid + ".enc")
+        versions = g.setdefault("credential_versions", {})
+        versions[uid] = version
+        if data is None:
+            return {}
+        try:
+            return json.loads(cipher().decrypt(data))
+        except Exception:
+            raise ValueError(
+                "Nie można odczytać połączenia ChatGPT. Połącz konto ponownie."
+            ) from None
     path = directory() / (uid + ".enc")
     if not path.exists():
         return {}
@@ -107,6 +122,19 @@ def load(uid):
 
 
 def save(uid, record):
+    from .cloud_state import cloud_state
+    from flask import g
+
+    if cloud_state():
+        versions = g.setdefault("credential_versions", {})
+        if uid not in versions:
+            _, versions[uid] = cloud_state().read("auth/" + uid + ".enc")
+        versions[uid] = cloud_state().write(
+            "auth/" + uid + ".enc",
+            cipher().encrypt(json.dumps(record).encode()),
+            versions[uid],
+        )
+        return
     path = directory() / (uid + ".enc")
     temporary = path.with_name(path.name + "." + secrets.token_hex(8))
     descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
@@ -120,6 +148,12 @@ def locked(uid):
     import fcntl
 
     with LOCK:
+        from .cloud_state import cloud_state
+
+        if cloud_state():
+            with cloud_state().lease(uid):
+                yield
+            return
         fd = os.open(directory() / (uid + ".lock"), os.O_CREAT | os.O_RDWR, 0o600)
         with os.fdopen(fd, "w") as file:
             fcntl.flock(file, fcntl.LOCK_EX)

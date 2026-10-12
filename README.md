@@ -98,11 +98,13 @@ Każdy stary zestaw staje się przedmiotem z tematem i fiszkami. Hash hasła jes
 | `MADRA_ENV=production` | Wymaga sekretu, włącza secure cookies i wyłącza publiczne demo |
 | `LEGACY_ENCRYPTION_KEY` | Klucz do jawnego importu dawnych użytkowników |
 
-SQLite wymaga trwałego dysku i pojedynczej instancji aplikacji. **Nie wdrażaj tej wersji bezpośrednio do starego Cloud Run:** jego efemeryczny dysk nie zapewni trwałości nowej bazy. Plan wieloinstancyjnej produkcji obejmuje PostgreSQL, staging, backup i monitoring.
+Lokalnie SQLite wymaga trwałego dysku. Na Cloud Run ustaw `MADRA_STATE_BUCKET`: aplikacja pracuje na niezależnych bazach w pamięci i po każdej transakcji atomowo zapisuje kompletny stan w Cloud Storage. Warunek generacji GCS odrzuca zapis ze starej wersji zamiast nadpisywać nowsze dane. Nowe żądania pobierają aktualny stan. Nie montujemy SQLite przez GCS FUSE. To prosty wariant dla małego MVP; koszt i czas przesyłania rosną wraz z bazą i liczbą plików. Dla większej aplikacji docelowo PostgreSQL i osobne obiekty plików.
 
 Dockerfile uruchamia Gunicorn jako użytkownik bez uprawnień administratora. Podłącz trwały wolumen do `/data`, przekaż `SECRET_KEY` przez konfigurację środowiska i zapewnij HTTPS przez reverse proxy. Obraz kopiuje wyłącznie aktywną aplikację i zależności; lokalne JSON-y i baza nie są do niego dołączane.
 
-Do czasu wdrożenia aplikacja działa lokalnie. Publikacja, migracja danych produkcyjnych i przełączenie domeny są osobnym etapem.
+Cloud Run: projekt `python-fiszki`, region `europe-west4`, usługa `python-fiszki`, bucket `python-fiszki-users`. Obiekty nowej wersji trafiają pod `madra-v2/`; stare dane nie są importowane ani nadpisywane. Przy tej konfiguracji dotychczasowy `ENCRYPTION_KEY` może pełnić rolę stałego sekretu, jeżeli nie ustawiono `SECRET_KEY`. Zmiana sekretu uniemożliwi odczyt zapisanych połączeń.
+
+`scripts/deploy-cloud.sh` buduje obraz i wdraża go z tagiem bez przełączania ruchu. Konfiguracja: jedna instancja, jeden worker Gunicorn, 1 GiB RAM, stale przydzielany CPU i minimalnie jedna instancja dla zadań AI w tle. Powoduje to opłaty za działającą instancję także poza żądaniami; nie tworzymy Cloud SQL. Restart platformy może przerwać generowanie; heartbeat pozwala wykryć przerwany worker bez limitowania całkowitego czasu AI. Po sprawdzeniu tagowanej wersji przełącz ruch na jej konkretną rewizję. Trigger GitHuba aktualizuje potem obraz po pushu na `main`, zachowując konfigurację usługi.
 
 ## Materiały z plików
 
@@ -114,7 +116,7 @@ Oryginały są przechowywane w SQLite jako BLOB i dostępne wyłącznie właści
 
 ## Opracowanie AI z planu ChatGPT
 
-Lokalna wersja obsługuje oficjalny flow **Sign in with ChatGPT** dla aplikacji open source. Uprawnione konta Plus i Pro mogą zatwierdzić używanie swojego planu; dostępność i limity określa OpenAI. Samo logowanie nie wystarcza — potrzebny jest grant `chatgpt.tokens.use.direct`. Nie jest używany płatny klucz API ani automatyczny fallback do rozliczenia API.
+Aplikacja obsługuje oficjalny flow **Sign in with ChatGPT** dla aplikacji open source. Uprawnione konta Plus i Pro mogą zatwierdzić używanie swojego planu; dostępność i limity określa OpenAI. Samo logowanie nie wystarcza — potrzebny jest grant `chatgpt.tokens.use.direct`. Nie jest używany płatny klucz API ani automatyczny fallback do rozliczenia API.
 
 1. Wybierz **Połącz ChatGPT** w menu konta lub podglądzie pliku.
 2. Zaloguj się na stronie OpenAI i zatwierdź użycie planu. Callback lokalny to `http://127.0.0.1:<PORT>/auth/callback`. Używaj `127.0.0.1`, nie `localhost`.
@@ -136,3 +138,7 @@ Wynik AI i zapisany temat mają menu rodzajów materiałów z licznikami oraz os
 Nowe opracowania AI zwracają rozdziały z tytułami i treścią, zapisane w edytowalnej notatce. Czytnik pokazuje spis treści oraz rozwijane rozdziały. Dostępny jest przed zapisem, po zapisie na ekranie pliku oraz jako osobna strona notatki z biblioteki. Starsze notatki z nagłówkami korzystają z nich, a długie notatki bez nagłówków są grupowane według akapitów do prezentacji; treść w bazie pozostaje bez zmian.
 
 Generowanie zawsze używa `gpt-5.6-terra`. Model z formularza jest ignorowany przez backend. Brak Terra w katalogu konta blokuje generowanie z czytelnym komunikatem, bez przełączania na inny model.
+
+### Logowanie ChatGPT na domenie
+
+`MADRA_PUBLIC_URL=https://madranauka.online` włącza połączenie chmurowe. Callback OpenAI pozostaje `http://127.0.0.1:8085/auth/callback`, zgodnie z flow OSS. W Połączeniu AI pobierz `madra-login.py`, uruchom `python3 madra-login.py`, następnie kliknij Kontynuuj z ChatGPT. Pomocnik nasłuchuje wyłącznie na loopback, nie zapisuje tokenów ani logów URL; po odebraniu kodu zamyka się i wraca na domenę. Kod trafia we fragmencie URL, a przeglądarka usuwa fragment i przekazuje go POST-em z CSRF. Aplikacja nadal weryfikuje state, PKCE, nonce, podpis i tożsamość. Zaszyfrowane połączenia przechowuje w prywatnych obiektach GCS; między rewizjami odświeżanie tokenów chroni blokada i warunek generacji. Klucz OpenAI API nie jest potrzebny. Logowanie wymaga komputera z Pythonem 3; samo otwarcie strony na telefonie nie uruchomi lokalnego listenera. Limity planu/kredytów nadal wyznacza OpenAI.

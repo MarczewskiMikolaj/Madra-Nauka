@@ -15,7 +15,15 @@ def create_app(test_config=None):
         DATABASE=os.environ.get(
             "MADRA_DATABASE_PATH", str(Path(app.instance_path) / "madra.sqlite3")
         ),
-        SECRET_KEY=os.environ.get("SECRET_KEY"),
+        CLOUD_STATE_BUCKET=os.environ.get("MADRA_STATE_BUCKET"),
+        CLOUD_STATE_PREFIX=os.environ.get("MADRA_STATE_PREFIX", "madra-v2"),
+        PUBLIC_URL=os.environ.get("MADRA_PUBLIC_URL", "").rstrip("/"),
+        SECRET_KEY=os.environ.get("SECRET_KEY")
+        or (
+            os.environ.get("ENCRYPTION_KEY")
+            if os.environ.get("MADRA_STATE_BUCKET")
+            else None
+        ),
         TIMEZONE="Europe/Warsaw",
         ALLOW_DEMO=not production,
         CHATGPT_LOCAL_AUTH=not production,
@@ -29,6 +37,26 @@ def create_app(test_config=None):
     )
     if test_config:
         app.config.update(test_config)
+    if app.config["PUBLIC_URL"]:
+        from urllib.parse import urlsplit
+
+        origin = urlsplit(app.config["PUBLIC_URL"])
+        if (
+            origin.scheme != "https"
+            or not origin.hostname
+            or origin.path
+            or origin.query
+            or origin.fragment
+            or origin.username
+        ):
+            raise RuntimeError("MADRA_PUBLIC_URL must be an HTTPS origin.")
+        app.config["CHATGPT_CALLBACK_URL"] = "http://127.0.0.1:8085/auth/callback"
+    if app.config["CLOUD_STATE_BUCKET"]:
+        from .services.cloud_state import CloudState
+
+        app.extensions["cloud_state"] = CloudState(
+            app.config["CLOUD_STATE_BUCKET"], app.config["CLOUD_STATE_PREFIX"]
+        )
     if not app.config["SECRET_KEY"]:
         if production:
             raise RuntimeError("Set SECRET_KEY before starting in production.")
@@ -93,6 +121,16 @@ def create_app(test_config=None):
             render_template(
                 "error.html", code=error.code, message=messages[error.code]
             ),
+            error.code,
+        )
+
+    from .services.cloud_state import StateConflict, StateUnavailable
+
+    @app.errorhandler(StateConflict)
+    @app.errorhandler(StateUnavailable)
+    def cloud_error(error):
+        return (
+            render_template("error.html", code=error.code, message=error.description),
             error.code,
         )
 

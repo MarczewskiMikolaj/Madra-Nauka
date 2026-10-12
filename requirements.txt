@@ -4,3 +4,4 @@ cryptography==46.0.3
 gunicorn==22.0.0
 pypdf==6.20.0
 certifi==2025.11.12
+google-cloud-storage==3.3.0
