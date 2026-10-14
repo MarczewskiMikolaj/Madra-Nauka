@@ -1,6 +1,11 @@
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 .env
+.env.*
+!.env.example
+!.env.sample
 *.pem
 .venv/
 instance/
@@ -11,6 +16,14 @@ output/
 .playwright/
 .playwright-cli/
 .DS_Store
+Thumbs.db
+.ruff_cache/
+.pytest_cache/
+graphify-out/
+
+# Private legacy account data and study history stay local.
+/users.json
+/sets.json
 
 # OAuth credentials if the database is placed outside instance/
 **/chatgpt/*.enc
