@@ -47,7 +47,7 @@ def create_app(test_config=None):
             or origin.path
             or origin.query
             or origin.fragment
-            or origin.username
+            or origin.username is not None
         ):
             raise RuntimeError("MADRA_PUBLIC_URL must be an HTTPS origin.")
         app.config["CHATGPT_CALLBACK_URL"] = "http://127.0.0.1:8085/auth/callback"
@@ -72,7 +72,8 @@ def create_app(test_config=None):
         app.config["SECRET_KEY"] = secret_path.read_text().strip()
     Path(app.config["DATABASE"]).parent.mkdir(parents=True, exist_ok=True)
     app.teardown_appcontext(db.close_db)
-    from . import auth, library, study, planning, uploads, ai, account
+    db.init_app(app)
+    from . import auth, library, study, planning, uploads, ai, account, imports
     from .services import migration
 
     for blueprint in (
@@ -83,14 +84,25 @@ def create_app(test_config=None):
         uploads.bp,
         ai.bp,
         account.bp,
+        imports.bp,
     ):
         app.register_blueprint(blueprint)
     auth.init_app(app)
     migration.init_app(app)
 
+    @app.get("/manifest.json")
+    def manifest():
+        response = app.send_static_file("manifest.json")
+        response.mimetype = "application/manifest+json"
+        response.headers["Cache-Control"] = "no-cache"
+        return response
+
     from .services.notes import note_chapters
 
+    from .services.formatting import render_content
+
     app.jinja_env.filters["note_chapters"] = note_chapters
+    app.jinja_env.filters["rich_text"] = render_content
 
     @app.context_processor
     def vocabulary():
@@ -116,6 +128,7 @@ def create_app(test_config=None):
     @app.errorhandler(409)
     @app.errorhandler(413)
     @app.errorhandler(429)
+    @app.errorhandler(500)
     def error_page(error):
         messages = {
             400: "Nieprawidłowy formularz. Odśwież stronę i spróbuj ponownie.",
@@ -124,6 +137,7 @@ def create_app(test_config=None):
             409: "Stan sesji się zmienił. Wróć do nauki i odśwież stronę.",
             413: "Materiał jest za duży. Maksymalny rozmiar pliku to 10 MB.",
             429: "Za dużo prób logowania. Spróbuj ponownie za 15 minut.",
+            500: "Wystąpił błąd aplikacji. Wróć do poprzedniej strony i spróbuj ponownie.",
         }
         return (
             render_template(
@@ -157,7 +171,7 @@ def create_app(test_config=None):
     @app.get("/health")
     def health():
         db.get_db().execute("SELECT 1").fetchone()
-        return {"status": "ok", "version": "2.0-mvp"}
+        return {"status": "ok", "version": "2.0.0"}
 
     with app.app_context():
         db.init_db()

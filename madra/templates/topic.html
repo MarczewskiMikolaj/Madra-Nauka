@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import icon,csrf,start,result_menu %}
+{% from 'macros.html' import icon,csrf,start,result_menu,material_tabs %}
 {% block title %}
     {{ topic.name }} · Mądra Nauka
 {% endblock %}
@@ -12,6 +12,8 @@
             <p>{{ topic.description }}</p>
         </div>
         <div class="actions">
+            <a class="button secondary" href="{{ url_for('study.prepare',topic_id=topic.id) }}">Tryby nauki / sprawdzian</a>
+            <a class="button secondary" href="{{ url_for('imports.upload',tid=topic.id) }}">Dodaj wiele ćwiczeń</a>
             <a class="button primary"
                href="{{ url_for('uploads.upload',topic_id=topic.id) }}">Wgraj plik</a>
             <a class="button secondary"
@@ -21,12 +23,12 @@
             {% endif %}
         </div>
     </div>
-    {% if sources %}
-        <section class="material"><h2>Pliki źródłowe</h2>{% for source in sources %}<p><a href="{{ url_for('uploads.preview',uid=source.id) }}">{{ source.filename }}</a> · <a href="{{ url_for('uploads.download',uid=source.id) }}">Pobierz</a></p>{% endfor %}</section>
-    {% endif %}
-    {{ result_menu(activities, materials|length) }}
-    <div class="topic-columns topic-organized">
-        <section class="result-section" id="result-notes">
+    <div class="topic-columns topic-organized" data-tab-group>
+        {{ material_tabs(materials|length, activities|length) }}
+        <section class="result-section" id="result-notes" data-tab-pane>
+            {% if sources %}
+                <section class="material"><h2>Pliki źródłowe</h2>{% for source in sources %}<p><a href="{{ url_for('uploads.preview',uid=source.id) }}">{{ source.filename }}</a> · <a href="{{ url_for('uploads.download',uid=source.id) }}">Pobierz</a></p>{% endfor %}</section>
+            {% endif %}
             <div class="section-heading">
                 <h2>Notatki i źródła</h2>
                 <a class="button secondary"
@@ -46,7 +48,7 @@
                            target="_blank"
                            rel="noopener noreferrer">{{ material.content }} {{ icon('arrow', 16) }}</a>
                     {% else %}
-                        <p class="material-excerpt">{{ (material.content|note_chapters)[0].content[:250] }}{% if material.content|length > 250 %}…{% endif %}</p><a class="button secondary"
+                        <div class="material-excerpt rich-content">{{ (material.content|note_chapters)[0].content|rich_text }}</div><a class="button secondary"
    href="{{ url_for('library.material',mid=material.id) }}">Czytaj notatkę i rozdziały</a>
                     {% endif %}
                 </article>
@@ -57,7 +59,8 @@
                 </div>
             {% endfor %}
         </section>
-        <section>
+        <section id="result-exercises" data-tab-pane>
+            {{ result_menu(activities, 0) }}
             <div class="section-heading">
                 <h2>
                     Ćwiczenia
@@ -81,7 +84,7 @@
                             {% if activity.upload_id %}<p class="small muted">Źródło: <a href="{{ url_for('uploads.preview',uid=activity.upload_id) }}">{{ activity.source_filename }}</a> · {{ activity.source_label }}</p>{% endif %}
                             <details>
                                 <summary>Odpowiedź wzorcowa</summary>
-                                <div class="note-content">{{ activity.answer }}</div>
+                                <div class="rich-content">{{ activity.answer|rich_text }}</div>
                             </details>
                             <div class="activity-footer">
                                 <span class="small muted">
@@ -111,6 +114,21 @@
                     <p>Przygotuj pytanie, fiszkę lub zadanie. Możesz korzystać z kilku metod w jednym temacie.</p>
                 </div>
             {% endif %}
+    {% if archived %}
+        <details class="panel archive-panel">
+            <summary>Archiwum ćwiczeń ({{ archived|length }})</summary>
+            <p class="muted">Historia i terminy pozostają zachowane. Przywrócone ćwiczenia wrócą do planu nauki.</p>
+            {% for activity in archived %}
+                <article class="material">
+                    <span class="small muted">{{ kinds[activity.kind] }}</span>
+                    <h3>{{ activity.prompt }}</h3>
+                    <form action="{{ url_for('library.restore_activity', aid=activity.id) }}" method="post">
+                        {{ csrf() }}<button class="button secondary">Przywróć ćwiczenie</button>
+                    </form>
+                </article>
+            {% endfor %}
+        </details>
+    {% endif %}
         </section>
     </div>
 {% endblock %}

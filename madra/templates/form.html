@@ -148,7 +148,17 @@
                 {% endif %}
             {% endif %}
             <div class="form-actions">
-                <button class="button primary">Zapisz {{ names[form_type] }} {{ icon('check', 18) }}</button>
+                {% if form_type=='activity' %}
+                <details class="learning-support-editor"><summary>Podpowiedzi, wyjaśnienie i źródło</summary>
+                {% for i in range(3) %}<label>Podpowiedź {{ i+1 }} (opcjonalnie)<textarea name="hints" maxlength="2000" rows="2">{{ request.form.getlist('hints')[i] if request.form.getlist('hints')|length>i else support.hints[i] if support.hints|length>i else '' }}</textarea></label>{% endfor %}
+                <label>Dlaczego odpowiedź jest poprawna?<textarea name="explanation" maxlength="10000" rows="4">{{ request.form.get('explanation',support.get('explanation','')) }}</textarea></label>
+                <label>Kryteria samooceny<textarea name="rubric" maxlength="4000" rows="3" placeholder="Co musi zawierać pełna odpowiedź? Jak rozpoznać odpowiedź częściową?">{{ request.form.get('rubric',support.get('rubric','')) }}</textarea></label>
+                <label>Notatka lub link źródłowy<select name="material_id"><option value="">Bez dodatkowego źródła</option>{% for material in materials %}<option value="{{ material.id }}" {% if request.form.get('material_id',support.get('material_id'))==material.id %}selected{% endif %}>{{ material.title }}</option>{% endfor %}</select></label>
+                <label>Numer rozdziału notatki (0 = cała notatka)<input type="number" name="source_chapter" min="0" max="100" value="{{ request.form.get('source_chapter',support.get('source_chapter',0)) }}"></label>
+                </details>
+            {% endif %}
+            <p class="small muted">Treść obsługuje Markdown, tabele, bloki kodu oraz wzory $...$ i $$...$$.</p>
+            <button class="button primary">Zapisz {{ names[form_type] }} {{ icon('check', 18) }}</button>
                 <a class="button quiet"
                    href="{% if topic %}{{ url_for('library.topic',tid=topic.id) }}{% elif space %}{{ url_for('library.workspace',wid=space.id) }}{% else %}{{ url_for('library.index') }}{% endif %}">
                     Anuluj

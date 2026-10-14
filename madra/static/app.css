@@ -2422,3 +2422,95 @@ details .note-content {
 .note-chapter .chapter-content { background: transparent; padding: 0 24px 24px; margin: 0; font-size: 16px; line-height: 1.85; }
 .note-chapter summary { color: var(--ink, #24304b); }
 @media (max-width: 600px) { .note-chapter .chapter-content { padding: 0 16px 20px; font-size: 15px; } }
+
+/* Release additions reuse the established panels and form controls. */
+.search-results, .archive-panel { margin: 24px 0; }
+.goal-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+.goal-week > div { display: flex; flex-direction: column; gap: 8px; padding: 10px 4px; text-align: center; background: var(--surface, #f4f6fc); border-radius: 8px; }
+.goal-week span { font-size: .8rem; }
+.goal-week strong { font-size: .85rem; }
+@media (max-width: 600px) { .goal-week { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+.rich-content { line-height: 1.75; overflow-wrap: anywhere; }
+.rich-content p { margin: .5em 0 1em; }
+.rich-content pre, .rich-content table { max-width: 100%; overflow: auto; }
+.rich-content pre { background: #edf0f7; padding: 16px; border-radius: 10px; white-space: pre; }
+.rich-content code { font-family: ui-monospace, monospace; font-size: .9em; }
+.rich-content table, .table-scroll table { border-collapse: collapse; width: 100%; }
+.rich-content th, .rich-content td, .table-scroll th, .table-scroll td { padding: 10px; border: 1px solid #dde2ef; text-align: left; }
+.table-scroll { overflow: auto; }
+.rich-content .math.block { overflow-x: auto; }
+.check-row { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+.check-row input { width: auto; min-width: 18px; }
+.goal-topic-option { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin: 12px 0; }
+.goal-topic-option select { width: 80px; }
+.learning-support-editor label { display: block; margin: 12px 0; }
+.study-hint { margin: 12px 0; padding: 12px; background: #f3f5fc; border-radius: 10px; }
+.answer-history .panel, .learning-actions { margin: 24px 0; }
+.review-answer { max-width: 100%; }
+.form-page fieldset { min-width: 0; }
+@media (max-width: 600px) { .goal-topic-option { flex-wrap: wrap; } .rich-content pre { font-size: 12px; } }
+
+.question-heading { font-weight: 700; font-size: 24px; line-height: 1.4; margin: 20px 0; }
+.review-answer .question-heading { font-size: 20px; }
+.question-heading p { margin: 0; }
+
+.rich-content .math.inline { display: inline-block; max-width: 100%; overflow-x: auto; vertical-align: middle; padding: 2px 0; }
+
+/* Render complete Markdown before limiting the card's visual preview. */
+.material-excerpt.rich-content {
+  margin: 16px 0 20px;
+  max-height: 12em;
+  overflow: hidden;
+  line-height: 1.7;
+}
+.material-excerpt.rich-content > :first-child { margin-top: 0; }
+.material-excerpt.rich-content :is(h1, h2, h3, h4, h5, h6) {
+  font-size: 1em;
+  line-height: inherit;
+  margin: 0 0 .5em;
+  color: var(--ink);
+}
+.material-excerpt.rich-content :is(ol, ul) { margin: .5em 0; padding-left: 1.5em; }
+
+.material-tabs { display: flex; gap: 24px; border-bottom: 1px solid var(--border); margin-bottom: 28px; }
+.material-tabs a { display: flex; gap: 10px; align-items: center; padding: 16px 2px; border-bottom: 3px solid transparent; color: var(--muted); text-decoration: none; font-weight: 600; }
+.material-tabs a[aria-selected="true"] { color: var(--blue); border-bottom-color: var(--blue); }
+.material-tabs a span { font-size: .8em; font-weight: 400; }
+[data-tab-pane][hidden], .note-chapter[hidden] { display: none !important; }
+.chapter-heading { display: flex; align-items: baseline; gap: 14px; padding: 24px; }
+.chapter-heading h3 { flex: 1; margin: 0; font-size: 22px; line-height: 1.5; }
+.chapter-toc a { display: block; padding: 3px 6px; border-radius: 5px; }
+.chapter-toc a[aria-current] { background: #e9ecff; color: var(--blue); font-weight: 600; }
+.chapter-reader { grid-template-columns: minmax(0, 1fr); }
+.chapter-toc.learning-plan { position: static; padding: 24px; border: 1px solid var(--border); border-radius: 12px; background: white; }
+.learning-plan h2 { font-size: 20px; margin: 0 0 8px; }
+.learning-plan p { font-size: 14px; color: var(--muted); margin: 0 0 16px; }
+.learning-plan ol { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); column-gap: 32px; row-gap: 4px; }
+
+/* Section boundaries inside a chapter stay distinct from the chapter title. */
+.chapter-content > :is(h1, h2, h3) {
+  margin: 2em 0 .8em;
+  padding-top: 1.25em;
+  border-top: 1px solid var(--border, #dce2ef);
+  font-size: 1.25em;
+  line-height: 1.45;
+}
+.chapter-content > :is(h4, h5, h6) {
+  margin: 1.6em 0 .65em;
+  font-size: 1.08em;
+  line-height: 1.5;
+}
+.chapter-content > :is(h1, h2, h3, h4, h5, h6):first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+.chapter-content > :is(table, pre, blockquote, ul, ol) { margin-block: 1.25em; }
+.chapter-content > hr { border: 0; border-top: 1px solid var(--border, #dce2ef); margin: 2em 0; }
+@media (max-width: 600px) {
+  .material-tabs { gap: 18px; }
+  .material-tabs a { font-size: 14px; }
+  .chapter-heading { padding: 18px 16px; }
+  .chapter-heading h3 { font-size: 19px; }
+}

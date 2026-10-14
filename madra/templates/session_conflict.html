@@ -1,0 +1,9 @@
+{% extends 'base.html' %}{% from 'macros.html' import csrf %}
+{% block title %}Zmiana sesji · Mądra Nauka{% endblock %}
+{% block content %}<section class="panel form-page"><h1>Masz rozpoczętą sesję</h1>
+<p>Trwa „{{ active.title }}”. Wybrany nowy zakres to „{{ title }}”.</p><p>Zapisanie przerwy zachowa kolejność, odpowiedzi i postęp poprzedniej sesji.</p>
+<div class="actions"><a class="button secondary" href="{{ url_for('study.session_page',sid=active.id) }}">Kontynuuj poprzednią</a>
+<form action="{{ url_for('study.resume',sid=resume_id) if resume_id else url_for('study.start') }}" method="post">{{ csrf() }}
+<input type="hidden" name="switch" value="1"><input type="hidden" name="active_id" value="{{ active.id }}">
+{% for name,value in fields.items() %}{% if value is iterable and value is not string %}{% for v in value %}<input type="hidden" name="{{ name }}" value="{{ v }}">{% endfor %}{% else %}<input type="hidden" name="{{ name }}" value="{{ value or '' }}">{% endif %}{% endfor %}
+<button class="button primary">Zapisz przerwę i przejdź do wybranej sesji</button></form></div></section>{% endblock %}

@@ -109,20 +109,87 @@ document.querySelectorAll("[data-select-group]").forEach((button) => {
   });
 });
 
-// A table-of-contents link opens its chapter, including on direct hash navigation.
-function revealNoteChapter() {
-  const target = document.getElementById(location.hash.slice(1));
-  if (target && target.classList.contains("note-chapter")) target.open = true;
+// Tabs and chapter navigation share URL hashes, so links and browser Back work.
+function selectMaterialPane(group, pane) {
+  group.querySelectorAll('[data-tab-pane]').forEach((item) => {
+    if (item.closest('[data-tab-group]') === group) item.hidden = item !== pane;
+  });
+  group.querySelectorAll('[data-pane-link]').forEach((link) => {
+    const selected = link.hash === '#' + pane.id;
+    link.setAttribute('aria-selected', String(selected));
+    link.tabIndex = selected ? 0 : -1;
+  });
 }
-window.addEventListener("hashchange", revealNoteChapter);
-revealNoteChapter();
-
-document.querySelectorAll('.chapter-toc a').forEach((link) => {
-  link.addEventListener('click', () => {
-    const chapter = document.getElementById(link.hash.slice(1));
-    if (chapter) chapter.open = true;
+function selectNoteChapter(reader, chapter) {
+  reader.querySelectorAll('.note-chapter').forEach((item) => { item.hidden = item !== chapter; });
+  reader.querySelectorAll('.chapter-toc a').forEach((link) => {
+    if (link.hash === '#' + chapter.id) link.setAttribute('aria-current', 'step');
+    else link.removeAttribute('aria-current');
+  });
+}
+function revealStudyTarget() {
+  if (!location.hash) {
+    document.querySelectorAll('[data-tab-group]').forEach((group) => {
+      selectMaterialPane(group, group.querySelector('[data-tab-pane]'));
+    });
+    document.querySelectorAll('.chapter-reader').forEach((reader) => {
+      const first = reader.querySelector('.note-chapter');
+      if (first) selectNoteChapter(reader, first);
+    });
+    return;
+  }
+  const target = document.getElementById(location.hash.slice(1));
+  if (!target) return;
+  const pane = target.closest('[data-tab-pane]');
+  if (pane) selectMaterialPane(pane.closest('[data-tab-group]'), pane);
+  const reader = target.closest('.chapter-reader');
+  if (reader && target.classList.contains('note-chapter')) selectNoteChapter(reader, target);
+}
+document.querySelectorAll('[data-tab-group]').forEach((group) => {
+  const nav = group.querySelector('[data-tab-nav]');
+  nav.setAttribute('role', 'tablist');
+  const links = [...nav.querySelectorAll('[data-pane-link]')];
+  links.forEach((link, index) => {
+    const pane = document.getElementById(link.hash.slice(1));
+    link.id = pane.id + '-tab';
+    link.setAttribute('role', 'tab');
+    link.setAttribute('aria-controls', pane.id);
+    pane.setAttribute('role', 'tabpanel');
+    pane.setAttribute('aria-labelledby', link.id);
+    link.addEventListener('click', () => selectMaterialPane(group, pane));
+    link.addEventListener('keydown', (event) => {
+      let next;
+      if (event.key === 'ArrowRight') next = (index + 1) % links.length;
+      if (event.key === 'ArrowLeft') next = (index + links.length - 1) % links.length;
+      if (event.key === 'Home') next = 0;
+      if (event.key === 'End') next = links.length - 1;
+      if (next !== undefined) {
+        event.preventDefault();
+        links[next].focus();
+        links[next].click();
+      }
+    });
+  });
+  selectMaterialPane(group, group.querySelector('[data-tab-pane]'));
+  group.addEventListener('invalid', (event) => {
+    const pane = event.target.closest('[data-tab-pane]');
+    if (pane) selectMaterialPane(group, pane);
+    const details = event.target.closest('details');
+    if (details) details.open = true;
+  }, true);
+});
+document.querySelectorAll('.chapter-reader').forEach((reader) => {
+  const first = reader.querySelector('.note-chapter');
+  if (first) selectNoteChapter(reader, first);
+  reader.querySelectorAll('.chapter-toc a').forEach((link) => {
+    link.addEventListener('click', () => {
+      const chapter = document.getElementById(link.hash.slice(1));
+      if (chapter) selectNoteChapter(reader, chapter);
+    });
   });
 });
+window.addEventListener('hashchange', revealStudyTarget);
+revealStudyTarget();
 
 const cloudCallback = document.getElementById("cloud-oauth-callback");
 if (cloudCallback) {
@@ -135,3 +202,10 @@ if (cloudCallback) {
     document.getElementById("callback-status").textContent = "Brak odpowiedzi logowania. Wróć do Połączenia AI i spróbuj ponownie.";
   }
 }
+
+// Formula nodes contain escaped TeX produced by the server-side Markdown parser.
+document.querySelectorAll('.math.inline, .math.block').forEach((node) => {
+  if (window.katex && node.textContent.length <= 4000) {
+    katex.render(node.textContent, node, {displayMode: node.classList.contains('block'), throwOnError: false, trust: false, maxExpand: 1000, maxSize: 10});
+  }
+});

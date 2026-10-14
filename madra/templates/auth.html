@@ -17,13 +17,18 @@
             <form method="post" class="form-stack">
                 {{ csrf() }}
                 <label>
-                    Nazwa użytkownika
+                    {{ 'Nazwa użytkownika' if register else 'E-mail lub nazwa użytkownika' }}
                     <input name="username"
                            required
                            {% if register %}minlength="3" maxlength="40"{% endif %}
                            autocomplete="username"
                            value="{{ request.form.get('username', '') }}">
                 </label>
+                {% if register %}
+                    <label>Adres e-mail
+                        <input type="email" name="email" required maxlength="254" autocomplete="email" value="{{ request.form.get('email', '') }}">
+                    </label>
+                {% endif %}
                 <label>
                     Hasło
                     <input type="password"
@@ -40,7 +45,7 @@
                                minlength="8"
                                autocomplete="new-password">
                     </label>
-                    <p class="small muted">Co najmniej 8 znaków. Dane zapisują się w Twojej prywatnej przestrzeni.</p>
+                    <p class="small muted">Co najmniej 8 znaków. Dane zapisują się w Twojej prywatnej przestrzeni. Możesz rozpocząć naukę od razu.</p>
                 {% endif %}
                 <button class="button primary">{{ 'Utwórz konto' if register else 'Zaloguj się' }} {{ icon('arrow', 18) }}</button>
             </form>

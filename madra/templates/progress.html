@@ -39,6 +39,8 @@
     <p class="small muted">
         Wskaźnik opiera się na ostatniej ocenie każdego ćwiczenia: jeszcze raz = 0%, trudno = 50%, dobrze lub łatwo = 100%. Niepodjęte ćwiczenia liczą się jako 0%. Quizy ocenia aplikacja; inne ćwiczenia oceniasz sam.
     </p>
+    <section class="panel"><h2>Co wymaga pracy?</h2><a class="button primary" href="{{ url_for('study.prepare',mode='difficult') }}">Przećwicz trudności</a>{% for activity in weak %}<p><a href="{{ url_for('library.topic',tid=activity.topic_id) }}">{{ activity.topic_name }}</a> · {{ activity.prompt[:140] }} · {{ 'Jeszcze raz' if activity.last_grade==0 else 'Trudno' }}</p>{% else %}<p>Brak ćwiczeń z ostatnią oceną „jeszcze raz” lub „trudno”. Niesprawdzone tematy nadal wymagają własnej próby.</p>{% endfor %}</section>
+    <section class="panel"><h2>Zakres według tematów</h2>{% for topic in topic_stats %}<p><a href="{{ url_for('library.topic',tid=topic.id) }}">{{ topic.workspace_name }} / {{ topic.name }}</a> · {{ topic.total }} ćwiczeń · {{ topic.new }} nowych · {{ topic.weak }} trudnych{% if not topic.total %} · Zakres niesprawdzony{% endif %}</p>{% endfor %}</section>
     <div class="progress-columns">
         <section class="panel">
             <div class="section-heading">
@@ -59,8 +61,9 @@
         </section>
         <section>
             <div class="section-heading">
-                <h2>Ostatnie sesje</h2>
+                <h2>Historia sesji</h2>
             </div>
+            <div class="actions">{% if page>1 %}<a href="{{ url_for('planning.progress',page=page-1) }}">Nowsze sesje</a>{% endif %}{% if has_more %}<a href="{{ url_for('planning.progress',page=page+1) }}">Starsze sesje</a>{% endif %}</div>
             <div class="session-history">
                 {% for study in history %}
                     <a href="{{ url_for('study.session_page',sid=study.id) }}"
@@ -69,7 +72,7 @@
                         <div>
                             <strong>{{ study.title }}</strong>
                             <small>
-                                {{ study.answer_count }} odpowiedzi · {{ {'active':'W trakcie','completed':'Ukończona','ended':'Zakończona wcześniej'}[study.status] }}
+                                {{ study.answer_count }} odpowiedzi · {{ 'Przerwa zapisana' if study.paused else {'active':'W trakcie','completed':'Ukończona','ended':'Zakończona wcześniej'}[study.status] }}{% if study.mode=='exam' %} · Sprawdzian{% endif %}
                             </small>
                         </div>
                         {{ icon('arrow', 16) }}

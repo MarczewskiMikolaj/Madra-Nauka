@@ -1,0 +1,11 @@
+{% extends 'base.html' %}{% from 'macros.html' import csrf %}
+{% block title %}Przygotuj sesję · Mądra Nauka{% endblock %}
+{% block content %}<section class="panel form-page">
+<h1>Jak chcesz pracować?</h1><p>{{ title }}</p><p><a href="{{ url_for('study.prepare',all=1,mode=mode) }}">Wybierz wszystkie przedmioty</a> · <a href="{{ url_for('planning.goals') }}">Wybierz zakres celu</a></p>
+<form action="{{ url_for('study.start') }}" method="post" class="form-stack">{{ csrf() }}
+{% for name,value in scope.items() %}<input type="hidden" name="{{ name }}" value="{{ value }}">{% endfor %}
+<label>Tryb<select name="mode"><option value="regular" {% if mode=='regular' %}selected{% endif %}>Nauka i powtórki</option><option value="difficult" {% if mode=='difficult' %}selected{% endif %}>Przećwicz trudności</option><option value="exam" {% if mode=='exam' %}selected{% endif %}>Próbny sprawdzian</option></select></label>
+<p class="small muted">Trudności to ostatnie oceny „jeszcze raz” i „trudno”. Każda oceniona próba zapisuje historię i aktualizuje termin powtórki. Sprawdzian ujawnia wzorce dopiero po zakończeniu.</p>
+<label>Czas (szacunkowy)<select name="budget">{% for minutes in [5,10,20,30,60] %}<option value="{{ minutes }}" {% if minutes==10 %}selected{% endif %}>{{ minutes }} minut</option>{% endfor %}</select></label>
+<fieldset><legend>Rodzaje ćwiczeń — pusty wybór oznacza wszystkie</legend>{% for key,label in kinds.items() %}<label class="check-row"><input type="checkbox" name="kinds" value="{{ key }}">{{ label }}</label>{% endfor %}</fieldset>
+<button class="button primary">Rozpocznij sesję</button></form></section>{% endblock %}

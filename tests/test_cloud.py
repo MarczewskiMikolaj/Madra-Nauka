@@ -77,6 +77,7 @@ class CloudTests(unittest.TestCase):
             "/register",
             {
                 "username": "CloudStudent",
+                "email": "cloud@example.test",
                 "password": "test-password-123",
                 "confirm_password": "test-password-123",
             },

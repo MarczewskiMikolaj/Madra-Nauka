@@ -87,6 +87,8 @@
             <span class="art-spark">{{ icon('spark', 35) }}</span>
         </div>
     </section>
+    <section class="learning-actions panel"><h2>Wybierz następny krok</h2><p>{{ weak }} ćwiczeń sprawia trudność.{% if nearest %} Domyślny plan uwzględnia cel „{{ nearest.title }}” i jego zakres.{% endif %}</p><div class="actions"><a class="button primary" href="{{ url_for('study.prepare',mode='difficult') }}">Przećwicz trudności</a><a class="button secondary" href="{{ url_for('study.prepare',mode='exam') }}">Próbny sprawdzian</a><a class="button quiet" href="{{ url_for('study.prepare') }}">Dobierz czas i metody</a></div><p class="small muted">Wracasz po przerwie? Wybierz 5 lub 10 minut i wykonaj małą porcję. Pozostałe zaległości pozostaną w kolejce.</p></section>
+    {% if paused %}<section class="panel"><h2>Zapisane przerwy</h2>{% for study in paused %}<p><a href="{{ url_for('study.session_page',sid=study.id) }}">{{ study.title }} — wznów zachowaną sesję</a></p>{% endfor %}</section>{% endif %}
     <div class="overview-strip">
         <div>
             <strong>{{ due }}</strong>

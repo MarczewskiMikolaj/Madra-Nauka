@@ -245,7 +245,7 @@ def run_job(app, job_id, uid, upload_id, model, goal):
             draft["goal"] = goal
             with transaction() as db:
                 source = db.execute(
-                    "SELECT imported_at FROM uploads WHERE id=? AND user_id=?",
+                    "SELECT imported_at,draft_json FROM uploads WHERE id=? AND user_id=?",
                     (upload_id, uid),
                 ).fetchone()
                 job = db.execute(
@@ -260,6 +260,10 @@ def run_job(app, job_id, uid, upload_id, model, goal):
                     raise ValueError(
                         "Plik został już zapisany lub generowanie wygasło. Wynik nie zastąpił materiałów."
                     )
+                metadata = json.loads(source["draft_json"])
+                for key in ("parent_upload_id", "focus", "file_metadata"):
+                    if key in metadata:
+                        draft[key] = metadata[key]
                 db.execute(
                     "UPDATE uploads SET draft_json=? WHERE id=? AND user_id=?",
                     (json.dumps(draft, ensure_ascii=False), upload_id, uid),
@@ -317,7 +321,9 @@ def generate_materials(uid):
                 "GPT-5.6 Terra nie jest dostępny dla tego połączenia ChatGPT. Nie uruchomiono generowania."
             )
         goal = (
-            request.form.get("goal", "").strip()[:1000]
+            request.form.get(
+                "goal", json.loads(source["draft_json"]).get("goal", "")
+            ).strip()[:1000]
             or "Zrozumienie materiału i przygotowanie do sprawdzianu."
         )
         jid = uuid4().hex

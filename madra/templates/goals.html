@@ -26,7 +26,7 @@
                             <p>
                                 Około
                                 <strong>{{ goal.estimated_remaining }} min</strong>
-                                na pierwszą próbę pozostałych ćwiczeń.
+                                na nowe ćwiczenia, trudności i najbliższe powtórki do terminu.
                                 {% if goal.feasible %}
                                     Ten zakres mieści się w Twoim budżecie.
                                 {% else %}
@@ -35,11 +35,22 @@
                             </p>
                         {% endif %}
                         <p class="small muted">
-                            Pokrycie oznacza podjęte ćwiczenia. Nie jest oceną gotowości do egzaminu; powtórki wymagają dodatkowego czasu.
+                            Pokrycie oznacza podjęte ćwiczenia. Nie jest oceną gotowości do egzaminu. Plan szacuje najbliższą próbę każdego ćwiczenia; dalsze powtórki zależą od nowych wyników.
                         </p>
+                        {% if not goal.completed and goal.days >= 0 and goal.total %}
+                            <h3>Najbliższy tydzień</h3>
+                            <div class="goal-week">{% for day in goal.week %}<div><span>{{ day.date }}</span><strong>{{ (day.minutes|string)~' min' if day.available else 'Wolne' }}</strong></div>{% endfor %}</div>
+                            <p class="small muted">Szacunkowa porcja nauki w dostępnych dniach{% if goal.review_minutes %}: obecnie {{ goal.review_minutes }} min zaległych{% endif %}.</p>
+                        {% endif %}
+                        <p><strong>{{ goal.new }} nowych · {{ goal.weak }} trudnych · tematy bez ćwiczeń: {{ goal.unchecked_topics }}</strong></p>
+                        {% if goal.unchecked_topics %}<p class="notice">Część zakresu nie ma jeszcze ćwiczeń. Podjęcie wszystkich dostępnych pytań nie oznacza sprawdzenia całego materiału.</p>{% endif %}
+                        <details><summary>Zakres i trudności według tematów</summary>{% for topic in goal.topic_status %}<p><a href="{{ url_for('library.topic',tid=topic.id) }}">{{ topic.name }}</a> · ważność {{ topic.priority }} · {{ topic.total }} ćwiczeń · {{ topic.new }} nowych · {{ topic.weak }} trudnych{% if not topic.total %} · Zakres niesprawdzony{% endif %}</p>{% endfor %}</details>
                         <div class="actions">
+                            <a class="button secondary" href="{{ url_for('study.prepare',goal_id=goal.id) }}">Ucz się tego zakresu / sprawdzian</a>
+                            <a class="button secondary" href="{{ url_for('planning.edit_goal',gid=goal.id) }}">Edytuj cel</a>
+                            <form action="{{ url_for('planning.delete_goal',gid=goal.id) }}" method="post" data-confirm="Usunąć cel? Materiały i postęp pozostaną.">{{ csrf() }}<button class="button quiet">Usuń cel</button></form>
                             {% if goal.total %}
-                                {{ start('workspace_id',goal.workspace_id,'Ucz się do celu') }}
+                                {{ start('goal_id',goal.id,'Ucz się do celu') }}
                             {% endif %}
                             <form action="{{ url_for('planning.toggle_goal',gid=goal.id) }}"
                                   method="post">

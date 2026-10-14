@@ -35,9 +35,10 @@ def today_date():
 
 def activities_for(user_id, workspace_id=None, topic_id=None):
     sql = """SELECT a.*,t.name topic_name,w.name workspace_name,w.color,w.id workspace_id,
-             p.reviews,p.last_grade,p.due_date,p.interval_days, u.id upload_id,u.filename source_filename, ua.source_label
+             p.reviews,p.last_grade,p.due_date,p.interval_days, u.id upload_id,u.filename source_filename, ua.source_label, s.hints_json,s.explanation,s.rubric,s.material_id,s.source_chapter
              FROM activities a JOIN topics t ON t.id=a.topic_id
              JOIN workspaces w ON w.id=t.workspace_id
+             LEFT JOIN activity_support s ON s.activity_id=a.id
              LEFT JOIN progress p ON p.activity_id=a.id AND p.user_id=?
              LEFT JOIN upload_activities ua ON ua.activity_id=a.id
              LEFT JOIN uploads u ON u.id=ua.upload_id
@@ -91,7 +92,7 @@ def next_interval(previous, grade):
     if grade == 0:
         return 1
     if grade == 1:
-        return max(1, min(7, round(previous * 1.2)))
+        return max(1, min(7, round(previous * 0.5)))
     if grade == 2:
         return min(90, max(3, round(previous * 2)))
     return min(90, max(5, round(previous * 2.8)))

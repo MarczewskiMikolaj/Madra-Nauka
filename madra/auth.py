@@ -26,8 +26,49 @@ bp = Blueprint("auth", __name__)
 
 USER_QUERY = """SELECT users.*,
     COALESCE(user_profiles.session_version, 0) AS session_version,
-    user_profiles.avatar_png IS NOT NULL AS has_avatar
-    FROM users LEFT JOIN user_profiles ON users.id=user_profiles.user_id"""
+    user_profiles.avatar_png IS NOT NULL AS has_avatar,
+    user_emails.email
+    FROM users LEFT JOIN user_profiles ON users.id=user_profiles.user_id
+    LEFT JOIN user_emails ON users.id=user_emails.user_id"""
+
+DUMMY_HASH = generate_password_hash(secrets.token_hex(32))
+
+
+def rate_keys(purpose, identity):
+    secret = current_app.secret_key
+    if isinstance(secret, str):
+        secret = secret.encode()
+    return [
+        (hmac.new(secret, value.encode(), hashlib.sha256).hexdigest(), limit)
+        for value, limit in (
+            (f"{purpose}:ip:{request.remote_addr}", 60),
+            (f"{purpose}:identity:{identity.casefold()}", 10),
+        )
+    ]
+
+
+def consume_attempt(db, purpose, identity):
+    """Called inside the same transaction as credential validation."""
+    timestamp = time.time()
+    keys = rate_keys(purpose, identity)
+    for key, limit in keys:
+        attempt = db.execute(
+            "SELECT * FROM login_attempts WHERE key=?", (key,)
+        ).fetchone()
+        if (
+            attempt
+            and timestamp - attempt["first_at"] < 900
+            and attempt["count"] >= limit
+        ):
+            abort(429)
+    db.execute("DELETE FROM login_attempts WHERE first_at<?", (timestamp - 900,))
+    for key, _ in keys:
+        db.execute(
+            "INSERT INTO login_attempts VALUES (?,1,?) "
+            "ON CONFLICT(key) DO UPDATE SET count=count+1",
+            (key, timestamp),
+        )
+    return keys[-1][0]
 
 
 def csrf_token():
@@ -81,49 +122,23 @@ def login():
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
-        key = hmac.new(
-            current_app.secret_key.encode(),
-            f"{request.remote_addr}:{username.casefold()}".encode(),
-            hashlib.sha256,
-        ).hexdigest()
-        timestamp = time.time()
-        attempt = (
-            get_db()
-            .execute("SELECT * FROM login_attempts WHERE key=?", (key,))
-            .fetchone()
-        )
-        if attempt and timestamp - attempt["first_at"] < 900 and attempt["count"] >= 10:
-            abort(429)
-        user = (
-            get_db()
-            .execute(USER_QUERY + " WHERE username=? AND is_demo=0", (username,))
-            .fetchone()
-        )
-        if user and check_password_hash(user["password_hash"], password):
-            with transaction() as db:
-                # Recheck after acquiring the write lock (including a cloud refresh).
-                user = db.execute(
-                    USER_QUERY + " WHERE users.id=? AND username=? AND is_demo=0",
-                    (user["id"], username),
-                ).fetchone()
-                if not user or not check_password_hash(user["password_hash"], password):
-                    abort(409)
+        with transaction() as db:
+            key = consume_attempt(db, "login", username[:254])
+            user = db.execute(
+                USER_QUERY + " WHERE (username=? OR user_emails.email=?) AND is_demo=0",
+                (username, username),
+            ).fetchone()
+            valid = 1 <= len(password) <= 256 and check_password_hash(
+                user["password_hash"] if user else DUMMY_HASH, password
+            )
+            if user and valid:
                 db.execute("DELETE FROM login_attempts WHERE key=?", (key,))
+        if user and valid:
             session.clear()
             session["user_id"] = user["id"]
             session["session_version"] = user["session_version"]
             return redirect(url_for("planning.today"))
-        with transaction() as db:
-            if not attempt or timestamp - attempt["first_at"] >= 900:
-                db.execute(
-                    "INSERT OR REPLACE INTO login_attempts VALUES (?,1,?)",
-                    (key, timestamp),
-                )
-            else:
-                db.execute(
-                    "UPDATE login_attempts SET count=count+1 WHERE key=?", (key,)
-                )
-        flash("Nieprawidłowa nazwa użytkownika lub hasło.", "error")
+        flash("Nieprawidłowy e-mail, nazwa użytkownika lub hasło.", "error")
     return render_template("auth.html", register=False)
 
 
@@ -134,6 +149,13 @@ def register():
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
+        from .services import email
+
+        try:
+            address = email.normalize_email(request.form.get("email", ""))
+        except ValueError as error:
+            flash(str(error), "error")
+            return render_template("auth.html", register=True), 400
         if not re.fullmatch(r"[\w .-]{3,40}", username):
             flash(
                 "Nazwa musi mieć 3–40 znaków: litery, cyfry, spacje, kropki lub myślniki.",
@@ -147,12 +169,17 @@ def register():
             uid = uuid4().hex
             try:
                 with transaction() as db:
+                    consume_attempt(db, "register", address)
                     db.execute(
                         "INSERT INTO users VALUES (?,?,?,0,?)",
                         (uid, username, generate_password_hash(password), now_iso()),
                     )
+                    db.execute(
+                        "INSERT INTO user_emails (user_id,email) VALUES (?,?)",
+                        (uid, address),
+                    )
             except sqlite3.IntegrityError:
-                flash("Ta nazwa użytkownika jest już zajęta.", "error")
+                flash("Ta nazwa użytkownika lub adres e-mail jest już zajęty.", "error")
             else:
                 session.clear()
                 session["user_id"] = uid

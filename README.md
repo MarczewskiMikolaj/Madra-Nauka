@@ -1,6 +1,8 @@
-# Mądra Nauka 2.0
+# Mądra Nauka 2.0.0
 
 Osobiste centrum nauki po polsku: przedmioty, tematy, notatki, linki i różne metody ćwiczenia. Plan dnia łączy pytania otwarte, zadania, quizy, luki i fiszki w jedną sesję.
+
+Plan pierwszego stabilnego wydania i audyt braków: [docs/RELEASE_PLAN.md](docs/RELEASE_PLAN.md). Instrukcja publikacji i kopii: [docs/RELEASE.md](docs/RELEASE.md).
 
 Pełna wizja produktu, zakres MVP, model danych, migracja i dalsze etapy: [docs/PLAN.md](docs/PLAN.md).
 
@@ -21,18 +23,18 @@ Przy pierwszym uruchomieniu aplikacja tworzy bazę `instance/madra.sqlite3` i lo
 
 ## Działające MVP
 
-- konta, logowanie, wylogowanie, oddzielne dane użytkowników;
+- rejestracja z e-mailem, logowanie adresem lub nazwą, wylogowanie i oddzielne dane użytkowników;
 - ustawienia konta: zmiana nazwy do logowania, zmiana hasła z potwierdzeniem obecnego i wylogowaniem pozostałych sesji, wgrywanie oraz usuwanie awatara;
-- biblioteka przedmiotów i tematów; wyszukiwanie przedmiotów;
+- biblioteka przedmiotów i tematów; wyszukiwanie także tematów, notatek, linków i ćwiczeń;
 - notatki tekstowe i linki HTTP/HTTPS;
-- pięć typów ćwiczeń, edycja z zachowaniem ID i historii, archiwizacja;
+- pięć typów ćwiczeń, edycja z zachowaniem ID i historii, archiwum z przywracaniem;
 - mieszane sesje 5/10/20 minut, globalne lub dla konkretnego przedmiotu/tematu;
 - quiz oceniany na serwerze; odpowiedzi otwarte, zadania i luki z porównaniem i samooceną;
 - wynik zapisany od razu, bez duplikatów przy ponowieniu; cofnięcie ostatniej oceny;
 - wznowienie sesji z niezmienną kolejnością i migawką treści;
-- proste terminy powtórek, cele z datą i dziennym czasem;
+- proste terminy powtórek, edycja i usuwanie celów z datą i dziennym czasem, tygodniowa rozpiska pierwszego przejścia materiału;
 - statystyki trzech wymiarów nauki, aktywność tygodniowa i historia sesji;
-- eksport JSON i jawny import danych poprzedniej wersji;
+- eksport JSON oraz ZIP z oryginalnymi plikami, usuwanie własnego konta i danych, administracyjne kopie bazy, jawny import danych poprzedniej wersji;
 - responsywny interfejs, CSRF, escaping treści i ograniczenie prób logowania.
 
 Statystyki są wskaźnikiem zarejestrowanych ocen, a nie pomiarem gotowości do egzaminu. Plan wybiera powtórki, nowe ćwiczenia, a gdy nie ma zaległości — dodatkowe utrwalenie. Czas jest szacunkowy; pojedyncze zadanie może być dłuższe od wybranego krótkiego budżetu. Harmonogram jest prostą regułą, nie FSRS.
@@ -144,3 +146,30 @@ Generowanie zawsze używa `gpt-5.6-terra`. Model z formularza jest ignorowany pr
 `MADRA_PUBLIC_URL=https://madranauka.online` włącza połączenie chmurowe. Callback OpenAI pozostaje `http://127.0.0.1:8085/auth/callback`, zgodnie z flow OSS. Logowanie otwiera się w nowej karcie. Po zatwierdzeniu w OpenAI, jeśli przeglądarka pokazuje niedostępny adres loopback, użytkownik może wrócić do Połączenia AI i wkleić pełny adres w sekcji „Dokończ połączenie”. Adres jest przekazywany POST-em z CSRF, a serwer weryfikuje dokładny origin i ścieżkę, state, PKCE, nonce, podpis oraz tożsamość. Nie pobiera wklejonego URL. Kod nie trafia do logów URL. To ręczne dokończenie, nie automatyczny callback na domenę; internetowy wariant integracji wymaga odpowiedniego dostępu OpenAI.
 
 Tutorial Pythona, przycisk pobierania pomocnika i dodatkowa lokalna zgoda zostały usunięte z UI. Istniejący endpoint pomocnika i relay obsługują wcześniej pobrane pomocniki. Zgoda na użycie planu jest sprawdzana na podstawie scope przyznanego przez OpenAI. Nie używamy klucza API ani automatycznego fallbacku płatności. Zaszyfrowane połączenia przechowywane są w prywatnych obiektach GCS.
+
+## Rejestracja e-mailem
+
+Nowe konta wymagają nazwy, adresu e-mail i hasła. Logowanie przyjmuje adres lub nazwę. Istniejące konta nie muszą podawać adresu i nadal logują się nazwą. Adres jest unikalny bez rozróżniania wielkości liter. Odzyskiwanie konta nie należy do tego wydania.
+
+Rejestracja od razu aktywuje konto i loguje użytkownika. Adres służy do logowania; aplikacja nie wysyła wiadomości ani nie weryfikuje własności skrzynki. Nie wymaga konfiguracji poczty.
+
+## Archiwum i usuwanie danych
+
+W ustawieniach konta **Pobierz archiwum z oryginalnymi plikami** zapisuje ZIP: `data.json`, oryginały w `originals/` z zachowaniem nazw i opcjonalny awatar. JSON zawiera mapowanie źródeł do plików. Eksport pomija hasła, tokeny ChatGPT i tokeny potwierdzenia. ZIP służy do pobrania danych; automatyczny import tego archiwum nie jest zaimplementowany. Dotychczasowy eksport JSON pozostaje dostępny.
+
+Usunięcie konta wymaga obecnego hasła oraz wpisania nazwy. Usuwa bieżące dane konta, w tym pliki i historię. Aktywne zadanie AI blokuje operację; połączenie ChatGPT trzeba wcześniej odłączyć. Kopie administratora mają osobną retencję. Konto demonstracyjne kończysz przez wylogowanie.
+
+## Pełny przebieg nauki studenta
+
+Plan i wyniki rozbudowy: [docs/STUDENT_IMPLEMENTATION_PLAN.md](docs/STUDENT_IMPLEMENTATION_PLAN.md). Audyt wyjściowy: [docs/STUDENT_AUDIT.md](docs/STUDENT_AUDIT.md).
+
+- **Tryby nauki / sprawdzian** w temacie i przedmiocie pozwalają wybrać naukę, trudności albo próbny sprawdzian, 5/10/20/30/60 minut oraz rodzaje pytań. Trudności wybierają ostatnie oceny 0–1 także przed terminem powtórki. Każda oceniona próba zapisuje nową historię i aktualizuje prosty harmonogram. „Trudno” skraca poprzedni odstęp; „jeszcze raz” ustawia jutro.
+- Podsumowanie zawiera pełne pytania, własne odpowiedzi, wzorce, wyjaśnienia, źródła oraz wyniki według tematów. Historia w Postępach ma strony, więc można wrócić również do starszych sesji.
+- Edycja ćwiczenia ma do trzech podpowiedzi, uzasadnienie, kryteria samooceny i odnośnik do własnego materiału/rozdziału. Pomoc i adnotacja przyczyny trudności są opcjonalne. Migawka sesji zachowuje ówczesne treści. Źródła są odnośnikami do bieżących materiałów; wskazania stron AI wymagają sprawdzenia.
+- Zmiana zakresu przy aktywnej sesji pokazuje wybór: kontynuować ją albo zapisać przerwę i przejść do nowej. Zapisane przerwy można wznowić z Dzisiaj i historii.
+- **Próbny sprawdzian** zapisuje odpowiedzi bez wzorców i podpowiedzi do końca. Quizy są wtedy oceniane automatycznie, reszta wymaga osobnej samooceny. Wcześniejsze zakończenie pokazuje liczbę nierozwiązanych pytań. Przerwa nie ujawnia wzorców. Ocenione odpowiedzi aktualizują harmonogram; nieocenione odpowiedzi otwarte nie zmieniają postępu.
+- Edycja celu pozwala wybrać tematy, ważność 1–3 i dni nauki. Domyślny plan Dzisiaj i globalna sesja korzystają z najbliższego niezakończonego celu; można jawnie wybrać wszystkie przedmioty. Szacunek obejmuje nowe pytania, trudności i najbliższe zaplanowane powtórki. Tematy bez ćwiczeń są pokazane jako niesprawdzone. To plan najbliższych prób, nie predykcja zdania egzaminu.
+- **Dodaj wiele ćwiczeń** obsługuje JSON/CSV/TSV oraz dwukolumnowe fiszki (także tekstowy eksport Anki; nie plik `.apkg`). Limit: 1 MB i 200 pytań. Podgląd poprzedza zapis; ponowienie zapisu nie tworzy duplikatu. JSON zawiera tablicę obiektów `kind`, `prompt`, `answer`, opcjonalnie `options`, `minutes`, `hints`, `explanation`, `rubric`. CSV z nagłówkami używa tych samych pól; opcje i podpowiedzi rozdziela `|`. Bez nagłówków potrzebne są dokładnie dwie kolumny: pytanie i odpowiedź.
+- Na zapisanym opracowaniu pliku wybierz rozdział, aby przygotować kolejną analizę bez ponownego uploadu. Aplikacja tworzy osobne opracowanie z kopią oryginału i zachowuje poprzednie materiały. Dopiero przycisk generowania wysyła pełny plik oraz cel do istniejącego połączenia ChatGPT. Powielone kliknięcie przygotowania tego samego niezapisanego rozdziału wznawia jego szkic. Każde opracowanie nadal ma limit 20 ćwiczeń, ale temat może zawierać wiele opracowań i pytań ręcznych.
+
+Notatki i treści ćwiczeń obsługują Markdown, tabele, bloki kodu oraz wzory `$...$` i `$$...$$`. KaTeX, CSS i fonty są dołączone lokalnie (`madra/static/vendor/katex/`); nie korzystają z zewnętrznego CDN. Surowy HTML i obrazki Markdown nie są wykonywane. Kod jest wyświetlany, nie uruchamiany. Zaktualizuj zależności przez `pip install -r requirements.txt`. Migracja 008 tworzy tabele pomocnicze bez zmiany istniejących treści i migawkowanych sesji. Eksport i usuwanie konta obejmują nowe dane.

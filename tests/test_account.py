@@ -44,6 +44,7 @@ class AccountTests(unittest.TestCase):
             "/register",
             {
                 "username": username,
+                "email": username.casefold() + "@example.test",
                 "password": "old-password-123",
                 "confirm_password": "old-password-123",
             },
@@ -226,7 +227,7 @@ class AccountTests(unittest.TestCase):
     def test_migration_from_existing_database(self):
         path = str(Path(self.directory.name) / "old.sqlite3")
         with sqlite3.connect(path) as db:
-            for migration in sorted(Path("madra/migrations").glob("00[1-5]*.sql")):
+            for migration in sorted(Path("madra/migrations").glob("00[1-6]*.sql")):
                 db.executescript(migration.read_text())
             db.execute("INSERT INTO users VALUES ('old','Existing','hash',0,'now')")
         app = create_app(
@@ -238,7 +239,7 @@ class AccountTests(unittest.TestCase):
             }
         )
         with app.app_context():
-            self.assertEqual(get_db().execute("PRAGMA user_version").fetchone()[0], 6)
+            self.assertEqual(get_db().execute("PRAGMA user_version").fetchone()[0], 8)
             self.assertEqual(
                 get_db().execute("SELECT username FROM users").fetchone()[0], "Existing"
             )

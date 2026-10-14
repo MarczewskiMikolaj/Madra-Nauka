@@ -2,7 +2,6 @@
 
 from io import BytesIO
 import re
-import time
 
 from flask import (
     Blueprint,
@@ -19,7 +18,7 @@ from flask import (
 from PIL import Image, ImageOps, UnidentifiedImageError
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from .auth import USER_QUERY, login_required
+from .auth import USER_QUERY, login_required, consume_attempt
 from .db import get_db, transaction
 
 bp = Blueprint("account", __name__)
@@ -33,6 +32,31 @@ def fresh_user(db):
     if not user or user["session_version"] != session.get("session_version", 0):
         abort(409)
     return user
+
+
+def confirm_password(db, user):
+    key = consume_attempt(db, "password", user["id"])
+    password = request.form.get("current_password", "")
+    if not 1 <= len(password) <= 256 or not check_password_hash(
+        user["password_hash"], password
+    ):
+        return False
+    db.execute("DELETE FROM login_attempts WHERE key=?", (key,))
+    return True
+
+
+def set_password(db, user, password):
+    version = user["session_version"] + 1
+    db.execute(
+        "UPDATE users SET password_hash=? WHERE id=?",
+        (generate_password_hash(password), user["id"]),
+    )
+    db.execute(
+        "INSERT INTO user_profiles (user_id,session_version) VALUES (?,?) "
+        "ON CONFLICT(user_id) DO UPDATE SET session_version=excluded.session_version",
+        (user["id"], version),
+    )
+    return version
 
 
 def prepare_avatar(upload):
@@ -113,46 +137,16 @@ def password():
         error = "Hasło musi mieć od 8 do 256 znaków."
     elif new_password != request.form.get("confirm_password", ""):
         error = "Hasła nie są takie same."
-    current_password = request.form.get("current_password", "")
     with transaction() as db:
         user = fresh_user(db)
-        key = "password:" + user["id"]
-        timestamp = time.time()
-        attempt = db.execute(
-            "SELECT * FROM login_attempts WHERE key=?", (key,)
-        ).fetchone()
-        if attempt and timestamp - attempt["first_at"] < 900 and attempt["count"] >= 10:
-            abort(429)
-        if not 1 <= len(current_password) <= 256 or not check_password_hash(
-            user["password_hash"], current_password
-        ):
+        if not confirm_password(db, user):
             error = "Obecne hasło jest nieprawidłowe."
-            if not attempt or timestamp - attempt["first_at"] >= 900:
-                db.execute(
-                    "INSERT OR REPLACE INTO login_attempts VALUES (?,1,?)",
-                    (key, timestamp),
-                )
-            else:
-                db.execute(
-                    "UPDATE login_attempts SET count=count+1 WHERE key=?", (key,)
-                )
-        else:
-            db.execute("DELETE FROM login_attempts WHERE key=?", (key,))
-            if not error and check_password_hash(user["password_hash"], new_password):
-                error = "Nowe hasło musi różnić się od obecnego."
+        elif not error and check_password_hash(user["password_hash"], new_password):
+            error = "Nowe hasło musi różnić się od obecnego."
         if error:
             flash(error, "error")
             return render_template("account.html", nav="account"), 400
-        version = user["session_version"] + 1
-        db.execute(
-            "UPDATE users SET password_hash=? WHERE id=?",
-            (generate_password_hash(new_password), user["id"]),
-        )
-        db.execute(
-            """INSERT INTO user_profiles (user_id, session_version) VALUES (?,?)
-            ON CONFLICT(user_id) DO UPDATE SET session_version=excluded.session_version""",
-            (user["id"], version),
-        )
+        version = set_password(db, user, new_password)
     session.clear()
     session["user_id"] = user["id"]
     session["session_version"] = version
@@ -200,3 +194,64 @@ def avatar():
     response = Response(row["avatar_png"], mimetype="image/png")
     response.headers["Cache-Control"] = "private, no-store"
     return response
+
+
+@bp.post("/konto/usun")
+@login_required
+def delete_account():
+    if g.user["is_demo"]:
+        abort(403)
+    from .services import chatgpt
+
+    uid = g.user["id"]
+    # Serialize with OAuth/token rotation; never delete an account mid-generation.
+    with chatgpt.locked(uid), transaction() as db:
+        user = fresh_user(db)
+        if not confirm_password(db, user):
+            flash("Obecne hasło jest nieprawidłowe.", "error")
+            return render_template("account.html", nav="account"), 400
+        if request.form.get("confirm_username", "") != user["username"]:
+            flash("Potwierdź usunięcie, wpisując dokładną nazwę użytkownika.", "error")
+            return render_template("account.html", nav="account"), 400
+        if db.execute(
+            "SELECT 1 FROM ai_jobs WHERE user_id=? AND state='running'", (uid,)
+        ).fetchone():
+            flash(
+                "Poczekaj na zakończenie opracowań AI przed usunięciem konta.", "error"
+            )
+            return render_template("account.html", nav="account"), 409
+        connection = chatgpt.load(uid)
+        if connection.get("tokens") or connection.get("pending"):
+            flash(
+                "Najpierw odłącz ChatGPT w Połączeniu AI, a potem usuń konto.", "error"
+            )
+            return render_template("account.html", nav="account"), 409
+        # Remove identity metadata too; an empty encrypted tombstone is safe to retry.
+        chatgpt.save(uid, {})
+        statements = [
+            "DELETE FROM activity_imports WHERE user_id=?",
+            "DELETE FROM reviews WHERE user_id=?",
+            "DELETE FROM session_items WHERE session_id IN (SELECT id FROM study_sessions WHERE user_id=?)",
+            "DELETE FROM study_sessions WHERE user_id=?",
+            "DELETE FROM progress WHERE user_id=?",
+            "DELETE FROM goals WHERE user_id=?",
+            "DELETE FROM ai_jobs WHERE user_id=?",
+            "DELETE FROM upload_activities WHERE upload_id IN (SELECT id FROM uploads WHERE user_id=?)",
+            "DELETE FROM upload_materials WHERE upload_id IN (SELECT id FROM uploads WHERE user_id=?)",
+            "DELETE FROM uploads WHERE user_id=?",
+            "DELETE FROM activity_support WHERE material_id IN (SELECT m.id FROM materials m JOIN topics t ON t.id=m.topic_id JOIN workspaces w ON w.id=t.workspace_id WHERE w.user_id=?)",
+            "DELETE FROM activities WHERE topic_id IN (SELECT t.id FROM topics t JOIN workspaces w ON w.id=t.workspace_id WHERE w.user_id=?)",
+            "DELETE FROM materials WHERE topic_id IN (SELECT t.id FROM topics t JOIN workspaces w ON w.id=t.workspace_id WHERE w.user_id=?)",
+            "DELETE FROM topics WHERE workspace_id IN (SELECT id FROM workspaces WHERE user_id=?)",
+            "DELETE FROM legacy_payloads WHERE workspace_id IN (SELECT id FROM workspaces WHERE user_id=?)",
+            "DELETE FROM workspaces WHERE user_id=?",
+            "DELETE FROM users WHERE id=?",
+        ]
+        for sql in statements:
+            db.execute(sql, (uid,))
+    session.clear()
+    flash(
+        "Konto i jego materiały, pliki oraz historia zostały usunięte z aplikacji.",
+        "success",
+    )
+    return redirect(url_for("planning.landing"))

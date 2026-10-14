@@ -13,6 +13,8 @@ from flask import (
 )
 from .auth import login_required
 from .db import get_db, transaction
+from .services.exercises import save_support
+from .services.notes import note_chapters
 from .services.learning import (
     KIND_DIMENSION,
     KINDS,
@@ -105,10 +107,54 @@ def index():
             for w in spaces
             if query.casefold() in (w["name"] + " " + w["description"]).casefold()
         ]
+    results = []
+    if query:
+        needle = query.casefold()
+        queries = [
+            (
+                "Temat",
+                "library.topic",
+                "tid",
+                "SELECT t.id,t.name title,t.description body,w.name context FROM topics t JOIN workspaces w ON w.id=t.workspace_id WHERE w.user_id=?",
+            ),
+            (
+                "Materiał",
+                "library.material",
+                "mid",
+                "SELECT m.id,m.title,m.content body,w.name || ' / ' || t.name context FROM materials m JOIN topics t ON t.id=m.topic_id JOIN workspaces w ON w.id=t.workspace_id WHERE w.user_id=?",
+            ),
+            (
+                "Ćwiczenie",
+                "library.activity_form",
+                "aid",
+                "SELECT a.id,a.prompt title,a.answer body,w.name || ' / ' || t.name context FROM activities a JOIN topics t ON t.id=a.topic_id JOIN workspaces w ON w.id=t.workspace_id WHERE w.user_id=? AND a.archived=0",
+            ),
+        ]
+        for label, endpoint, parameter, sql in queries:
+            for row in get_db().execute(sql, (g.user["id"],)):
+                if (
+                    needle
+                    in (
+                        row["title"] + " " + row["body"] + " " + row["context"]
+                    ).casefold()
+                ):
+                    results.append(
+                        {
+                            "kind": label,
+                            "title": row["title"],
+                            "context": row["context"],
+                            "url": url_for(endpoint, **{parameter: row["id"]}),
+                        }
+                    )
+                    if len(results) == 50:
+                        break
+            if len(results) == 50:
+                break
     return render_template(
         "library.html",
         spaces=spaces,
         query=query,
+        results=results,
         nav="library",
         uploads=get_db()
         .execute(
@@ -230,6 +276,12 @@ def topic(tid):
         .fetchall(),
         materials=materials,
         activities=activities,
+        archived=get_db()
+        .execute(
+            "SELECT * FROM activities WHERE topic_id=? AND archived=1 ORDER BY updated_at DESC",
+            (tid,),
+        )
+        .fetchall(),
         scores=dimension_scores(activities),
         nav="library",
     )
@@ -327,6 +379,35 @@ def activity_form(tid=None, aid=None):
                 )
             if kind == "cloze" and "[...]" not in prompt:
                 raise ValueError("Oznacz lukę w poleceniu jako [...].")
+            from .services.exercises import validate_exercise
+
+            help_data = validate_exercise(
+                {
+                    "kind": kind,
+                    "prompt": prompt,
+                    "answer": answer,
+                    "options": options,
+                    "minutes": minutes,
+                    "hints": request.form.getlist("hints"),
+                    "explanation": request.form.get("explanation", ""),
+                    "rubric": request.form.get("rubric", ""),
+                }
+            )
+            material_id = request.form.get("material_id") or None
+            try:
+                chapter = int(request.form.get("source_chapter", 0) or 0)
+            except ValueError:
+                raise ValueError("Wybierz numer rozdziału źródła.") from None
+            if material_id:
+                material = owned_content("materials", material_id)
+                if material["topic_id"] != topic["id"] or not 0 <= chapter <= len(
+                    note_chapters(material["content"])
+                ):
+                    raise ValueError(
+                        "Źródło musi należeć do tego tematu, z poprawnym numerem rozdziału."
+                    )
+            elif chapter:
+                raise ValueError("Najpierw wybierz notatkę źródłową.")
             with transaction() as db:
                 if aid:
                     db.execute(
@@ -359,14 +440,33 @@ def activity_form(tid=None, aid=None):
                             now_iso(),
                         ),
                     )
+                save_support(db, aid, help_data, material_id, chapter)
             flash("Ćwiczenie zostało zapisane.", "success")
             return redirect(url_for("library.topic", tid=topic["id"]))
         except ValueError as e:
             flash(str(e), "error")
     options = "\n".join(json.loads(record["options_json"])) if record else ""
+    support = (
+        get_db()
+        .execute("SELECT * FROM activity_support WHERE activity_id=?", (aid,))
+        .fetchone()
+        if aid
+        else None
+    )
+    support = dict(support) if support else {}
+    support["hints"] = json.loads(support.get("hints_json") or "[]")
+    materials = (
+        get_db()
+        .execute(
+            "SELECT * FROM materials WHERE topic_id=? ORDER BY title", (topic["id"],)
+        )
+        .fetchall()
+    )
     return render_template(
         "form.html",
         form_type="activity",
+        support=support,
+        materials=materials,
         record=record,
         topic=topic,
         options=options,
@@ -381,4 +481,14 @@ def archive_activity(aid):
     with transaction() as db:
         db.execute("UPDATE activities SET archived=1 WHERE id=?", (aid,))
     flash("Ćwiczenie zarchiwizowane. Historia została zachowana.", "success")
+    return redirect(url_for("library.topic", tid=record["topic_id"]))
+
+
+@bp.post("/cwiczenia/<aid>/przywroc")
+@login_required
+def restore_activity(aid):
+    record = owned_content("activities", aid)
+    with transaction() as db:
+        db.execute("UPDATE activities SET archived=0 WHERE id=?", (aid,))
+    flash("Ćwiczenie przywrócone wraz z jego historią i terminem powtórki.", "success")
     return redirect(url_for("library.topic", tid=record["topic_id"]))

@@ -14,13 +14,22 @@
     {% if uploads %}<section class="material"><h2>Twoje pliki</h2>{% for upload in uploads %}<p><a href="{{ url_for('uploads.preview',uid=upload.id) }}">{{ upload.filename }}</a> <span class="small muted">· {% if upload.imported_at %}Zapisano materiały{% elif upload.ai_state=="running" %}AI pracuje — otwórz postęp{% elif upload.ai_state=="failed" %}Błąd opracowania — otwórz szczegóły{% elif upload.generator=="ai" %}Opracowanie AI do sprawdzenia{% else %}Czeka na analizę AI{% endif %}</span></p>{% endfor %}</section>{% endif %}
     <form class="search-form" method="get">
         {{ icon('search', 20) }}
-        <label class="sr-only" for="search">Szukaj przedmiotu</label>
+        <label class="sr-only" for="search">Szukaj w bibliotece</label>
         <input id="search"
                name="q"
-               placeholder="Szukaj przedmiotu lub umiejętności…"
+               placeholder="Szukaj przedmiotów, tematów i treści…"
                value="{{ query }}">
         <button class="button quiet">Szukaj</button>
     </form>
+    {% if query %}
+        <section class="panel search-results" aria-label="Wyniki wyszukiwania treści">
+            <h2>Tematy, materiały i ćwiczenia</h2>
+            {% for result in results %}
+                <p><span class="small muted">{{ result.kind }} · {{ result.context }}</span><br><a href="{{ result.url }}">{{ result.title[:200] }}</a></p>
+            {% else %}<p>Nie znaleziono pasującej treści.</p>{% endfor %}
+            {% if results|length == 50 %}<p class="small muted">Pokazujemy pierwsze 50 wyników. Doprecyzuj wyszukiwanie.</p>{% endif %}
+        </section>
+    {% endif %}
     <div class="subject-grid">
         {% for space in spaces %}
             <a class="subject-card {{ space.color }}"
@@ -38,6 +47,7 @@
                 </div>
             </a>
         {% else %}
+            {% if not query or not results %}
             <div class="empty-state full-width">
                 {{ icon('book', 36) }}
                 <h2>{{ 'Brak pasujących przedmiotów' if query else 'Zacznij od tego, czego chcesz się nauczyć.' }}</h2>
@@ -46,6 +56,7 @@
                 </p>
                 <a class="button primary" href="{{ url_for('library.workspace_form') }}">Dodaj przedmiot</a>
             </div>
+            {% endif %}
         {% endfor %}
     </div>
 {% endblock %}

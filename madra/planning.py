@@ -1,4 +1,6 @@
 import json
+import tempfile
+import zipfile
 from datetime import date, timedelta, datetime
 from uuid import uuid4
 from zoneinfo import ZoneInfo
@@ -13,16 +15,26 @@ from flask import (
     request,
     url_for,
     Response,
+    send_file,
 )
 from .auth import login_required
-from .db import get_db, transaction
+from .db import get_db, transaction, read_snapshot
 from .library import owned_workspace, required_text
 from .services.learning import (
     activities_for,
-    choose_items,
     dimension_scores,
     now_iso,
     today_date,
+)
+
+from .services.goals import (
+    enrich_goal,
+    save_goal_settings,
+    goal_activities,
+    nearest_goal,
+    choose_learning,
+    DAYS,
+    settings_for,
 )
 
 bp = Blueprint("planning", __name__)
@@ -32,30 +44,12 @@ def goal_details(user_id):
     rows = (
         get_db()
         .execute(
-            """SELECT g.*,w.name workspace_name,w.color FROM goals g
-                            JOIN workspaces w ON w.id=g.workspace_id WHERE g.user_id=?
-                            ORDER BY g.completed,g.target_date""",
+            "SELECT g.*,w.name workspace_name,w.color FROM goals g JOIN workspaces w ON w.id=g.workspace_id WHERE g.user_id=? ORDER BY g.completed,g.target_date",
             (user_id,),
         )
         .fetchall()
     )
-    result = []
-    for row in rows:
-        goal = dict(row)
-        activities = activities_for(user_id, workspace_id=row["workspace_id"])
-        practiced = sum(bool(a["reviews"]) for a in activities)
-        remaining = sum(a["minutes"] for a in activities if not a["reviews"])
-        days = (date.fromisoformat(row["target_date"]) - today_date()).days
-        goal.update(
-            total=len(activities),
-            practiced=practiced,
-            coverage=round(practiced / len(activities) * 100) if activities else 0,
-            days=days,
-            estimated_remaining=remaining,
-            feasible=remaining <= max(0, days + 1) * row["daily_minutes"],
-        )
-        result.append(goal)
-    return result
+    return [enrich_goal(row) for row in rows]
 
 
 @bp.get("/")
@@ -70,7 +64,8 @@ def landing():
 @login_required
 def today():
     activities = activities_for(g.user["id"])
-    chosen = choose_items(activities, 10)
+    nearest = nearest_goal(g.user["id"])
+    chosen = choose_learning(goal_activities(nearest) if nearest else activities, 10)
     active = (
         get_db()
         .execute(
@@ -99,6 +94,14 @@ def today():
     return render_template(
         "today.html",
         activities=activities,
+        nearest=nearest,
+        weak=sum(bool(a["reviews"]) and a["last_grade"] < 2 for a in activities),
+        paused=get_db()
+        .execute(
+            "SELECT s.* FROM study_sessions s JOIN session_settings x ON x.session_id=s.id WHERE s.user_id=? AND x.paused=1 ORDER BY s.created_at DESC LIMIT 5",
+            (g.user["id"],),
+        )
+        .fetchall(),
         plan=chosen,
         active=active,
         spaces=spaces,
@@ -143,11 +146,12 @@ def add_goal():
             raise ValueError(
                 "Wybierz przyszły termin (do 10 lat) i 5–180 minut dziennie."
             )
+        gid = uuid4().hex
         with transaction() as db:
             db.execute(
                 "INSERT INTO goals VALUES (?,?,?,?,?,?,0,?)",
                 (
-                    uuid4().hex,
+                    gid,
                     g.user["id"],
                     wid,
                     title,
@@ -156,7 +160,8 @@ def add_goal():
                     now_iso(),
                 ),
             )
-        flash("Cel dodany. Możesz rozpocząć naukę w jego przedmiocie.", "success")
+            save_goal_settings(db, {"id": gid, "workspace_id": wid})
+        flash("Cel dodany. Ustaw jego tematy i dni nauki w edycji celu.", "success")
     except (ValueError, TypeError) as e:
         flash(
             (
@@ -181,6 +186,89 @@ def toggle_goal(gid):
         db.execute(
             "UPDATE goals SET completed=? WHERE id=?", (int(not goal["completed"]), gid)
         )
+    return redirect(url_for("planning.goals"))
+
+
+def owned_goal(gid):
+    row = (
+        get_db()
+        .execute("SELECT * FROM goals WHERE id=? AND user_id=?", (gid, g.user["id"]))
+        .fetchone()
+    )
+    if not row:
+        abort(404)
+    return row
+
+
+@bp.route("/cele/<gid>/edytuj", methods=["GET", "POST"])
+@login_required
+def edit_goal(gid):
+    goal = owned_goal(gid)
+    if request.method == "POST":
+        try:
+            title = required_text("title", "Nazwa celu", 150)
+            target = date.fromisoformat(request.form.get("target_date", ""))
+            minutes = int(request.form.get("daily_minutes", ""))
+            if (
+                not today_date() <= target <= today_date() + timedelta(days=3650)
+                or not 5 <= minutes <= 180
+            ):
+                raise ValueError()
+            with transaction() as db:
+                db.execute(
+                    "UPDATE goals SET title=?,target_date=?,daily_minutes=? WHERE id=? AND user_id=?",
+                    (title, target.isoformat(), minutes, gid, g.user["id"]),
+                )
+                save_goal_settings(db, goal)
+            flash("Cel zaktualizowany. Rozpiska czasu została przeliczona.", "success")
+            return redirect(url_for("planning.goals"))
+        except (ValueError, TypeError) as error:
+            flash(
+                (
+                    str(error)
+                    if str(error).startswith(("Wybierz", "Ważność"))
+                    else "Podaj nazwę celu, termin od dziś do 10 lat i 5–180 minut dziennie."
+                ),
+                "error",
+            )
+            return (
+                render_template(
+                    "goal_edit.html",
+                    goal=goal,
+                    settings=settings_for(goal),
+                    topics=get_db()
+                    .execute(
+                        "SELECT t.*,COALESCE(gt.priority,1) priority,gt.topic_id IS NOT NULL selected FROM topics t LEFT JOIN goal_topics gt ON gt.topic_id=t.id AND gt.goal_id=? WHERE workspace_id=? ORDER BY name",
+                        (gid, goal["workspace_id"]),
+                    )
+                    .fetchall(),
+                    days=DAYS,
+                    nav="goals",
+                ),
+                400,
+            )
+    return render_template(
+        "goal_edit.html",
+        goal=goal,
+        settings=settings_for(goal),
+        topics=get_db()
+        .execute(
+            "SELECT t.*,COALESCE(gt.priority,1) priority,gt.topic_id IS NOT NULL selected FROM topics t LEFT JOIN goal_topics gt ON gt.topic_id=t.id AND gt.goal_id=? WHERE workspace_id=? ORDER BY name",
+            (gid, goal["workspace_id"]),
+        )
+        .fetchall(),
+        days=DAYS,
+        nav="goals",
+    )
+
+
+@bp.post("/cele/<gid>/usun")
+@login_required
+def delete_goal(gid):
+    owned_goal(gid)
+    with transaction() as db:
+        db.execute("DELETE FROM goals WHERE id=? AND user_id=?", (gid, g.user["id"]))
+    flash("Cel usunięty. Materiały i historia nauki pozostały zachowane.", "success")
     return redirect(url_for("planning.goals"))
 
 
@@ -234,18 +322,51 @@ def progress():
     while day.isoformat() in daily:
         streak += 1
         day -= timedelta(days=1)
+    page = request.args.get("page", 1, type=int)
+    if not 1 <= page <= 100000:
+        abort(400)
+    history_total = (
+        get_db()
+        .execute("SELECT COUNT(*) FROM study_sessions WHERE user_id=?", (g.user["id"],))
+        .fetchone()[0]
+    )
     history = (
         get_db()
         .execute(
-            """SELECT s.*,COUNT(r.id) answer_count FROM study_sessions s
-                               LEFT JOIN session_items i ON i.session_id=s.id LEFT JOIN reviews r ON r.item_id=i.id
-                               WHERE s.user_id=? GROUP BY s.id ORDER BY s.created_at DESC LIMIT 10""",
+            """SELECT s.*,COUNT(CASE WHEN r.id IS NOT NULL OR e.item_id IS NOT NULL THEN i.id END) answer_count,COALESCE(x.paused,0) paused,COALESCE(x.mode,'regular') mode FROM study_sessions s
+                               LEFT JOIN session_settings x ON x.session_id=s.id
+                               LEFT JOIN session_items i ON i.session_id=s.id LEFT JOIN reviews r ON r.item_id=i.id LEFT JOIN exam_answers e ON e.item_id=i.id
+                               WHERE s.user_id=? GROUP BY s.id ORDER BY s.created_at DESC LIMIT 10 OFFSET ?""",
+            (g.user["id"], (page - 1) * 10),
+        )
+        .fetchall()
+    )
+    weak = [a for a in activities if a["reviews"] and a["last_grade"] < 2]
+    topics = (
+        get_db()
+        .execute(
+            "SELECT t.id,t.name,w.name workspace_name FROM topics t JOIN workspaces w ON w.id=t.workspace_id WHERE w.user_id=? ORDER BY w.name,t.name",
             (g.user["id"],),
         )
         .fetchall()
     )
+    topic_stats = []
+    for t in topics:
+        group = [a for a in activities if a["topic_id"] == t["id"]]
+        topic_stats.append(
+            {
+                **dict(t),
+                "total": len(group),
+                "new": sum(not a["reviews"] for a in group),
+                "weak": sum(bool(a["reviews"]) and a["last_grade"] < 2 for a in group),
+            }
+        )
     return render_template(
         "progress.html",
+        page=page,
+        has_more=page * 10 < history_total,
+        weak=weak,
+        topic_stats=topic_stats,
         scores=dimension_scores(activities),
         reviews=reviews,
         week=week,
@@ -259,11 +380,7 @@ def progress():
     )
 
 
-@bp.get("/konto/eksport")
-@login_required
-def export():
-    db = get_db()
-    uid = g.user["id"]
+def export_payload(db, uid):
     tables = {
         "workspaces": ("SELECT * FROM workspaces WHERE user_id=?",),
         "topics": (
@@ -291,16 +408,47 @@ def export():
         "upload_materials": (
             "SELECT m.* FROM upload_materials m JOIN uploads u ON u.id=m.upload_id WHERE u.user_id=?",
         ),
+        "activity_support": (
+            "SELECT x.* FROM activity_support x JOIN activities a ON a.id=x.activity_id JOIN topics t ON t.id=a.topic_id JOIN workspaces w ON w.id=t.workspace_id WHERE w.user_id=?",
+        ),
+        "session_settings": (
+            "SELECT x.* FROM session_settings x JOIN study_sessions s ON s.id=x.session_id WHERE s.user_id=?",
+        ),
+        "exam_answers": (
+            "SELECT e.* FROM exam_answers e JOIN session_items i ON i.id=e.item_id JOIN study_sessions s ON s.id=i.session_id WHERE s.user_id=?",
+        ),
+        "review_notes": (
+            "SELECT n.* FROM review_notes n JOIN reviews r ON r.id=n.review_id WHERE r.user_id=?",
+        ),
+        "goal_settings": (
+            "SELECT x.* FROM goal_settings x JOIN goals g ON g.id=x.goal_id WHERE g.user_id=?",
+        ),
+        "goal_topics": (
+            "SELECT x.* FROM goal_topics x JOIN goals g ON g.id=x.goal_id WHERE g.user_id=?",
+        ),
+        "activity_imports": ("SELECT * FROM activity_imports WHERE user_id=?",),
         "legacy_payloads": (
             "SELECT l.* FROM legacy_payloads l JOIN workspaces w ON w.id=l.workspace_id WHERE w.user_id=?",
         ),
     }
-    with transaction():
-        result = {
-            name: [dict(r) for r in db.execute(sql[0], (uid,)).fetchall()]
-            for name, sql in tables.items()
-        }
-    result.update(version=2, exported_at=now_iso(), username=g.user["username"])
+    result = {
+        name: [dict(r) for r in db.execute(sql[0], (uid,)).fetchall()]
+        for name, sql in tables.items()
+    }
+    result.update(
+        version=2,
+        exported_at=now_iso(),
+        username=g.user["username"],
+        email=g.user["email"],
+    )
+    return result
+
+
+@bp.get("/konto/eksport")
+@login_required
+def export():
+    with read_snapshot() as db:
+        result = export_payload(db, g.user["id"])
     return Response(
         json.dumps(result, ensure_ascii=False, indent=2),
         mimetype="application/json",
@@ -308,3 +456,58 @@ def export():
             "Content-Disposition": 'attachment; filename="madra-nauka-export.json"'
         },
     )
+
+
+@bp.get("/konto/archiwum")
+@login_required
+def archive_export():
+    output = tempfile.SpooledTemporaryFile(max_size=2 * 1024 * 1024, mode="w+b")
+    try:
+        with (
+            read_snapshot() as db,
+            zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as archive,
+        ):
+            result = export_payload(db, g.user["id"])
+            result["archive_version"] = 1
+            # Paths are generated from IDs, never supplied filenames.
+            originals = []
+            for source in db.execute(
+                "SELECT id,filename,file_blob FROM uploads WHERE user_id=?",
+                (g.user["id"],),
+            ):
+                filename = source["filename"].replace("\\", "/").rsplit("/", 1)[-1]
+                filename = (
+                    "".join(c for c in filename if c.isprintable()).strip(".")[:200]
+                    or "material"
+                )
+                path = f"originals/{len(originals) + 1}/{filename}"
+                archive.writestr(path, source["file_blob"])
+                originals.append(
+                    {
+                        "upload_id": source["id"],
+                        "filename": source["filename"],
+                        "path": path,
+                    }
+                )
+            result["originals"] = originals
+            profile = db.execute(
+                "SELECT avatar_png FROM user_profiles WHERE user_id=?", (g.user["id"],)
+            ).fetchone()
+            if profile and profile["avatar_png"]:
+                archive.writestr("avatar.png", profile["avatar_png"])
+            archive.writestr(
+                "data.json", json.dumps(result, ensure_ascii=False, indent=2)
+            )
+        output.seek(0)
+        response = send_file(
+            output,
+            mimetype="application/zip",
+            as_attachment=True,
+            download_name="madra-nauka-archive.zip",
+        )
+        response.headers["Cache-Control"] = "no-store"
+        response.call_on_close(output.close)
+        return response
+    except BaseException:
+        output.close()
+        raise

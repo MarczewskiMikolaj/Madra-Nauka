@@ -1,6 +1,8 @@
 # Mądra Nauka 2.0 — plan produktu i realizacji
 
-Data: 11 października 2026. Cel: wskrzesić projekt jako osobiste centrum nauki, w którym fiszki są jedną z metod pracy.
+Aktualizacja 13 października 2026: zakres i realizację przebiegu studenta opisuje [STUDENT_IMPLEMENTATION_PLAN.md](STUDENT_IMPLEMENTATION_PLAN.md). Starszy plan poniżej jest punktem odniesienia.
+
+Data pierwotnego planu: 11 października 2026. Cel: wskrzesić projekt jako osobiste centrum nauki, w którym fiszki są jedną z metod pracy.
 
 ## 1. Cel produktu
 

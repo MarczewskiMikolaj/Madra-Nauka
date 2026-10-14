@@ -65,27 +65,37 @@ Dla krótkiego źródła wystarczą 1–3 rozdziały. Każdy rozdział omawia je
 Tytuły muszą konkretnie nazywać omawiany temat (np. "Faza jasna fotosyntezy",
 "Rola chlorofilu", "Obliczanie stężenia molowego"), a nie "Część 1", "Rozdział 2"
 ani ogólnikowe "Podstawy". Nie wpisuj numeracji do tytułu.
-Uporządkuj rozdziały:
-mapa zagadnień i kolejność nauki, następnie osobna sekcja dla każdego ważnego tematu,
-a na końcu typowe błędy oraz podsumowanie do powtórki.
+Uporządkuj rozdziały od podstaw do zaawansowanych zagadnień, po jednym rozdziale
+na ważny temat, a na końcu typowe błędy oraz podsumowanie do powtórki.
+Nie twórz rozdziału "Plan nauki" ani rozdziału z samym spisem treści.
+Zwróć learning_order: listę indeksów rozdziałów (licząc od 1) w zalecanej kolejności.
+Każdy rozdział musi wystąpić dokładnie raz. Aplikacja ułoży rozdziały według tej
+listy i wyświetli plan nauki nad notatką. Nie pisz osobnej kolejności nauki w content,
+żeby plan i notatka zawsze miały tę samą kolejność.
+Jeśli CDB/PDB ma być poznawane po pamięci i procesach, umieść je w osobnym
+rozdziale w tym miejscu, zamiast łączyć z początkowym rozdziałem o instancji.
+Tytuł rozdziału występuje tylko w title; w content stosuj śródtytuły ### lub ####.
 Każdy temat wyjaśnij pełnymi akapitami: definicje, mechanizm lub tok rozumowania,
 zależności, zastosowanie i co najmniej jeden rozwiązany przykład, jeśli źródło
 pozwala go uzasadnić. Objaśnij symbole we wzorach, jednostki i warunki stosowania.
 Notatka powinna wystarczać do zrozumienia tematu bez zgadywania brakujących kroków.
-Używaj zwykłego tekstu i czytelnych list, bez HTML i znaczników Markdown.
+Używaj czytelnego Markdown: list, tabel i bloków kodu. Wzory zapisuj jako $...$ lub $$...$$. Nie używaj HTML.
 Nie kopiuj źródła jako całej notatki.
 Nie wymyślaj faktów ani zakresu nieobecnego w źródle. Przykłady oznacz jako przykłady.
 Jeśli źródło jest nieczytelne lub nie zawiera materiału edukacyjnego, zwróć error.
 Zwróć wyłącznie obiekt JSON:
-{"title":"tytuł", "chapters":[{"title":"tytuł rozdziału", "content":"obszerne objaśnienie"}], "activities":[
+{"title":"tytuł", "chapters":[{"title":"tytuł rozdziału", "content":"obszerne objaśnienie"}], "learning_order":[1], "activities":[
 {"kind":"flashcard|open|quiz|exercise|cloze", "prompt":"polecenie", "answer":"odpowiedź i uzasadnienie (quiz: dokładny wariant, luka: brakujące słowo)",
-"options":[], "minutes":2, "label":"miejsce w źródle", "evidence":"dokładny krótki cytat ze źródła"}], "error":""}.
+"hints":["krótka wskazówka","kolejny krok"], "explanation":"uzasadnienie odpowiedzi, także quizu", "rubric":"kryteria samooceny dla odpowiedzi otwartej", "options":[], "minutes":2, "label":"miejsce w źródle", "evidence":"dokładny krótki cytat ze źródła"}], "error":""}.
 Przygotuj od 6 do 20 ćwiczeń, dopasowanych do zakresu i celu, z mieszanką metod.
 Quiz ma 3-4 różne opcje; answer musi być dokładnie jedną opcją.
 Luka zawiera dokładnie oznaczenie [...]. Ćwiczenia zadaniowe mają pełne rozwiązania.
 Przeanalizuj cały załączony plik, od pierwszej do ostatniej strony, zanim przygotujesz materiały.
 Uwzględnij układ, tabele, wzory, wykresy i ilustracje, jeśli są dostępne w załączniku.
 Pokryj wszystkie istotne zagadnienia dokumentu, nie tylko pierwsze strony.
+Jeśli cel wskazuje konkretny rozdział lub zagadnienie, po analizie całego oryginału
+skup notatkę i wszystkie dodatkowe ćwiczenia na tym zakresie. W tym przypadku
+nie wymagamy pokrycia całego dokumentu w jednym opracowaniu.
 W notatce wyjaśnij zależności i podaj rozwiązane przykłady; nie twórz listy wyrwanych cytatów.
 Evidence to krótki cytat lub opis elementu ilustracji/tabeli do 500 znaków.
 Label wskazuje stronę i temat albo nagłówek sekcji. Nie zgaduj numerów stron.
@@ -101,7 +111,10 @@ def validate_draft(value):
             "AI nie może opracować tego materiału: " + str(value["error"])[:300]
         )
     if "chapters" in value:
-        value = {**value, "guide": chapter_guide(value["chapters"])}
+        value = {
+            **value,
+            "guide": chapter_guide(value["chapters"], value.get("learning_order")),
+        }
     for key, limit in [("title", 150), ("guide", 50000)]:
         if (
             not isinstance(value.get(key), str)
@@ -151,7 +164,12 @@ def validate_draft(value):
         minutes = activity.get("minutes", 2)
         if type(minutes) is not int or not 1 <= minutes <= 15:
             minutes = 2
-        result.append({**activity, "options": options, "minutes": minutes})
+        from .exercises import validate_exercise
+
+        help_data = validate_exercise(
+            {**activity, "options": options, "minutes": minutes}
+        )
+        result.append({**activity, **help_data})
     return {
         "title": value["title"],
         "guide": value["guide"],
@@ -247,7 +265,14 @@ def generate(uid, filename, file_data, model, goal, on_progress=None):
             on_progress("validating", output_chars)
         if raw.startswith("```"):
             raw = raw.split("\n", 1)[1].rsplit("```", 1)[0].strip()
-        return validate_draft(json.loads(raw))
+        value = json.loads(raw)
+        # New generations always get a plan derived from their actual chapters,
+        # even if the model omits the optional ordering field.
+        if isinstance(value, dict) and isinstance(value.get("chapters"), list):
+            value.setdefault(
+                "learning_order", list(range(1, len(value["chapters"]) + 1))
+            )
+        return validate_draft(value)
     except HTTPError as error:
         logging.getLogger(__name__).warning(
             "OpenAI generation failed: status=%s", error.code

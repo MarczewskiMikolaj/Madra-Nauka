@@ -11,7 +11,7 @@
             <h1>{{ space.name }}</h1>
             <p>{{ space.description }}</p>
         </div>
-        <div class="actions">
+        <div class="actions"><a class="button secondary" href="{{ url_for('study.prepare',workspace_id=space.id) }}">Tryby nauki / sprawdzian</a>
             <a class="button secondary"
                href="{{ url_for('library.workspace_form',wid=space.id) }}">Edytuj</a>
             {% if activities %}

@@ -152,15 +152,38 @@ def locked(uid):
 
         if cloud_state():
             with cloud_state().lease(uid):
+                check_actor()
                 yield
             return
         fd = os.open(directory() / (uid + ".lock"), os.O_CREAT | os.O_RDWR, 0o600)
         with os.fdopen(fd, "w") as file:
             fcntl.flock(file, fcntl.LOCK_EX)
             try:
+                check_actor()
                 yield
             finally:
                 fcntl.flock(file, fcntl.LOCK_UN)
+
+
+def check_actor():
+    """Reject a request that waited for credentials after account invalidation."""
+    from flask import g, abort
+    from ..db import get_db, refresh_cloud_db
+    from .cloud_state import cloud_state
+
+    user = g.get("user")
+    if not user:
+        return
+    db = get_db()
+    if cloud_state() and not db.in_transaction:
+        refresh_cloud_db(db)
+    row = db.execute(
+        "SELECT COALESCE(p.session_version,0) version FROM users u "
+        "LEFT JOIN user_profiles p ON p.user_id=u.id WHERE u.id=?",
+        (user["id"],),
+    ).fetchone()
+    if not row or row["version"] != user["session_version"]:
+        abort(409)
 
 
 def begin(uid, callback):

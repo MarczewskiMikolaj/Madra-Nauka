@@ -48,6 +48,10 @@
                     </form>
                 </section>
                 <div class="account-security">
+                    <section class="panel">
+                        <h2>Adres e-mail</h2>
+                        {% if g.user.email %}<p>{{ g.user.email }}</p>{% else %}<p>To konto powstało przed rejestracją e-mailem. Nadal możesz logować się swoją nazwą.</p>{% endif %}
+                    </section>
                     <section class="panel" aria-labelledby="password-heading">
                         <h2 id="password-heading">Zmiana hasła</h2>
                         <p class="muted">Po zmianie hasła wylogujemy pozostałe sesje. Tutaj pozostaniesz zalogowany.</p>
@@ -66,8 +70,19 @@
                     </section>
                     <section class="account-shortcuts" aria-label="Dane i połączenia">
                         <a href="{{ url_for('ai.settings') }}">{{ icon('spark', 18) }} Zarządzaj połączeniem ChatGPT</a>
+                        <a href="{{ url_for('planning.archive_export') }}">{{ icon('download', 18) }} Pobierz archiwum z oryginalnymi plikami</a>
                         <a href="{{ url_for('planning.export') }}">{{ icon('download', 18) }} Eksportuj swoje dane</a>
                     </section>
+                    <details class="panel">
+                        <summary>Usuń konto i dane</summary>
+                        <p>Usunięcie obejmuje przedmioty, tematy, pliki, materiały, cele i historię. Pobierz archiwum wcześniej. Kopie administratora mogą zachowywać dane do końca okresu retencji. Jeśli masz połączenie ChatGPT, najpierw je odłącz.</p>
+                        <form action="{{ url_for('account.delete_account') }}" method="post" class="form-stack" data-confirm="Trwale usunąć konto i wszystkie jego dane?">
+                            {{ csrf() }}
+                            <label>Obecne hasło<input type="password" name="current_password" required maxlength="256" autocomplete="current-password"></label>
+                            <label>Wpisz nazwę {{ g.user.username }}<input name="confirm_username" required maxlength="40" autocomplete="off"></label>
+                            <button class="button secondary">Trwale usuń konto</button>
+                        </form>
+                    </details>
                 </div>
             </div>
         {% endif %}

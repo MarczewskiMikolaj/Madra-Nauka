@@ -11,6 +11,7 @@
         <a class="button secondary"
            href="{{ url_for('library.material_form',mid=material.id) }}">Edytuj notatkę</a>
     </div>
+    <p><a class="button secondary" href="{{ url_for('library.activity_form',tid=topic.id) }}">Utwórz pytanie do tej notatki</a></p>
     {% if material.kind == "note" %}{{ note_reader(material.content, material.id) }}{% else %}<a class="source-link"
    href="{{ material.content }}"
    target="_blank"

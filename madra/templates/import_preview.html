@@ -1,0 +1,6 @@
+{% extends 'base.html' %}{% from 'macros.html' import csrf %}
+{% block title %}Podgląd importu · Mądra Nauka{% endblock %}
+{% block content %}<section class="panel"><h1>Podgląd importu</h1><p>{{ topic.name }} · {{ items|length }} ćwiczeń. Sprawdź treści przed zapisem.</p>
+{% if source.imported_at %}<p>Ten import został już zapisany.</p>{% else %}<form method="post">{{ csrf() }}<button class="button primary">Zapisz wszystkie ćwiczenia</button></form>{% endif %}
+<a href="{{ url_for('imports.upload',tid=topic.id) }}">Popraw dane i przygotuj nowy podgląd</a></section>
+{% for item in items %}<article class="panel"><p>{{ loop.index }} · {{ kinds[item.kind] }} · {{ item.minutes }} min</p><div class="question-heading rich-content" role="heading" aria-level="3">{{ item.prompt|rich_text }}</div><details><summary>Odpowiedź i wyjaśnienie</summary><div class="rich-content">{{ item.answer|rich_text }}{{ item.explanation|rich_text }}</div></details></article>{% endfor %}{% endblock %}

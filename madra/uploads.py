@@ -19,6 +19,8 @@ from .library import owned_topic, owned_workspace, required_text
 from .services.files import MAX_BYTES, validate_file
 from .services.ai_materials import FIXED_MODEL
 from .services.learning import KIND_DIMENSION, now_iso
+from .services.exercises import save_support
+from .services.notes import note_chapters
 
 bp = Blueprint("uploads", __name__)
 
@@ -144,8 +146,22 @@ def preview(uid):
                             "Quiz wymaga 2–6 różnych wariantów, a odpowiedź musi być jednym z nich."
                         )
                     items.append(
-                        {**item, "prompt": prompt, "answer": answer, "options": options}
+                        {
+                            **item,
+                            "prompt": prompt,
+                            "answer": answer,
+                            "options": options,
+                            "explanation": request.form.get(
+                                f"explanation_{i}", item.get("explanation", "")
+                            ),
+                            "rubric": request.form.get(
+                                f"rubric_{i}", item.get("rubric", "")
+                            ),
+                        }
                     )
+            from .services.exercises import validate_exercise
+
+            items = [{**item, **validate_exercise(item)} for item in items]
             with transaction() as db:
                 # Check again under the write lock; repeat submits must not duplicate content.
                 state = db.execute(
@@ -201,6 +217,7 @@ def preview(uid):
                                 now_iso(),
                             ),
                         )
+                        save_support(db, aid, item)
                         db.execute(
                             "INSERT INTO upload_activities VALUES (?,?,?)",
                             (uid, aid, item["label"]),
@@ -281,3 +298,81 @@ def discard(uid):
         db.execute("DELETE FROM uploads WHERE id=? AND user_id=?", (uid, g.user["id"]))
     flash("Usunięto plik i niezapisane propozycje.", "success")
     return redirect(url_for("library.index"))
+
+
+@bp.get("/pliki/<uid>/czytaj")
+@login_required
+def view_original(uid):
+    source = owned_upload(uid)
+    pdf = source["filename"].lower().endswith(".pdf")
+    return send_file(
+        io.BytesIO(source["file_blob"]),
+        mimetype="application/pdf" if pdf else "application/octet-stream",
+        as_attachment=not pdf,
+        download_name=source["filename"],
+    )
+
+
+@bp.post("/pliki/<uid>/rozbuduj")
+@login_required
+def expand(uid):
+    source = owned_upload(uid)
+    if not source["imported_at"]:
+        abort(409)
+    try:
+        mid = request.form.get("material_id", "")
+        note = (
+            get_db()
+            .execute(
+                "SELECT m.* FROM materials m JOIN upload_materials um ON um.material_id=m.id WHERE um.upload_id=? AND m.id=?",
+                (uid, mid),
+            )
+            .fetchone()
+        )
+        if not note:
+            raise ValueError("Wybierz notatkę z tego opracowania.")
+        chapters = note_chapters(note["content"])
+        chapter = int(request.form.get("chapter", "0"))
+        if not 1 <= chapter <= len(chapters):
+            raise ValueError("Wybierz poprawny rozdział.")
+        focus = chapters[chapter - 1]["title"]
+        nid = uuid4().hex
+        draft = {
+            "guide": "",
+            "activities": [],
+            "generator": "pending",
+            "parent_upload_id": uid,
+            "focus": focus,
+            "goal": "Przygotuj dodatkowe ćwiczenia i wyjaśnienia do zagadnienia: "
+            + focus
+            + ". Analizuj cały oryginał, skupiając ćwiczenia na tym rozdziale.",
+            "file_metadata": json.loads(source["draft_json"]).get("file_metadata", {}),
+        }
+        with transaction() as db:
+            existing = db.execute(
+                "SELECT id FROM uploads WHERE user_id=? AND imported_at IS NULL AND json_extract(draft_json,'$.parent_upload_id')=? AND json_extract(draft_json,'$.focus')=? ORDER BY created_at LIMIT 1",
+                (g.user["id"], uid, focus),
+            ).fetchone()
+            if existing:
+                return redirect(url_for("uploads.preview", uid=existing["id"]))
+            db.execute(
+                "INSERT INTO uploads VALUES (?,?,?,?,?,?,?,?,NULL)",
+                (
+                    nid,
+                    g.user["id"],
+                    source["workspace_id"],
+                    source["topic_id"],
+                    source["filename"],
+                    source["file_blob"],
+                    json.dumps(draft, ensure_ascii=False),
+                    now_iso(),
+                ),
+            )
+        flash(
+            "Oryginał jest gotowy do kolejnego opracowania. Uruchom AI, aby wysłać plik i cel. Dotychczasowe materiały pozostają zachowane.",
+            "success",
+        )
+        return redirect(url_for("uploads.preview", uid=nid))
+    except (ValueError, TypeError):
+        flash("Wybierz notatkę i poprawny numer rozdziału.", "error")
+        return redirect(url_for("uploads.preview", uid=uid))

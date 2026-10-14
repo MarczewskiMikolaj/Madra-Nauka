@@ -1,6 +1,38 @@
 # Weryfikacja MVP
 
-Data: 11 października 2026.
+Ostatnia weryfikacja: 14 października 2026. Starsze sekcje poniżej są zapisem poprzednich etapów i opisują ich ówczesne ograniczenia.
+
+## Czytnik rozdziałów i kolejność nauki — 14 października 2026
+
+- Aktualny widok: osobne zakładki notatek/źródeł i ćwiczeń w temacie oraz podglądzie importu; stały plan nad czytnikiem z linkami do rozdziałów. Jednocześnie widoczny jest jeden, zawsze rozwinięty rozdział. Plan nie jest numerowany jako rozdział. 129 testów przechodzi; w przeglądarce sprawdzono przełączanie zakładek/rozdziałów, bezpośrednie hashe oraz szerokość 390 px bez poziomego przewijania.
+- Naprawiono puste karty powodowane przez śródtytuły zapisane na tym samym poziomie Markdown co tytuły rozdziałów. Nowy zapis rozdziela te poziomy; czytnik uwzględnia hierarchię nagłówków, CRLF i bloki kodu oraz scala starsze puste nagłówki nadrzędne z ich treścią.
+- Nowe generowanie przyjmuje `learning_order` jako permutację indeksów rozdziałów. Aplikacja układa według niej notatkę i sama tworzy zgodny plan. Gdy model pomija pole, plan powstaje z faktycznej kolejności rozdziałów.
+- Sprawdzono render zapisanej notatki Oracle: 8 kart z treścią, bez pustych kart nadrzędnych. Dane w bazie i historyczna tekstowa propozycja kolejności nauki pozostają zachowane; dla starego płaskiego zapisu granice końcowych sekcji nie zawsze dają się jednoznacznie odzyskać.
+- Testy obejmują zagnieżdżone śródtytuły, przykłady Markdown w kodzie, starszy płaski format, poprawność permutacji i generowanie planu z ukończonej odpowiedzi AI. Odpowiedzi AI w testach są syntetyczne.
+
+## Rozbudowa z perspektywy studenta — 13 października 2026
+
+118 testów przechodzi po migracji 008 i wdrożeniu pełnego przebiegu: historia odpowiedzi, trudności, pomoc i źródła, zakres/dni/ważność celu, sprawdzian, importy i formatowanie treści. Szczegóły zakresu, testów, sprawdzonych widoków i ograniczeń: [STUDENT_IMPLEMENTATION_PLAN.md](STUDENT_IMPLEMENTATION_PLAN.md#realizacja-i-weryfikacja). Poprzednie liczby testów poniżej opisują wcześniejsze etapy.
+
+## Pierwsze stabilne wydanie — 2.0.0
+
+- 98 testów przechodzi w lokalnym Pythonie 3.14; przed zmianami przechodziło 81. CI obejmuje Python 3.12 i 3.14, ale nie uruchamiano go zdalnie w tej sesji.
+- Nowe testy sprawdzają rejestrację i logowanie e-mailem, walidację i unikalność adresów oraz natychmiastową aktywację konta. Obsługa poczty i weryfikacja adresu są całkowicie usunięte z kodu zgodnie z życzeniem użytkownika.
+- Biblioteka: wyszukiwanie treści z polskimi literami i escapingiem, izolacja kont, archiwum i przywrócenie bez utraty historii.
+- Cele: edycja, walidacja, tygodniowa rozpiska i usuwanie bez naruszenia materiałów.
+- Dane: ZIP zachowuje bajty oryginałów i pomija dane uwierzytelniające; kopia SQLite ma prawa 0600, przechodzi kontrolę integralności i daje się ponownie otworzyć. Próba nadpisania istniejącej kopii jest odrzucana. To próba na syntetycznej bazie, nie odtworzenie produkcji.
+- Konto: usuwanie po potwierdzeniu hasła i nazwy, brak dostępu po usunięciu, zachowanie innych kont, brak sierot relacyjnych, blokada podczas AI i przy podłączonym ChatGPT. Nowe dane i usuwanie sprawdzono również na syntetycznym GCS, w tym błąd zapisu.
+- Błędy: limit prób jest atomowy dla równoległych żądań i działa również przy zmienianiu nazw. Zapis ze starej sesji jest odrzucany. Cofnięcie oceny przy jednakowych timestampach wskazuje ostatnie zdarzenie; ponowienie nie usuwa poprzedniej odpowiedzi.
+- Ruff, Black, `node --check madra/static/app.js` i `git diff --check` przechodzą. Testy w Pythonie 3.14 emitują również ResourceWarning dotyczące zamykania zasobów testowych; nie są błędami wyniku zestawu.
+- Migracja 007 została sprawdzona od istniejącego schematu 6; dawne konto i logowanie nazwą pozostają zachowane.
+- Przeglądarka Chromium: rejestracja, edycja celu, przywracanie ćwiczenia, wyszukiwanie i ustawienia konta. Cele obejrzano na desktopie 1440 px i telefonie 390 px. Sprawdzone mobilne widoki tematu i konta mają `scrollWidth == innerWidth == 390`; konsola bez błędów i ostrzeżeń.
+- Zrzuty obejrzane lokalnie: `output/playwright/release/goals-desktop.png`, `goals-mobile.png`, `account-mobile.png`; dodatkowo zapisano archiwum i wyniki wyszukiwania.
+- Graf struktury aktywnej aplikacji wygenerowano przez graphify w `output/graphify-release/`. Dawny graf w katalogu głównym opisuje starszy kod i pozostał nietknięty.
+- Nie zmieniano `sets.json`, `users.json` ani danych produkcji. Przeglądarka używa osobnej bazy w `/private/tmp/`.
+
+Rzeczywiste OpenAI nie było używane w nowych testach. Brak Dockera w środowisku uniemożliwił sprawdzenie obrazu. Nie wykonano publikacji ani przełączenia ruchu. Instrukcja tych kroków i warunków znajduje się w [RELEASE.md](RELEASE.md).
+
+Data wcześniejszego MVP: 11 października 2026.
 
 ## Wynik
 

@@ -326,6 +326,33 @@ class AITests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_draft(bad)
 
+    def test_generation_derives_plan_from_chapters_when_model_omits_order(self):
+        value = draft()
+        del value["guide"]
+        value["chapters"] = [
+            {"title": "Światło", "content": "## Energia\n\nŚwiatło dostarcza energii."},
+            {"title": "Chlorofil", "content": "Chlorofil pochłania światło."},
+        ]
+        events = [
+            {"type": "response.output_text.delta", "delta": json.dumps(value)},
+            {"type": "response.completed"},
+        ]
+        response = io.BytesIO(
+            b"".join(
+                b"data: " + json.dumps(event).encode() + b"\n\n" for event in events
+            )
+        )
+        with (
+            patch("madra.services.ai_materials.access_token", return_value="synthetic"),
+            patch("madra.services.ai_materials.urlopen", return_value=response),
+        ):
+            generated = generate(
+                self.uid, "material.txt", TEXT.encode(), "model", "Nauka"
+            )
+        chapters = note_chapters(generated["guide"])
+        self.assertEqual([c["title"] for c in chapters], ["Światło", "Chlorofil"])
+        self.assertIn("### Energia", chapters[0]["content"])
+
     def test_stream_requires_completion_and_subscription_contract(self):
         events = [
             {"type": "response.output_text.delta", "delta": json.dumps(draft())},

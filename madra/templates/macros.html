@@ -125,12 +125,17 @@
         {% endfor %}
     </nav>
 {% endmacro %}
+{% macro material_tabs(note_count, activity_count) %}
+    <nav class="material-tabs" aria-label="Materiały do nauki" data-tab-nav>
+        <a href="#result-notes" data-pane-link>Notatki i źródła <span>{{ note_count }}</span></a>
+        <a href="#result-exercises" data-pane-link>Ćwiczenia <span>{{ activity_count }}</span></a>
+    </nav>
+{% endmacro %}
 {% macro note_reader(content, prefix='note') %}
     {% set chapters = content|note_chapters %}
     <div class="chapter-reader">
-        <nav class="chapter-toc" aria-label="Spis treści notatki"><h3>Spis treści</h3><ol>{% for chapter in chapters %}<li><a href="#{{ prefix }}-chapter-{{ loop.index }}">{{ chapter.title }}</a></li>{% endfor %}</ol></nav>
-        <div class="chapter-list">{% for chapter in chapters %}<details class="note-chapter"
-         id="{{ prefix }}-chapter-{{ loop.index }}"
-         {% if loop.first %}open{% endif %}><summary><span class="chapter-number">{{ loop.index }}</span><h3>{{ chapter.title }}</h3></summary><div class="note-content chapter-content">{{ chapter.content }}</div></details>{% endfor %}</div>
+        <nav class="chapter-toc learning-plan" aria-label="Plan nauki — Spis treści notatki"><h2>Plan nauki</h2><p>Wybierz rozdział, który chcesz przeczytać.</p><ol>{% for chapter in chapters %}<li><a href="#{{ prefix }}-chapter-{{ loop.index }}">{{ chapter.title }}</a></li>{% endfor %}</ol></nav>
+        <div class="chapter-list">{% for chapter in chapters %}<section class="note-chapter"
+         id="{{ prefix }}-chapter-{{ loop.index }}" tabindex="-1"><header class="chapter-heading"><span class="chapter-number">{{ loop.index }}</span><h3>{{ chapter.title }}</h3></header><div class="rich-content chapter-content">{{ chapter.content|rich_text }}</div></section>{% endfor %}</div>
     </div>
 {% endmacro %}

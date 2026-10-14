@@ -6,7 +6,7 @@
 {% block content %}
     <div class="study-wrapper">
         <div class="study-top">
-            <a class="breadcrumb" href="{{ url_for('planning.today') }}">← Zapisz przerwę i wróć później</a>
+            <form action="{{ url_for('study.pause',sid=study.id) }}" method="post">{{ csrf() }}<button class="text-button">Zapisz przerwę i wróć później</button></form>
             <span class="small muted">{{ study.title }}</span>
         </div>
         <div class="between">
@@ -22,8 +22,10 @@
                 <span class="small muted">{{ activity.reason }}</span>
             </div>
             <p class="study-source">{{ activity.workspace_name }} / {{ activity.topic_name }}</p>
-            <h1>{{ activity.prompt }}</h1>
+            <div class="question-heading rich-content" role="heading" aria-level="1">{{ activity.prompt|rich_text }}</div>
+            {% include 'learning_help.html' %}
             {% if not item.revealed %}
+                {% for hint in activity.get('hints',[]) %}<details class="study-hint"><summary>Podpowiedź {{ loop.index }}</summary><div class="rich-content">{{ hint|rich_text }}</div></details>{% endfor %}
                 <form action="{{ url_for('study.reveal',sid=study.id) }}"
                       method="post"
                       class="form-stack">
@@ -62,7 +64,7 @@
                 {% if item.response %}
                     <div class="response-block">
                         <span class="small muted">Twoja odpowiedź</span>
-                        <div class="note-content">{{ item.response }}</div>
+                        <div class="rich-content">{{ item.response|rich_text }}</div>
                     </div>
                 {% endif %}
                 <div class="answer-block">
@@ -73,11 +75,14 @@
                             Odpowiedź wzorcowa
                         {% endif %}
                     </span>
-                    <div class="note-content">{{ activity.answer }}</div>
+                    <div class="rich-content">{{ activity.answer|rich_text }}</div>
+                    {% if activity.explanation %}<h3>Dlaczego?</h3><div class="rich-content">{{ activity.explanation|rich_text }}</div>{% endif %}
+                    {% if activity.rubric %}<h3>Kryteria samooceny</h3><div class="rich-content">{{ activity.rubric|rich_text }}</div>{% endif %}
                 </div>
-                <form action="{{ url_for('study.grade',sid=study.id) }}" method="post">
+                <form action="{{ url_for('study.grade',sid=study.id) }}" method="post" class="form-stack">
                     {{ csrf() }}
                     <input type="hidden" name="item_id" value="{{ item.id }}">
+                    {% include 'review_fields.html' %}
                     {% if activity.kind=="quiz" %}
                         <p class="small muted">
                             Wynik quizu jest oceniany automatycznie. {{ 'Następna powtórka będzie później.' if item.objective_correct else 'To pytanie wróci do powtórki jutro.' }}
@@ -112,6 +117,7 @@
             {% if last %}
                 <form action="{{ url_for('study.undo',sid=study.id) }}" method="post">
                     {{ csrf() }}
+                    <input type="hidden" name="review_id" value="{{ last.id }}">
                     <button class="text-button">{{ icon('undo', 17) }} Cofnij ostatnią ocenę</button>
                 </form>
             {% else %}

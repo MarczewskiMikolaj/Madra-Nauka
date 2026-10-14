@@ -64,6 +64,18 @@ class MVPTests(unittest.TestCase):
             path, data={"csrf_token": token, **(data or {})}, follow_redirects=follow
         )
 
+    def undo(self, sid):
+        with self.app.app_context():
+            review = (
+                get_db()
+                .execute(
+                    "SELECT r.id FROM reviews r JOIN session_items i ON i.id=r.item_id WHERE i.session_id=? ORDER BY i.position DESC LIMIT 1",
+                    (sid,),
+                )
+                .fetchone()[0]
+            )
+        return self.post(f"/nauka/{sid}/cofnij", {"review_id": review})
+
     def activity(
         self,
         kind="open",
@@ -140,7 +152,9 @@ class MVPTests(unittest.TestCase):
         self.reveal(sid, next_item, "print(42)")
         self.grade(sid, next_item)
         self.assertEqual(self.count("reviews"), 2)
-        self.assertIn("Kolejny krok".encode(), self.client.get(f"/nauka/{sid}").data)
+        self.assertIn(
+            "Przegląd odpowiedzi".encode(), self.client.get(f"/nauka/{sid}").data
+        )
         other_app = create_app(
             {"TESTING": True, "SECRET_KEY": "test-secret", "DATABASE": self.path}
         )
@@ -234,7 +248,7 @@ class MVPTests(unittest.TestCase):
                 .fetchone()
             )
             self.assertEqual(tuple(row), (0, 0))
-        self.post(f"/nauka/{sid}/cofnij")
+        self.undo(sid)
         # The frozen attempted answer cannot be changed after revealing.
         self.reveal(sid, item, "Right")
         self.grade(sid, item, 3)
@@ -305,7 +319,7 @@ class MVPTests(unittest.TestCase):
         sid, item = self.start()
         self.reveal(sid, item)
         self.grade(sid, item, 0)
-        self.assertEqual(self.post(f"/nauka/{sid}/cofnij").status_code, 302)
+        self.assertEqual(self.undo(sid).status_code, 302)
         with self.app.app_context():
             self.assertEqual(
                 tuple(get_db().execute("SELECT * FROM progress").fetchone()), original
@@ -482,6 +496,7 @@ class MVPTests(unittest.TestCase):
             "/register",
             {
                 "username": "New learner",
+                "email": "new@example.test",
                 "password": "new-pass-123",
                 "confirm_password": "new-pass-123",
             },
