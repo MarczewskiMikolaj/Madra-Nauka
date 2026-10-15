@@ -239,7 +239,7 @@ class AccountTests(unittest.TestCase):
             }
         )
         with app.app_context():
-            self.assertEqual(get_db().execute("PRAGMA user_version").fetchone()[0], 8)
+            self.assertEqual(get_db().execute("PRAGMA user_version").fetchone()[0], 9)
             self.assertEqual(
                 get_db().execute("SELECT username FROM users").fetchone()[0], "Existing"
             )

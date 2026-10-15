@@ -33,7 +33,8 @@ def create_app(test_config=None):
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Lax",
         SESSION_COOKIE_SECURE=production,
-        MAX_CONTENT_LENGTH=11 * 1024 * 1024,
+        MAX_CONTENT_LENGTH=51 * 1024 * 1024,
+        MAX_FORM_MEMORY_SIZE=2 * 1024 * 1024,
     )
     if test_config:
         app.config.update(test_config)
@@ -73,7 +74,17 @@ def create_app(test_config=None):
     Path(app.config["DATABASE"]).parent.mkdir(parents=True, exist_ok=True)
     app.teardown_appcontext(db.close_db)
     db.init_app(app)
-    from . import auth, library, study, planning, uploads, ai, account, imports
+    from . import (
+        auth,
+        library,
+        study,
+        planning,
+        uploads,
+        ai,
+        account,
+        imports,
+        workflow,
+    )
     from .services import migration
 
     for blueprint in (
@@ -85,8 +96,10 @@ def create_app(test_config=None):
         ai.bp,
         account.bp,
         imports.bp,
+        workflow.bp,
     ):
         app.register_blueprint(blueprint)
+    app.context_processor(workflow.navigation_data)
     auth.init_app(app)
     migration.init_app(app)
 
@@ -135,7 +148,7 @@ def create_app(test_config=None):
             403: "Nie masz dostępu do tej strony.",
             404: "Nie znaleźliśmy tej strony.",
             409: "Stan sesji się zmienił. Wróć do nauki i odśwież stronę.",
-            413: "Materiał jest za duży. Maksymalny rozmiar pliku to 10 MB.",
+            413: "Przekroczono limit żądania. Wgrywaj do 5 plików po 10 MB lub zestaw tematu do 20 MB.",
             429: "Za dużo prób logowania. Spróbuj ponownie za 15 minut.",
             500: "Wystąpił błąd aplikacji. Wróć do poprzedniej strony i spróbuj ponownie.",
         }

@@ -229,6 +229,7 @@ def delete_account():
         # Remove identity metadata too; an empty encrypted tombstone is safe to retry.
         chatgpt.save(uid, {})
         statements = [
+            "DELETE FROM topic_packages WHERE user_id=?",
             "DELETE FROM activity_imports WHERE user_id=?",
             "DELETE FROM reviews WHERE user_id=?",
             "DELETE FROM session_items WHERE session_id IN (SELECT id FROM study_sessions WHERE user_id=?)",

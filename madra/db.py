@@ -106,6 +106,7 @@ def init_db():
         (6, "006_account_settings.sql"),
         (7, "007_email.sql"),
         (8, "008_student_learning.sql"),
+        (9, "009_student_workflow.sql"),
     ]:
         if db.execute("PRAGMA user_version").fetchone()[0] < version:
             migrated = True
@@ -167,7 +168,7 @@ def init_app(app):
         try:
             version = connection.execute("PRAGMA user_version").fetchone()[0]
             if (
-                not 1 <= version <= 8
+                not 1 <= version <= 9
                 or connection.execute("PRAGMA integrity_check").fetchall() != [("ok",)]
                 or connection.execute("PRAGMA foreign_key_check").fetchall()
             ):

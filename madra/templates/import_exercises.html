@@ -2,8 +2,8 @@
 {% block title %}Dodaj wiele ćwiczeń · Mądra Nauka{% endblock %}
 {% block content %}<section class="panel form-page"><h1>Dodaj wiele ćwiczeń</h1><p>{{ topic.name }} · do 200 ćwiczeń i 1 MB, UTF-8.</p>
 <form method="post" enctype="multipart/form-data" class="form-stack">{{ csrf() }}
-<label>Format<select name="format"><option value="tsv">TSV / dwukolumnowe fiszki (np. eksport Anki)</option><option value="csv">CSV</option><option value="json">JSON</option></select></label>
-<label>Wklej treść<textarea name="text" rows="10" maxlength="1048576" placeholder="Pytanie&#9;Odpowiedź">{{ request.form.get('text','') }}</textarea></label>
+<label>Format (rozpoznaj automatycznie lub wybierz)<select name="format"><option value="auto">Rozpoznaj z wklejonej treści</option><option value="tsv">TSV / dwukolumnowe fiszki (np. eksport Anki)</option><option value="csv">CSV</option><option value="json">JSON</option></select></label>
+<p class="small muted">Skopiuj dwie kolumny z arkusza: pytania po lewej, odpowiedzi po prawej. Podgląd pokażemy przed zapisem.</p><label>Wklej treść<textarea name="text" rows="10" maxlength="1048576" placeholder="Pytanie&#9;Odpowiedź">{{ request.form.get('text','') }}</textarea></label>
 <label>Albo wybierz plik<input type="file" name="file" accept=".csv,.tsv,.json,.txt"></label>
 <button class="button primary">Sprawdź i pokaż podgląd</button></form>
 <details><summary>Formaty i przykład</summary><p>Bez nagłówków TSV/CSV wymaga dwóch kolumn: pytanie i odpowiedź. Z nagłówkami dostępne są kind, prompt, answer, options, minutes, hints, explanation, rubric. Opcje quizu i podpowiedzi rozdziel znakiem |. CSV obsługuje przecinki lub średniki i pola w cudzysłowach.</p>

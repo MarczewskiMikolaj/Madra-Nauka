@@ -179,7 +179,9 @@ def validate_draft(value):
     }
 
 
-def generate(uid, filename, file_data, model, goal, on_progress=None):
+def generate(
+    uid, filename, file_data, model, goal, on_progress=None, is_cancelled=None
+):
     suffix = Path(filename).suffix.lower()
     if suffix not in EXTENSIONS or not file_data or len(file_data) > MAX_BYTES:
         raise ValueError("Nieprawidłowy plik do analizy AI.")
@@ -188,6 +190,10 @@ def generate(uid, filename, file_data, model, goal, on_progress=None):
         ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         ".txt": "text/plain",
         ".md": "text/markdown",
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".webp": "image/webp",
     }[suffix]
     content = [
         {
@@ -204,11 +210,22 @@ def generate(uid, filename, file_data, model, goal, on_progress=None):
     ]
     if suffix == ".pdf":
         content[0]["detail"] = "high"
+    elif mime.startswith("image/"):
+        content[0] = {
+            "type": "input_image",
+            "image_url": f"data:{mime};base64," + base64.b64encode(file_data).decode(),
+            "detail": "high",
+        }
+    instructions = INSTRUCTIONS
+    if goal.startswith("[SZYBKA POWTÓRKA]"):
+        instructions += "\nWażne: tym razem opracuj zwięzłą notatkę do szybkiej powtórki (do 6000 znaków), skupioną na najważniejszych ideach i pułapkach."
+    elif goal.startswith("[ZADANIA]"):
+        instructions += "\nWażne: tym razem skup się na samodzielnych zadaniach i wyjaśnieniu rozwiązań; notatka ma być krótkim wprowadzeniem (do 4000 znaków)."
     payload = {
         "model": model,
         "store": False,
         "stream": True,
-        "instructions": INSTRUCTIONS,
+        "instructions": instructions,
         "input": [
             {
                 "role": "user",
@@ -231,6 +248,8 @@ def generate(uid, filename, file_data, model, goal, on_progress=None):
     try:
         with urlopen(request, timeout=None, context=tls_context()) as response:
             for line in response:
+                if is_cancelled and is_cancelled():
+                    raise ValueError("Opracowanie anulowane.")
                 if not line.startswith(b"data:"):
                     continue
                 raw = line[5:].strip()

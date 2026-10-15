@@ -517,7 +517,7 @@ class AITests(unittest.TestCase):
         self.assertIn("Ostatnie opracowanie nie zostało ukończone".encode(), page.data)
         self.assertIn("Błąd opracowania".encode(), self.client.get("/biblioteka").data)
 
-    def test_grouped_preview_preserves_original_activity_indexes(self):
+    def test_preview_list_preserves_original_order_and_activity_indexes(self):
         source = self.source()
         result = draft()
         result["activities"].insert(
@@ -541,7 +541,8 @@ class AITests(unittest.TestCase):
             )
         page = self.client.get("/pliki/" + source).get_data(as_text=True)
         self.assertLess(
-            page.index('id="result-open"'), page.index('id="result-flashcard"')
+            page.index('data-exercise-kind="flashcard"'),
+            page.index('data-exercise-kind="open"'),
         )
         self.assertIn('name="prompt_0"', page)
         self.assertIn('name="prompt_2"', page)
@@ -574,9 +575,9 @@ class AITests(unittest.TestCase):
                 },
             )
         topic = self.client.get(response.location).get_data(as_text=True)
-        self.assertIn('id="result-quiz"', topic)
-        self.assertIn('id="result-flashcard"', topic)
-        self.assertNotIn('id="result-open"', topic)
+        self.assertIn('data-exercise-kind="quiz"', topic)
+        self.assertIn('data-exercise-kind="flashcard"', topic)
+        self.assertNotIn('data-exercise-kind="open"', topic)
 
     def test_ai_chapters_survive_save_and_are_readable_after_import(self):
         source = self.source()
@@ -673,7 +674,7 @@ class AITests(unittest.TestCase):
                 (json.dumps(validate_draft(draft())), uid),
             )
         page = self.client.get("/pliki/" + uid)
-        self.assertIn("Warianty 2".encode(), page.data)
+        self.assertIn('aria-label="Warianty odpowiedzi"'.encode(), page.data)
         response = self.post(
             "/pliki/" + uid,
             {

@@ -33,13 +33,13 @@
         </div>
     </div>
     <div class="section-heading">
-        <h2>Trzy wymiary nauki</h2>
+        <h2>Wyniki według rodzaju pracy</h2>
     </div>
     {{ render_scores(scores) }}
     <p class="small muted">
-        Wskaźnik opiera się na ostatniej ocenie każdego ćwiczenia: jeszcze raz = 0%, trudno = 50%, dobrze lub łatwo = 100%. Niepodjęte ćwiczenia liczą się jako 0%. Quizy ocenia aplikacja; inne ćwiczenia oceniasz sam.
+        Wskaźnik opiera się na ostatniej ocenie każdego ćwiczenia: jeszcze nie = 0%, częściowo = 50%, samodzielnie lub bez trudu = 100%. Niepodjęte ćwiczenia liczą się jako 0%. Quizy ocenia aplikacja; inne ćwiczenia oceniasz sam.
     </p>
-    <section class="panel"><h2>Co wymaga pracy?</h2><a class="button primary" href="{{ url_for('study.prepare',mode='difficult') }}">Przećwicz trudności</a>{% for activity in weak %}<p><a href="{{ url_for('library.topic',tid=activity.topic_id) }}">{{ activity.topic_name }}</a> · {{ activity.prompt[:140] }} · {{ 'Jeszcze raz' if activity.last_grade==0 else 'Trudno' }}</p>{% else %}<p>Brak ćwiczeń z ostatnią oceną „jeszcze raz” lub „trudno”. Niesprawdzone tematy nadal wymagają własnej próby.</p>{% endfor %}</section>
+    <p>{{ independent }} ocenionych prób samodzielnych z wynikiem „samodzielnie” lub „bez trudu” · {{ assisted }} prób z pomocą. To zapis aktywności, a nie pomiar gotowości do egzaminu.</p><section class="panel"><h2>Co wymaga pracy?</h2><a class="button primary" href="{{ url_for('study.prepare',mode='difficult',all=1) }}">Przećwicz trudności</a>{% for activity in weak %}<p><a href="{{ url_for('library.topic',tid=activity.topic_id) }}">{{ activity.topic_name }}</a> · {{ activity.prompt[:140] }} · {{ 'Jeszcze nie' if activity.last_grade==0 else 'Częściowo' }}</p>{% else %}<p>Brak ćwiczeń z ostatnią oceną „jeszcze nie” lub „częściowo”. Niesprawdzone tematy nadal wymagają własnej próby.</p>{% endfor %}</section>
     <section class="panel"><h2>Zakres według tematów</h2>{% for topic in topic_stats %}<p><a href="{{ url_for('library.topic',tid=topic.id) }}">{{ topic.workspace_name }} / {{ topic.name }}</a> · {{ topic.total }} ćwiczeń · {{ topic.new }} nowych · {{ topic.weak }} trudnych{% if not topic.total %} · Zakres niesprawdzony{% endif %}</p>{% endfor %}</section>
     <div class="progress-columns">
         <section class="panel">

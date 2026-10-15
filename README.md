@@ -2,6 +2,8 @@
 
 Osobiste centrum nauki po polsku: przedmioty, tematy, notatki, linki i różne metody ćwiczenia. Plan dnia łączy pytania otwarte, zadania, quizy, luki i fiszki w jedną sesję.
 
+Aktualny przebieg studenta: [plan wdrożenia](docs/STUDENT_UX_IMPLEMENTATION_PLAN.md) i [wyniki weryfikacji](docs/STUDENT_UX_VERIFICATION.md). Aktualizacja z 15 października 2026 rozszerza opisane niżej pierwsze MVP. Przebudowę list, podglądu AI i rozwiązywania opisuje [wdrożenie sekcji ćwiczeń](docs/EXERCISES_UX_IMPLEMENTATION.md).
+
 Plan pierwszego stabilnego wydania i audyt braków: [docs/RELEASE_PLAN.md](docs/RELEASE_PLAN.md). Instrukcja publikacji i kopii: [docs/RELEASE.md](docs/RELEASE.md).
 
 Pełna wizja produktu, zakres MVP, model danych, migracja i dalsze etapy: [docs/PLAN.md](docs/PLAN.md).
@@ -28,7 +30,7 @@ Przy pierwszym uruchomieniu aplikacja tworzy bazę `instance/madra.sqlite3` i lo
 - biblioteka przedmiotów i tematów; wyszukiwanie także tematów, notatek, linków i ćwiczeń;
 - notatki tekstowe i linki HTTP/HTTPS;
 - pięć typów ćwiczeń, edycja z zachowaniem ID i historii, archiwum z przywracaniem;
-- mieszane sesje 5/10/20 minut, globalne lub dla konkretnego przedmiotu/tematu;
+- mieszane sesje z czasem 1–180 minut, plan dnia dla kilku celów lub nauka konkretnego przedmiotu/tematu;
 - quiz oceniany na serwerze; odpowiedzi otwarte, zadania i luki z porównaniem i samooceną;
 - wynik zapisany od razu, bez duplikatów przy ponowieniu; cofnięcie ostatniej oceny;
 - wznowienie sesji z niezmienną kolejnością i migawką treści;
@@ -39,7 +41,7 @@ Przy pierwszym uruchomieniu aplikacja tworzy bazę `instance/madra.sqlite3` i lo
 
 Statystyki są wskaźnikiem zarejestrowanych ocen, a nie pomiarem gotowości do egzaminu. Plan wybiera powtórki, nowe ćwiczenia, a gdy nie ma zaległości — dodatkowe utrwalenie. Czas jest szacunkowy; pojedyncze zadanie może być dłuższe od wybranego krótkiego budżetu. Harmonogram jest prostą regułą, nie FSRS.
 
-Audio, push, pełne offline, współdzielenie, reset hasła e-mailem i zaawansowany plan egzaminu należą do kolejnych etapów. Opracowanie wgranych materiałów wymaga połączenia ChatGPT; ręczne materiały i nauka działają lokalnie. Poprzedni service worker jest wyrejestrowywany, a stare cache HTML czyszczone — nowa aplikacja wymaga połączenia z serwerem.
+Audio, push, pełna synchronizacja offline, wspólna edycja i reset hasła e-mailem należą do kolejnych etapów. Wymianę tematów, pobraną notatkę offline i wspólny plan kilku celów opisuje aktualizacja poniżej. Opracowanie wgranych materiałów wymaga połączenia ChatGPT; ręczne materiały i nauka działają lokalnie. Poprzedni service worker jest wyrejestrowywany, a stare cache HTML czyszczone — nowa aplikacja wymaga połączenia z serwerem.
 
 ## Struktura
 
@@ -111,7 +113,7 @@ Cloud Run: projekt `python-fiszki`, region `europe-west4`, usługa `python-fiszk
 
 ## Materiały z plików
 
-W Bibliotece wybierz **Wgraj plik** albo użyj przycisku w istniejącym temacie. Obsługiwane są PDF (także skany), DOCX, TXT i Markdown. Limit to 10 MB i 100 stron PDF; TXT/MD wymagają UTF-8. Zaktualizuj zależności: `pip install -r requirements.txt`.
+W Bibliotece wybierz **Wgraj plik** albo użyj przycisku w istniejącym temacie. Obsługiwane są PDF (także skany), DOCX, TXT, Markdown i zdjęcia PNG/JPG/WebP, do 5 plików naraz. Limit to 10 MB na plik, 100 stron PDF i 16 megapikseli na zdjęcie; TXT/MD wymagają UTF-8. Zaktualizuj zależności: `pip install -r requirements.txt`.
 
 Aplikacja sprawdza format i przechowuje oryginał. Nie wyciąga tekstu, nie tworzy transkrypcji ani lokalnych pytań z fragmentów. Dopiero po uruchomieniu AI powstają notatka i ćwiczenia. Podgląd pozwala poprawić wynik i wybrać ćwiczenia przed zapisem. Zapis tworzy jedną notatkę AI i wybrane ćwiczenia; ponowienie zapisu nie tworzy duplikatów.
 
@@ -173,3 +175,24 @@ Plan i wyniki rozbudowy: [docs/STUDENT_IMPLEMENTATION_PLAN.md](docs/STUDENT_IMPL
 - Na zapisanym opracowaniu pliku wybierz rozdział, aby przygotować kolejną analizę bez ponownego uploadu. Aplikacja tworzy osobne opracowanie z kopią oryginału i zachowuje poprzednie materiały. Dopiero przycisk generowania wysyła pełny plik oraz cel do istniejącego połączenia ChatGPT. Powielone kliknięcie przygotowania tego samego niezapisanego rozdziału wznawia jego szkic. Każde opracowanie nadal ma limit 20 ćwiczeń, ale temat może zawierać wiele opracowań i pytań ręcznych.
 
 Notatki i treści ćwiczeń obsługują Markdown, tabele, bloki kodu oraz wzory `$...$` i `$$...$$`. KaTeX, CSS i fonty są dołączone lokalnie (`madra/static/vendor/katex/`); nie korzystają z zewnętrznego CDN. Surowy HTML i obrazki Markdown nie są wykonywane. Kod jest wyświetlany, nie uruchamiany. Zaktualizuj zależności przez `pip install -r requirements.txt`. Migracja 008 tworzy tabele pomocnicze bez zmiany istniejących treści i migawkowanych sesji. Eksport i usuwanie konta obejmują nowe dane.
+
+## Usprawnienia dla studenta — 15 października 2026
+
+- **Szkice bez utraty pracy.** Odpowiedzi, wybór quizu i edycja notatek zapisują się na serwerze podczas pisania. „Zapisz przerwę” zachowuje bieżący szkic również bez JavaScript. Szkic nie odsłania odpowiedzi ani nie nalicza próby. Inna karta z nieaktualnym szkicem dostaje konflikt; tekst trzeba zachować przed odświeżeniem. Bez sieci otwarta strona zachowuje tekst w pamięci i ostrzega przed wyjściem, ale nie obiecuje zapisu offline.
+- **Jeden budżet dnia.** Na Dzisiaj ustalasz łącznie 5–180 minut dla aktywnych celów. Plan przeplata cele według terminów i dostępnych dni, pilnuje ich limitów oraz usuwa duplikaty. Ocenione próby pomniejszają dzisiejszą porcję o czas szacowany w pytaniu; pozostałą porcję 1–4 min także można uruchomić. Podgląd czasu pozwala świadomie wybrać dodatkową pracę. To szacunki, nie pomiar rzeczywistego czasu.
+- **Wspólna rozpiska tygodnia.** Dzisiaj i Cele używają tej samej reguły. Plan obejmuje jedną najbliższą próbę każdego ćwiczenia i nie przyspiesza poprawnie wykonanych powtórek przed ich terminem. Przeterminowany lub zarchiwizowany cel nie przejmuje planu. Trudności można ćwiczyć jawnie we wszystkich przedmiotach.
+- **Nauka z opracowanych materiałów.** Główna ścieżka to wgranie plików → opracowanie AI → sprawdzenie i zapis → nauka. Dzisiaj, biblioteka i ekran dodawania prowadzą do tego samego procesu. Z rozdziału notatki można przejść przez czytanie, odtworzenie z pamięci i porównanie. Próba nie jest automatycznie oceniana. Czytnik pamięta ostatni rozdział, oznacza rozdziały z wykonaną próbą i przenosi źródło do formularza pytania.
+- **Porządkowanie.** Przedmioty i tematy mają archiwum; notatki i opracowania plików — kosz z przywracaniem. Kosz opracowania obejmuje jego notatkę i ćwiczenia. Przenoszenie tematów i treści zachowuje historię oraz odłącza niepasujące źródła i wymagania dawnego przedmiotu. Wcześniejsze migawki sesji pozostają czytelne.
+- **Zadania na kartce i obrazy.** Można odpowiedzieć ustnie lub na kartce, bez wymuszonego przepisywania rozwiązania. Pytanie może mieć ilustrację PNG/JPG/WebP do 5 MB i 16 megapikseli. Obraz jest czyszczony z metadanych i dostępny tylko właścicielowi. Edycja obrazu nie zmienia go w już rozpoczętej sesji; eksport i usuwanie konta obejmują obrazy.
+- **Sprawdzian.** Wybór 1–30 pytań równoważy tematy i uwzględnia długie zadania niezależnie od szacunkowego budżetu. Można pomijać, oznaczać do powrotu i poprawiać odpowiedzi. Ekran zakończenia pokazuje liczbę wysłanych odpowiedzi. Sam szkic nie jest wynikiem. Opcjonalny zegar tylko przypomina o czasie i biegnie również podczas przerwy.
+- **Zakres egzaminu.** W celu można wkleić wymagania po jednym w wierszu, przypisać je do tematu i oznaczyć po własnej próbie. To deklaracja studenta, oddzielona od procentu podjętych pytań. Puste kategorie wyników pokazują „Brak danych”.
+- **Materiały i AI.** Można wgrać do 5 plików naraz: PDF, DOCX, TXT, MD oraz PNG/JPG/WebP. Cały wybór jest walidowany przed zapisem. Limit: 10 MB na plik, 100 stron PDF i 16 megapikseli na zdjęcie. Prezentacje PPTX trzeba wcześniej wyeksportować do PDF. Opracowanie ma tryby „Wyjaśnij od podstaw”, „Szybka powtórka” i „Przygotuj zadania”; przy zapisie można zachować same pytania. Anulowanie blokuje publikację wyniku i zatrzymuje odczyt przy kolejnym zdarzeniu streamu; rozpoczęte przetwarzanie dostawcy może jeszcze trwać. Logowanie AI wraca do wybranego pliku. Model i uprawnienia pozostają zgodne z dotychczasowym połączeniem.
+- **Wymiana zestawu.** Menu tematu pozwala pobrać JSON z notatkami, ćwiczeniami i obrazami, bez historii i danych konta. „Dodaj gotowy zestaw” pokazuje podgląd i tworzy własną kopię. Limity: 20 MB, 200 ćwiczeń i 50 notatek. Tekstowe importy pytań rozpoznają JSON lub dwie kolumny automatycznie; nadal nie obsługują .apkg.
+- **Powroty.** W zwykłej nauce można włączyć jedną ponowną próbę błędu po innych pytaniach; potrzebne są co najmniej dwa pozostałe pytania. Pobrana notatka HTML działa bez sieci (wzory pozostają w notacji TeX). Można pobrać plik kalendarza z siedmioma przypomnieniami od jutra o 18:00 czasu polskiego; dodanie do kalendarza jest osobnym działaniem użytkownika.
+- **Prostsze ekrany.** Dzisiaj zaczyna się od konkretnego planu lub wznowienia. Nawigacja ma cztery codzienne obszary; AI i eksport są w koncie. Adnotacje oraz zaawansowane opcje są rozwijane, rozdziały wybiera się po tytule, a poprawny wariant quizu zaznacza przy opcji.
+
+Migracja 009 dodaje osobne tabele, bez przepisywania ćwiczeń i historii. Nowe dane należą do eksportu konta i są usuwane razem z kontem. Archiwum ZIP całego konta nadal służy pobraniu danych; import zestawu tematu nie jest odtwarzaniem całego konta.
+
+Wejście zdjęć jest zgodne z [dokumentacją obrazów w Responses](https://developers.openai.com/api/docs/guides/images-vision). Testy używają syntetycznych streamów i nie potwierdzają rzeczywistej dostępności modelu, grantów ani jakości analizy obrazów.
+
+Pełna synchronizacja odpowiedzi offline, Web Push, wspólna edycja i odzyskiwanie hasła pozostają poza tym wydaniem, zgodnie z zakresem planu.

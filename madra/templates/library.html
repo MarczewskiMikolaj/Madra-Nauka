@@ -9,8 +9,9 @@
             <h1>Twoja biblioteka.</h1>
             <p>Materiały, które pomagają Ci zrozumieć więcej.</p>
         </div>
-        <div class="actions"><a class="button secondary" href="{{ url_for('uploads.upload') }}">Wgraj plik</a><a class="button primary" href="{{ url_for('library.workspace_form') }}">{{ icon('plus', 18) }} Dodaj przedmiot</a></div>
+        <div class="actions"><a class="button primary" href="{{ url_for('uploads.upload') }}">Opracuj materiały z AI</a><details class="action-menu"><summary class="button quiet">Dodaj inaczej</summary><div><a href="{{ url_for('workflow.import_topic') }}">Dodaj gotowy zestaw</a><a href="{{ url_for('library.workspace_form') }}">Dodaj przedmiot</a></div></details></div>
     </div>
+    <p><a href="{{ url_for('workflow.organize') }}">Archiwum i kosz</a></p>
     {% if uploads %}<section class="material"><h2>Twoje pliki</h2>{% for upload in uploads %}<p><a href="{{ url_for('uploads.preview',uid=upload.id) }}">{{ upload.filename }}</a> <span class="small muted">· {% if upload.imported_at %}Zapisano materiały{% elif upload.ai_state=="running" %}AI pracuje — otwórz postęp{% elif upload.ai_state=="failed" %}Błąd opracowania — otwórz szczegóły{% elif upload.generator=="ai" %}Opracowanie AI do sprawdzenia{% else %}Czeka na analizę AI{% endif %}</span></p>{% endfor %}</section>{% endif %}
     <form class="search-form" method="get">
         {{ icon('search', 20) }}
@@ -52,9 +53,9 @@
                 {{ icon('book', 36) }}
                 <h2>{{ 'Brak pasujących przedmiotów' if query else 'Zacznij od tego, czego chcesz się nauczyć.' }}</h2>
                 <p>
-                    {{ 'Spróbuj innej nazwy lub wyczyść wyszukiwanie.' if query else 'Dodaj biologię, programowanie, język albo dowolny obszar, który Cię ciekawi.' }}
+                    {{ 'Spróbuj innej nazwy lub wyczyść wyszukiwanie.' if query else 'Wgraj materiały z zajęć. AI przygotuje notatki i ćwiczenia, a Ty sprawdzisz je przed zapisaniem do biblioteki.' }}
                 </p>
-                <a class="button primary" href="{{ url_for('library.workspace_form') }}">Dodaj przedmiot</a>
+                {% if query %}<a class="button secondary" href="{{ url_for('library.index') }}">Wyczyść wyszukiwanie</a>{% else %}<a class="button primary" href="{{ url_for('uploads.upload') }}">Opracuj materiały z AI</a>{% endif %}
             </div>
             {% endif %}
         {% endfor %}

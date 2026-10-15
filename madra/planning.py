@@ -27,12 +27,11 @@ from .services.learning import (
     today_date,
 )
 
+from .services.daily_plan import daily_budget, day_plan, week_plan, studied_minutes
 from .services.goals import (
     enrich_goal,
     save_goal_settings,
-    goal_activities,
     nearest_goal,
-    choose_learning,
     DAYS,
     settings_for,
 )
@@ -65,7 +64,13 @@ def landing():
 def today():
     activities = activities_for(g.user["id"])
     nearest = nearest_goal(g.user["id"])
-    chosen = choose_learning(goal_activities(nearest) if nearest else activities, 10)
+    allowance = daily_budget(g.user["id"])
+    spent = studied_minutes(g.user["id"])
+    budget = request.args.get("budget", max(0, allowance - spent), type=int)
+    if not 0 <= budget <= 180:
+        abort(400)
+    planned = day_plan(g.user["id"], budget)
+    chosen = planned["items"]
     active = (
         get_db()
         .execute(
@@ -77,7 +82,7 @@ def today():
     spaces = (
         get_db()
         .execute(
-            "SELECT * FROM workspaces WHERE user_id=? ORDER BY created_at DESC",
+            "SELECT * FROM workspaces WHERE user_id=? AND NOT EXISTS (SELECT 1 FROM content_states cs WHERE cs.kind='workspace' AND cs.content_id=workspaces.id) ORDER BY created_at DESC",
             (g.user["id"],),
         )
         .fetchall()
@@ -95,6 +100,17 @@ def today():
         "today.html",
         activities=activities,
         nearest=nearest,
+        budget=budget,
+        allowance=allowance,
+        spent=spent,
+        planned=planned,
+        week_plan=week_plan(g.user["id"]),
+        expired=get_db()
+        .execute(
+            "SELECT * FROM goals WHERE user_id=? AND completed=0 AND target_date<? ORDER BY target_date",
+            (g.user["id"], today_date().isoformat()),
+        )
+        .fetchall(),
         weak=sum(bool(a["reviews"]) and a["last_grade"] < 2 for a in activities),
         paused=get_db()
         .execute(
@@ -120,12 +136,25 @@ def goals():
     spaces = (
         get_db()
         .execute(
-            "SELECT * FROM workspaces WHERE user_id=? ORDER BY name", (g.user["id"],)
+            "SELECT * FROM workspaces w WHERE user_id=? AND NOT EXISTS (SELECT 1 FROM content_states cs WHERE cs.kind='workspace' AND cs.content_id=w.id) ORDER BY name",
+            (g.user["id"],),
         )
         .fetchall()
     )
     return render_template(
-        "goals.html", goals=goal_details(g.user["id"]), spaces=spaces, nav="goals"
+        "goals.html",
+        goals=goal_details(g.user["id"]),
+        spaces=spaces,
+        shared_week=week_plan(g.user["id"]),
+        shared_budget=daily_budget(g.user["id"]),
+        all_topics=get_db()
+        .execute(
+            "SELECT t.* FROM topics t JOIN workspaces w ON w.id=t.workspace_id WHERE w.user_id=? AND NOT EXISTS (SELECT 1 FROM content_states cs WHERE cs.content_id IN (w.id,t.id)) ORDER BY t.name",
+            (g.user["id"],),
+        )
+        .fetchall(),
+        days=DAYS,
+        nav="goals",
     )
 
 
@@ -161,7 +190,10 @@ def add_goal():
                 ),
             )
             save_goal_settings(db, {"id": gid, "workspace_id": wid})
-        flash("Cel dodany. Ustaw jego tematy i dni nauki w edycji celu.", "success")
+        flash(
+            "Cel i jego zakres zostały zapisane. Plan dnia uwzględni termin i dostępne dni.",
+            "success",
+        )
     except (ValueError, TypeError) as e:
         flash(
             (
@@ -345,7 +377,7 @@ def progress():
     topics = (
         get_db()
         .execute(
-            "SELECT t.id,t.name,w.name workspace_name FROM topics t JOIN workspaces w ON w.id=t.workspace_id WHERE w.user_id=? ORDER BY w.name,t.name",
+            "SELECT t.id,t.name,w.name workspace_name FROM topics t JOIN workspaces w ON w.id=t.workspace_id WHERE w.user_id=? AND NOT EXISTS (SELECT 1 FROM content_states cs WHERE cs.content_id IN (w.id,t.id)) ORDER BY w.name,t.name",
             (g.user["id"],),
         )
         .fetchall()
@@ -376,6 +408,18 @@ def progress():
         history=history,
         practiced=sum(bool(a["reviews"]) for a in activities),
         total=len(activities),
+        independent=get_db()
+        .execute(
+            "SELECT COUNT(*) FROM reviews r LEFT JOIN review_notes n ON n.review_id=r.id WHERE r.user_id=? AND COALESCE(n.used_help,0)=0 AND r.grade>=2",
+            (g.user["id"],),
+        )
+        .fetchone()[0],
+        assisted=get_db()
+        .execute(
+            "SELECT COUNT(*) FROM reviews r JOIN review_notes n ON n.review_id=r.id WHERE r.user_id=? AND n.used_help=1",
+            (g.user["id"],),
+        )
+        .fetchone()[0],
         nav="progress",
     )
 
@@ -427,6 +471,23 @@ def export_payload(db, uid):
             "SELECT x.* FROM goal_topics x JOIN goals g ON g.id=x.goal_id WHERE g.user_id=?",
         ),
         "activity_imports": ("SELECT * FROM activity_imports WHERE user_id=?",),
+        "study_drafts": (
+            "SELECT d.* FROM study_drafts d JOIN session_items i ON i.id=d.item_id JOIN study_sessions s ON s.id=i.session_id WHERE s.user_id=?",
+        ),
+        "topic_packages": ("SELECT * FROM topic_packages WHERE user_id=?",),
+        "form_drafts": ("SELECT * FROM form_drafts WHERE user_id=?",),
+        "daily_preferences": ("SELECT * FROM daily_preferences WHERE user_id=?",),
+        "content_states": ("SELECT * FROM content_states WHERE user_id=?",),
+        "reading_progress": ("SELECT * FROM reading_progress WHERE user_id=?",),
+        "goal_requirements": (
+            "SELECT r.* FROM goal_requirements r JOIN goals g ON g.id=r.goal_id WHERE g.user_id=?",
+        ),
+        "activity_images": (
+            "SELECT i.* FROM activity_images i JOIN activities a ON a.id=i.activity_id JOIN topics t ON t.id=a.topic_id JOIN workspaces w ON w.id=t.workspace_id WHERE w.user_id=?",
+        ),
+        "exam_options": (
+            "SELECT e.* FROM exam_options e JOIN study_sessions s ON s.id=e.session_id WHERE s.user_id=?",
+        ),
         "legacy_payloads": (
             "SELECT l.* FROM legacy_payloads l JOIN workspaces w ON w.id=l.workspace_id WHERE w.user_id=?",
         ),
@@ -435,6 +496,16 @@ def export_payload(db, uid):
         name: [dict(r) for r in db.execute(sql[0], (uid,)).fetchall()]
         for name, sql in tables.items()
     }
+    import base64
+
+    result["image_assets"] = [
+        {
+            "id": r["id"],
+            "png_base64": base64.b64encode(r["png"]).decode(),
+            "created_at": r["created_at"],
+        }
+        for r in db.execute("SELECT * FROM image_assets WHERE user_id=?", (uid,))
+    ]
     result.update(
         version=2,
         exported_at=now_iso(),
@@ -511,3 +582,105 @@ def archive_export():
     except BaseException:
         output.close()
         raise
+
+
+@bp.post("/plan/czas")
+@login_required
+def save_daily_budget():
+    try:
+        minutes = int(request.form.get("budget", 20))
+    except ValueError:
+        abort(400)
+    if not 5 <= minutes <= 180:
+        abort(400)
+    with transaction() as db:
+        db.execute(
+            "INSERT INTO daily_preferences VALUES (?,?) ON CONFLICT(user_id) DO UPDATE SET budget=excluded.budget",
+            (g.user["id"], minutes),
+        )
+    return redirect(url_for("planning.today"))
+
+
+@bp.post("/cele/<gid>/wymagania")
+@login_required
+def requirement(gid):
+    goal = owned_goal(gid)
+    with transaction() as db:
+        rid = request.form.get("requirement_id")
+        if rid:
+            row = db.execute(
+                "SELECT * FROM goal_requirements WHERE id=? AND goal_id=?", (rid, gid)
+            ).fetchone()
+            if not row:
+                abort(404)
+            if request.form.get("action") == "remove":
+                db.execute("DELETE FROM goal_requirements WHERE id=?", (rid,))
+            else:
+                db.execute(
+                    "UPDATE goal_requirements SET checked=? WHERE id=?",
+                    (int(not row["checked"]), rid),
+                )
+        else:
+            titles = [
+                t.strip()
+                for t in request.form.get("titles", "").splitlines()
+                if t.strip()
+            ]
+            if not titles or len(titles) > 50 or any(len(t) > 200 for t in titles):
+                abort(400)
+            tid = request.form.get("topic_id") or None
+            if (
+                tid
+                and owned_topic_for_requirement(tid)["workspace_id"]
+                != goal["workspace_id"]
+            ):
+                abort(400)
+            for title in titles:
+                db.execute(
+                    "INSERT INTO goal_requirements VALUES (?,?,?,?,0,?)",
+                    (uuid4().hex, gid, title, tid, now_iso()),
+                )
+    return redirect(url_for("planning.goals", _anchor="goal-" + gid))
+
+
+def owned_topic_for_requirement(tid):
+    from .library import owned_topic
+
+    return owned_topic(tid)
+
+
+@bp.get("/plan/przypomnienie.ics")
+@login_required
+def reminder():
+    # Download only: the user chooses whether to add it to their calendar.
+    tomorrow = today_date() + timedelta(days=1)
+    stamp = tomorrow.strftime("%Y%m%d") + "T180000"
+    from urllib.parse import urljoin
+    from flask import current_app
+
+    base = current_app.config.get("PUBLIC_URL") or request.url_root
+    link = urljoin(base.rstrip("/") + "/", "dzisiaj")
+    data = "\r\n".join(
+        [
+            "BEGIN:VCALENDAR",
+            "VERSION:2.0",
+            "PRODID:-//Madra Nauka//Plan//PL",
+            "BEGIN:VEVENT",
+            "UID:" + uuid4().hex + "@madra-nauka",
+            "DTSTAMP:" + datetime.now(ZoneInfo("UTC")).strftime("%Y%m%dT%H%M%SZ"),
+            "DTSTART;TZID=Europe/Warsaw:" + stamp,
+            "DURATION:PT" + str(daily_budget(g.user["id"])) + "M",
+            "RRULE:FREQ=DAILY;COUNT=7",
+            "SUMMARY:Krótka sesja nauki",
+            "DESCRIPTION:Otwórz plan dnia: " + link,
+            "URL:" + link,
+            "END:VEVENT",
+            "END:VCALENDAR",
+            "",
+        ]
+    )
+    return Response(
+        data,
+        mimetype="text/calendar",
+        headers={"Content-Disposition": 'attachment; filename="nauka.ics"'},
+    )

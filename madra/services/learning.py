@@ -35,14 +35,18 @@ def today_date():
 
 def activities_for(user_id, workspace_id=None, topic_id=None):
     sql = """SELECT a.*,t.name topic_name,w.name workspace_name,w.color,w.id workspace_id,
-             p.reviews,p.last_grade,p.due_date,p.interval_days, u.id upload_id,u.filename source_filename, ua.source_label, s.hints_json,s.explanation,s.rubric,s.material_id,s.source_chapter
+             p.reviews,p.last_grade,p.due_date,p.interval_days, u.id upload_id,u.filename source_filename, ua.source_label, s.hints_json,s.explanation,s.rubric,s.material_id,s.source_chapter, ai.asset_id image_id
              FROM activities a JOIN topics t ON t.id=a.topic_id
              JOIN workspaces w ON w.id=t.workspace_id
              LEFT JOIN activity_support s ON s.activity_id=a.id
+             LEFT JOIN activity_images ai ON ai.activity_id=a.id
              LEFT JOIN progress p ON p.activity_id=a.id AND p.user_id=?
              LEFT JOIN upload_activities ua ON ua.activity_id=a.id
              LEFT JOIN uploads u ON u.id=ua.upload_id
-             WHERE w.user_id=? AND a.archived=0"""
+             WHERE w.user_id=? AND a.archived=0
+             AND NOT EXISTS (SELECT 1 FROM content_states cs WHERE cs.content_id IN (w.id,t.id) AND cs.kind IN ('workspace','topic'))
+             AND NOT EXISTS (SELECT 1 FROM content_states cs WHERE cs.content_id=s.material_id AND cs.kind='material')
+             AND NOT EXISTS (SELECT 1 FROM content_states cs WHERE cs.content_id=u.id AND cs.kind='upload')"""
     args = [user_id, user_id]
     if workspace_id:
         sql += " AND w.id=?"
@@ -65,6 +69,8 @@ def activities_for(user_id, workspace_id=None, topic_id=None):
             "due": "Czas na powtórkę",
             "scheduled": "Dodatkowe utrwalenie",
         }[item["state"]]
+        if item["reviews"] and item["last_grade"] < 2 and item["state"] != "due":
+            item["reason"] = "Wróć do trudności"
         result.append(item)
     return sorted(
         result,

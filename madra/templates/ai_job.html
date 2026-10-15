@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import icon %}
+{% from 'macros.html' import icon,csrf %}
 {% block title %}Opracowanie materiału · Mądra Nauka{% endblock %}
 {% block extra_head %}
     {% if job.state=="running" %}<meta http-equiv="refresh" content="3">{% endif %}
@@ -18,7 +18,7 @@
                 </ol>
                 <p><strong>Czas oczekiwania: {{ elapsed }}</strong></p>
                 {% if progress.get("output_chars",0) %}<p>Otrzymano {{ progress.output_chars }} znaków odpowiedzi. Wynik będzie dostępny po ukończeniu i sprawdzeniu.</p>{% endif %}
-                <p class="small muted">{{ job.model }} · Bez limitu czasu generowania</p>
+                <details><summary>Szczegóły opracowania</summary><p class="small muted">{{ job.model }} · Bez limitu czasu generowania</p></details><form method="post" action="{{ url_for('ai.cancel',jid=job.id) }}">{{ csrf() }}<button class="button secondary">Anuluj opracowanie</button></form>
                 <p>Ten ekran aktualizuje się co 3 sekundy. Możesz wrócić do biblioteki — AI będzie pracować dalej. Etapy wynikają ze zdarzeń OpenAI; dostawca nie udostępnia postępu analizy poszczególnych stron.</p>
             {% else %}
                 <div class="notice" role="alert">{{ job.error }}</div>

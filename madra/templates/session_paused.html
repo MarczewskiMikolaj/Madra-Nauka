@@ -1,6 +1,6 @@
 {% extends 'base.html' %}{% from 'macros.html' import csrf %}
 {% block title %}Przerwa zapisana · Mądra Nauka{% endblock %}
 {% block content %}<section class="panel form-page"><h1>Przerwa zapisana</h1><p>{{ study.title }} · {{ total }} ćwiczeń</p>
-<p>Odpowiedzi i kolejność są zachowane.{% if settings.mode=='exam' %} Wzorce sprawdzianu pojawią się dopiero po jego zakończeniu.{% endif %}</p>
+<p>Wysłane odpowiedzi, zapisany szkic i kolejność są zachowane.{% if settings.mode=='exam' %} Wzorce sprawdzianu pojawią się dopiero po jego zakończeniu.{% endif %}</p>
 <form action="{{ url_for('study.resume',sid=study.id) }}" method="post">{{ csrf() }}<button class="button primary">Wznów tę sesję</button></form>
 <a href="{{ url_for('planning.progress') }}">Historia sesji</a></section>{% endblock %}

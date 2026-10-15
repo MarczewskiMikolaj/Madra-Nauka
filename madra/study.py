@@ -16,9 +16,12 @@ from .auth import login_required
 from .db import get_db, transaction
 from .library import owned_topic, owned_workspace
 from .services.learning import activities_for, KINDS, now_iso, save_progress
-from .services.goals import goal_activities, nearest_goal, choose_learning
+from .services.goals import goal_activities, choose_learning
+from .services.daily_plan import day_plan, daily_budget, balanced_exam
+from .services.drafts import item_draft, save_item_draft
 
 bp = Blueprint("study", __name__)
+SKIPPED_RESPONSE = "Nie podjęto samodzielnej odpowiedzi."
 
 
 def owned_session(sid, db=None):
@@ -62,9 +65,6 @@ def prepare():
     tid = request.args.get("topic_id") or None
     wid = request.args.get("workspace_id") or None
     goal_id = request.args.get("goal_id") or None
-    if not tid and not wid and not goal_id and request.args.get("all") != "1":
-        goal = nearest_goal(g.user["id"])
-        goal_id = goal["id"] if goal else None
     title = (
         owned_topic(tid)["name"]
         if tid
@@ -79,11 +79,23 @@ def prepare():
         title=title,
         mode=request.args.get("mode", "regular"),
         scope={
-            "global_scope": "1" if not tid and not wid and not goal_id else "0",
+            "global_scope": (
+                "1"
+                if request.args.get("all") == "1"
+                or request.args.get("mode") in ("difficult", "exam")
+                else "0"
+            ),
             "topic_id": tid or "",
             "workspace_id": wid or "",
             "goal_id": goal_id or "",
         },
+        budget=daily_budget(g.user["id"]),
+        goals=get_db()
+        .execute(
+            "SELECT id,title FROM goals WHERE user_id=? AND completed=0 ORDER BY target_date",
+            (g.user["id"],),
+        )
+        .fetchall(),
         nav="today",
     )
 
@@ -94,14 +106,17 @@ def start():
     wid = request.form.get("workspace_id") or None
     tid = request.form.get("topic_id") or None
     goal_id = request.form.get("goal_id") or None
+    activity_id = request.form.get("activity_id") or None
     mode = request.form.get("mode", "regular")
     if mode not in ("regular", "difficult", "exam"):
         abort(400)
+    if activity_id and (mode != "regular" or goal_id):
+        abort(400)
     try:
-        budget = int(request.form.get("budget", 10))
+        budget = int(request.form.get("budget", daily_budget(g.user["id"])))
     except ValueError:
         abort(400)
-    if budget not in (5, 10, 20, 30, 60):
+    if not 1 <= budget <= 180:
         abort(400)
     kinds = request.form.getlist("kinds")
     if any(k not in KINDS for k in kinds):
@@ -115,9 +130,6 @@ def start():
         title = owned_workspace(wid)["name"]
     else:
         title = "Moja sesja na dziś"
-    if not tid and not wid and not goal_id and request.form.get("global_scope") != "1":
-        goal = nearest_goal(g.user["id"])
-        goal_id = goal["id"] if goal else None
     if goal_id:
         from .planning import owned_goal
 
@@ -125,13 +137,56 @@ def start():
         if tid or wid:
             abort(400)
         title = goal["title"]
+    if not tid and not wid and not goal_id:
+        title = (
+            "Plan dnia"
+            if mode == "regular" and request.form.get("global_scope") != "1"
+            else "Wszystkie przedmioty"
+        )
+    if mode == "exam":
+        title = "Sprawdzian: " + title
+    elif mode == "difficult":
+        title = "Trudności: " + title
+    try:
+        exam_count = int(request.form.get("exam_count", 0) or 0)
+        timer = int(request.form.get("timer_minutes", 0) or 0)
+    except ValueError:
+        abort(400)
+    if not 0 <= exam_count <= 30 or not 0 <= timer <= 180:
+        abort(400)
     scope = {
         "workspace_id": wid,
         "topic_id": tid,
         "goal_id": goal_id,
         "kinds": sorted(set(kinds)),
     }
+    if activity_id:
+        scope["activity_id"] = activity_id
+    if not wid and not tid and not goal_id:
+        scope["selection"] = (
+            "day"
+            if mode == "regular" and request.form.get("global_scope") != "1"
+            else "all"
+        )
+    if mode == "exam" and exam_count:
+        scope.update(exam_count=exam_count, timer_minutes=timer)
+    if request.form.get("repeat_errors") == "1":
+        scope["repeat_errors"] = True
     with transaction() as db:
+        single = None
+        if activity_id:
+            single = next(
+                (
+                    a
+                    for a in activities_for(
+                        g.user["id"], workspace_id=wid, topic_id=tid
+                    )
+                    if a["id"] == activity_id
+                ),
+                None,
+            )
+            if not single:
+                abort(404)
         active = db.execute(
             "SELECT * FROM study_sessions WHERE user_id=? AND status='active' ORDER BY created_at DESC LIMIT 1",
             (g.user["id"],),
@@ -160,9 +215,8 @@ def start():
                             **scope,
                             "mode": mode,
                             "budget": budget,
-                            "global_scope": (
-                                "1" if not tid and not wid and not goal_id else "0"
-                            ),
+                            "repeat_errors": "1" if scope.get("repeat_errors") else "0",
+                            "global_scope": request.form.get("global_scope", "0"),
                         },
                         nav="today",
                     ),
@@ -177,7 +231,27 @@ def start():
         )
         if kinds:
             pool = [a for a in pool if a["kind"] in kinds]
-        items = choose_learning(pool, budget, mode)
+        is_daily = (
+            not tid
+            and not wid
+            and not goal_id
+            and request.form.get("global_scope") != "1"
+            and mode == "regular"
+            and not activity_id
+        )
+        items = (
+            balanced_exam(pool, exam_count)
+            if mode == "exam" and exam_count
+            else (
+                day_plan(g.user["id"], budget)["items"]
+                if is_daily and not kinds
+                else choose_learning(pool, budget, mode)
+            )
+        )
+        if is_daily and kinds:
+            items = day_plan(g.user["id"], budget, kinds=kinds)["items"]
+        if single:
+            items = [single]
         if not items:
             flash(
                 "Brak ćwiczeń dla wybranego zakresu i trybu. Dodaj ćwiczenia lub zmień wybór.",
@@ -204,6 +278,10 @@ def start():
             "INSERT INTO session_settings (session_id,mode,scope_json) VALUES (?,?,?)",
             (sid, mode, json.dumps(scope)),
         )
+        if mode == "exam" and exam_count:
+            db.execute(
+                "INSERT INTO exam_options VALUES (?,?,?,?)", (sid, 1, timer, exam_count)
+            )
         for pos, activity in enumerate(items):
             snapshot = {
                 key: activity[key]
@@ -223,6 +301,7 @@ def start():
                     "source_chapter",
                     "explanation",
                     "rubric",
+                    "image_id",
                 )
             }
             label = activity.get("source_label") or ""
@@ -295,6 +374,8 @@ def pause(sid):
     with transaction() as db:
         study = owned_session(sid, db)
         if study["status"] == "active":
+            if request.form.get("item_id"):
+                save_item_draft(db, sid, request.form)
             db.execute(
                 "UPDATE study_sessions SET status='ended',finished_at=NULL WHERE id=?",
                 (sid,),
@@ -310,7 +391,7 @@ def review_rows(sid):
     rows = (
         get_db()
         .execute(
-            "SELECT i.*,r.grade,r.id review_id,n.used_help,n.reason error_reason,e.response exam_response,e.objective_correct exam_correct FROM session_items i LEFT JOIN reviews r ON r.item_id=i.id LEFT JOIN review_notes n ON n.review_id=r.id LEFT JOIN exam_answers e ON e.item_id=i.id WHERE i.session_id=? ORDER BY position",
+            "SELECT i.*,r.grade,r.id review_id,n.used_help,n.reason error_reason,COALESCE(d.flagged,0) flagged,e.response exam_response,e.objective_correct exam_correct FROM session_items i LEFT JOIN reviews r ON r.item_id=i.id LEFT JOIN review_notes n ON n.review_id=r.id LEFT JOIN exam_answers e ON e.item_id=i.id LEFT JOIN study_drafts d ON d.item_id=i.id WHERE i.session_id=? ORDER BY position",
             (sid,),
         )
         .fetchall()
@@ -325,6 +406,47 @@ def session_page(sid):
     settings = session_settings(sid)
     rows = review_rows(sid)
     item = current_item(sid)
+    feedback = None
+    if request.args.get("feedback") and settings["mode"] != "exam":
+        feedback = (
+            get_db()
+            .execute(
+                "SELECT i.* FROM session_items i JOIN reviews r ON r.item_id=i.id "
+                "WHERE i.session_id=? AND i.id=? AND i.revealed=1",
+                (sid, request.args["feedback"]),
+            )
+            .fetchone()
+        )
+        if not feedback or json.loads(feedback["snapshot_json"])["kind"] != "quiz":
+            abort(404)
+        item = feedback
+    exam_options = (
+        get_db()
+        .execute("SELECT * FROM exam_options WHERE session_id=?", (sid,))
+        .fetchone()
+    )
+    if settings["mode"] == "exam" and study["status"] == "active" and exam_options:
+        requested = request.args.get("item")
+        if requested:
+            item = (
+                get_db()
+                .execute(
+                    "SELECT * FROM session_items WHERE id=? AND session_id=?",
+                    (requested, sid),
+                )
+                .fetchone()
+            )
+            if not item:
+                abort(404)
+        elif not item:
+            item = (
+                get_db()
+                .execute(
+                    "SELECT * FROM session_items WHERE session_id=? ORDER BY position LIMIT 1",
+                    (sid,),
+                )
+                .fetchone()
+            )
     if settings["paused"]:
         return render_template(
             "session_paused.html",
@@ -333,7 +455,7 @@ def session_page(sid):
             total=len(rows),
             nav="today",
         )
-    if study["status"] != "active" or not item:
+    if (study["status"] != "active" or not item) and not feedback:
         exam = settings["mode"] == "exam"
         reviewed = [r for r in rows if r["grade"] is not None]
         submitted = (
@@ -390,8 +512,27 @@ def session_page(sid):
         total=len(rows),
         last=last,
         settings=settings,
+        feedback=bool(feedback),
+        skipped=(item["response"] or "").startswith(SKIPPED_RESPONSE),
+        draft=item_draft(get_db(), item["id"]),
+        exam_options=exam_options,
+        exam_items=rows,
+        exam_response=get_db()
+        .execute("SELECT response FROM exam_answers WHERE item_id=?", (item["id"],))
+        .fetchone(),
         nav="today",
     )
+
+
+@bp.post("/nauka/<sid>/szkic")
+@login_required
+def save_draft(sid):
+    with transaction() as db:
+        owned_session(sid, db)
+        if session_settings(sid, db)["paused"]:
+            abort(409)
+        revision = save_item_draft(db, sid, request.form)
+    return {"revision": revision}
 
 
 def record_review(
@@ -416,6 +557,41 @@ def record_review(
     db.execute("INSERT INTO review_notes VALUES (?,?,?)", (rid, int(used_help), reason))
 
 
+def finish_review(db, sid, item, value, *, is_exam=False):
+    repeat = json.loads(session_settings(sid, db)["scope_json"]).get("repeat_errors")
+    if not is_exam and repeat and value == 0:
+        remaining = db.execute(
+            "SELECT COUNT(*) FROM session_items i LEFT JOIN reviews r ON r.item_id=i.id WHERE i.session_id=? AND r.id IS NULL",
+            (sid,),
+        ).fetchone()[0]
+        occurrences = db.execute(
+            "SELECT COUNT(*) FROM session_items WHERE session_id=? AND activity_id=?",
+            (sid, item["activity_id"]),
+        ).fetchone()[0]
+        if remaining >= 2 and occurrences < 2:
+            position = db.execute(
+                "SELECT MAX(position)+1 FROM session_items WHERE session_id=?",
+                (sid,),
+            ).fetchone()[0]
+            snapshot = json.loads(item["snapshot_json"])
+            snapshot["reason"] = "Ponowna próba po innych pytaniach"
+            db.execute(
+                "INSERT INTO session_items VALUES (?,?,?,?,?,NULL,0,NULL)",
+                (
+                    uuid4().hex,
+                    sid,
+                    item["activity_id"],
+                    position,
+                    json.dumps(snapshot, ensure_ascii=False),
+                ),
+            )
+    if not current_item(sid, db):
+        db.execute(
+            "UPDATE study_sessions SET status='completed',finished_at=? WHERE id=?",
+            (now_iso(), sid),
+        )
+
+
 @bp.post("/nauka/<sid>/egzamin-odpowiedz")
 @login_required
 def exam_answer(sid):
@@ -429,13 +605,38 @@ def exam_answer(sid):
         ).fetchone()
         if not item:
             abort(404)
-        if db.execute("SELECT 1 FROM exam_answers WHERE item_id=?", (iid,)).fetchone():
-            return redirect(url_for("study.session_page", sid=sid))
-        current = current_item(sid, db)
-        if study["status"] != "active" or not current or current["id"] != iid:
+        manual = db.execute(
+            "SELECT 1 FROM exam_options WHERE session_id=?", (sid,)
+        ).fetchone()
+        if study["status"] != "active" or session_settings(sid, db)["paused"]:
             abort(409)
+        current = current_item(sid, db)
+        if not manual:
+            if db.execute(
+                "SELECT 1 FROM exam_answers WHERE item_id=?", (iid,)
+            ).fetchone():
+                return redirect(url_for("study.session_page", sid=sid))
+            if not current or current["id"] != iid:
+                abort(409)
+        if manual and request.form.get("go_to"):
+            target = request.form["go_to"]
+            if not db.execute(
+                "SELECT 1 FROM session_items WHERE id=? AND session_id=?", (target, sid)
+            ).fetchone():
+                abort(404)
+            save_item_draft(db, sid, request.form)
+            return redirect(url_for("study.session_page", sid=sid, item=target))
         activity = json.loads(item["snapshot_json"])
         response = request.form.get("response", "").strip()
+        if (
+            request.form.get("response_mode") in ("paper", "oral")
+            and activity["kind"] != "quiz"
+        ):
+            response = response or (
+                "Rozwiązano na kartce"
+                if request.form["response_mode"] == "paper"
+                else "Odpowiedź ustna"
+            )
         if (
             not response
             or len(response) > 10000
@@ -446,10 +647,12 @@ def exam_answer(sid):
             int(response == activity["answer"]) if activity["kind"] == "quiz" else None
         )
         db.execute(
-            "INSERT INTO exam_answers VALUES (?,?,?,?)",
+            "INSERT INTO exam_answers VALUES (?,?,?,?) ON CONFLICT(item_id) DO UPDATE SET response=excluded.response,objective_correct=excluded.objective_correct,submitted_at=excluded.submitted_at",
             (iid, response, objective, now_iso()),
         )
-        if not current_item(sid, db):
+        if manual:
+            save_item_draft(db, sid, request.form)
+        elif not current_item(sid, db):
             finish_exam(db, study)
     return redirect(url_for("study.session_page", sid=sid))
 
@@ -495,6 +698,15 @@ def reveal(sid):
             abort(404)
         item = current_item(sid, db)
         if existing["revealed"] or study["status"] != "active":
+            if (
+                json.loads(existing["snapshot_json"])["kind"] == "quiz"
+                and db.execute(
+                    "SELECT 1 FROM reviews WHERE item_id=?", (item_id,)
+                ).fetchone()
+            ):
+                return redirect(
+                    url_for("study.session_page", sid=sid, feedback=item_id)
+                )
             return redirect(url_for("study.session_page", sid=sid))
         if not item or item["id"] != item_id:
             abort(409)
@@ -503,18 +715,50 @@ def reveal(sid):
         if len(response) > 10000:
             abort(400)
         objective = None
+        skipped = request.form.get("skip") == "1" and activity["kind"] not in (
+            "quiz",
+            "flashcard",
+        )
         if activity["kind"] == "quiz":
             if response not in activity["options"]:
                 flash("Wybierz jedną odpowiedź.", "error")
                 return redirect(url_for("study.session_page", sid=sid))
             objective = int(response == activity["answer"])
+        elif skipped:
+            response = SKIPPED_RESPONSE + (
+                "\n\nRozpoczęta odpowiedź: " + response if response else ""
+            )
+        elif request.form.get("response_mode") in ("paper", "oral"):
+            response = response or (
+                "Rozwiązano na kartce"
+                if request.form["response_mode"] == "paper"
+                else "Odpowiedź ustna"
+            )
         elif activity["kind"] in ("open", "exercise", "cloze") and not response:
             flash("Zapisz swoją próbę odpowiedzi. Możesz wpisać „nie wiem”.", "error")
             return redirect(url_for("study.session_page", sid=sid))
+        if "revision" in request.form or skipped:
+            fields = request.form.copy()
+            if skipped:
+                fields["used_help"] = "1"
+            save_item_draft(db, sid, fields)
         db.execute(
             "UPDATE session_items SET revealed=1,response=?,objective_correct=? WHERE id=?",
             (response, objective, item_id),
         )
+        if activity["kind"] == "quiz":
+            value = 2 if objective else 0
+            record_review(
+                db,
+                item,
+                g.user["id"],
+                value,
+                response,
+                objective,
+                bool(item_draft(db, item_id)["used_help"]),
+            )
+            finish_review(db, sid, item, value)
+            return redirect(url_for("study.session_page", sid=sid, feedback=item_id))
     return redirect(url_for("study.session_page", sid=sid))
 
 
@@ -560,6 +804,8 @@ def grade(sid):
                 abort(400)
             if value not in range(4):
                 abort(400)
+            if not is_exam and (item["response"] or "").startswith(SKIPPED_RESPONSE):
+                value = 0
         reason = request.form.get("error_reason", "")
         if reason not in (
             "",
@@ -577,14 +823,11 @@ def grade(sid):
             value,
             exam_row["response"] if is_exam else item["response"] or "",
             exam_row["objective_correct"] if is_exam else item["objective_correct"],
-            request.form.get("used_help") == "1",
+            request.form.get("used_help") == "1"
+            or bool(item_draft(db, item_id)["used_help"]),
             reason,
         )
-        if not current_item(sid, db):
-            db.execute(
-                "UPDATE study_sessions SET status='completed',finished_at=? WHERE id=?",
-                (now_iso(), sid),
-            )
+        finish_review(db, sid, item, value, is_exam=is_exam)
     return redirect(url_for("study.session_page", sid=sid))
 
 
@@ -649,6 +892,13 @@ def undo(sid):
             )
         db.execute("DELETE FROM reviews WHERE id=?", (last["id"],))
         db.execute(
+            """DELETE FROM session_items WHERE session_id=? AND activity_id=?
+            AND position>(SELECT position FROM session_items WHERE id=?)
+            AND json_extract(snapshot_json,'$.reason')='Ponowna próba po innych pytaniach'
+            AND NOT EXISTS (SELECT 1 FROM reviews r WHERE r.item_id=session_items.id)""",
+            (sid, last["activity_id"], last["item_id"]),
+        )
+        db.execute(
             "UPDATE study_sessions SET status='active',finished_at=NULL WHERE id=?",
             (sid,),
         )
@@ -662,6 +912,8 @@ def end(sid):
     with transaction() as db:
         study = owned_session(sid, db)
         if session_settings(sid, db)["mode"] == "exam" and study["status"] == "active":
+            if request.form.get("item_id"):
+                save_item_draft(db, sid, request.form)
             finish_exam(db, study)
             return redirect(url_for("study.session_page", sid=sid))
         db.execute(
@@ -669,3 +921,21 @@ def end(sid):
             (now_iso(), sid),
         )
     return redirect(url_for("study.session_page", sid=sid))
+
+
+@bp.get("/nauka/<sid>/zakoncz")
+@login_required
+def end_confirmation(sid):
+    study = owned_session(sid)
+    settings = session_settings(sid)
+    if study["status"] != "active" or settings["mode"] != "exam":
+        return redirect(url_for("study.session_page", sid=sid))
+    rows = review_rows(sid)
+    return render_template(
+        "exam_finish.html",
+        study=study,
+        total=len(rows),
+        answered=sum(r["exam_response"] is not None for r in rows),
+        flagged=sum(bool(r["flagged"]) for r in rows),
+        nav="today",
+    )

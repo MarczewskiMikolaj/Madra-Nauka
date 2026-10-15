@@ -1,19 +1,8 @@
-{% extends "base.html" %}
-{% from 'macros.html' import note_reader,icon %}
+{% extends 'base.html' %}{% from 'macros.html' import note_reader,csrf,organization %}
 {% block title %}{{ material.title }} · Mądra Nauka{% endblock %}
-{% block content %}
-    <a class="breadcrumb" href="{{ url_for('library.topic',tid=topic.id) }}">Biblioteka / {{ topic.name }}</a>
-    <div class="page-heading">
-        <div>
-            <h1>{{ material.title }}</h1>
-            <p>Notatka do nauki</p>
-        </div>
-        <a class="button secondary"
-           href="{{ url_for('library.material_form',mid=material.id) }}">Edytuj notatkę</a>
-    </div>
-    <p><a class="button secondary" href="{{ url_for('library.activity_form',tid=topic.id) }}">Utwórz pytanie do tej notatki</a></p>
-    {% if material.kind == "note" %}{{ note_reader(material.content, material.id) }}{% else %}<a class="source-link"
-   href="{{ material.content }}"
-   target="_blank"
-   rel="noopener noreferrer">Otwórz źródło {{ icon('arrow', 16) }}</a>{% endif %}
-{% endblock %}
+{% block content %}<a class="breadcrumb" href="{{ url_for('library.topic',tid=topic.id) }}">Biblioteka / {{ topic.name }}</a>
+<div class="page-heading"><h1>{{ material.title }}</h1><a class="button secondary" href="{{ url_for('library.material_form',mid=material.id) }}">Edytuj</a></div>
+{% if material.kind=='note' %}<div class="actions"><a class="button primary" href="{{ url_for('workflow.recall',mid=material.id,chapter=reading.chapter if reading else 1) }}">Ucz się z notatki</a><a class="button secondary" href="{{ url_for('library.activity_form',tid=topic.id,material_id=material.id) }}">Utwórz pytanie do tej notatki</a><a href="{{ url_for('workflow.download_note',mid=material.id) }}">Pobierz do czytania offline</a></div><p class="small muted">Pobrana notatka działa bez sieci. Wzory w pliku offline są zapisane w notacji TeX.</p>
+<div data-reading-url="{{ url_for('workflow.reading_position',mid=material.id) }}" data-last-chapter="{{ reading.chapter if reading else 0 }}">{{ csrf() }}{{ note_reader(material.content,material.id,topic.id,reading_done) }}</div>
+{% else %}<a href="{{ material.content }}" target="_blank" rel="noopener noreferrer">Otwórz źródło</a>{% endif %}
+{{ organization('material',material.id,destination_spaces,destination_topics) }}{% endblock %}

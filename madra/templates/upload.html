@@ -6,8 +6,8 @@
         <a class="breadcrumb" href="{{ url_for('library.index') }}">Biblioteka / Nowy materiał</a>
         <div class="page-heading">
             <div>
-                <h1>Czego dziś się nauczysz?</h1>
-                <p>Dodaj plik. Z niego przygotujesz notatkę i ćwiczenia.</p>
+                <h1>Opracuj materiały z AI</h1>
+                <p>Wgraj pliki lub zdjęcia, z których AI przygotuje notatki i ćwiczenia. Slajdy PowerPoint wyeksportuj najpierw do PDF.</p>
             </div>
         </div>
         <div class="upload-layout">
@@ -23,16 +23,16 @@
             <input type="file"
                    name="file"
                    id="file"
-                   accept=".pdf,.docx,.txt,.md"
+                   accept=".pdf,.docx,.txt,.md,.png,.jpg,.jpeg,.webp" multiple
                    required
                    aria-describedby="file-help">
-            <span class="file-drop-icon">{{ icon('upload', 28) }}</span><strong data-file-name>Wybierz plik lub przeciągnij go tutaj</strong><span class="muted" data-file-description>Notatki, dokument lub podręcznik</span><span class="file-types">PDF <i></i> DOCX <i></i> TXT <i></i> MD</span>
+            <span class="file-drop-icon">{{ icon('upload', 28) }}</span><strong data-file-name>Wybierz do 5 plików lub przeciągnij je tutaj</strong><span class="muted" data-file-description>Notatki, dokument lub podręcznik</span><span class="file-types">PDF <i></i> DOCX <i></i> TXT <i></i> MD <i></i> Zdjęcia</span>
         </div>
-        <p class="field-help" id="file-help">Do 10 MB i 100 stron PDF. Obsługujemy także skany PDF. Dokumenty z ilustracjami najlepiej wgrywać jako PDF; DOCX jest analizowany tekstowo.</p>
+        <p class="field-help" id="file-help">Do 5 plików naraz, każdy do 10 MB; PDF do 100 stron, zdjęcia do 16 megapikseli. Obsługujemy także skany PDF. Dokumenty z ilustracjami najlepiej wgrywać jako PDF; DOCX jest analizowany tekstowo.</p>
         <button class="button primary upload-submit">Wgraj i przejrzyj materiał {{ icon('arrow', 18) }}</button>
     </form>
     <aside class="upload-explainer">
-        <h2>Od źródła do zrozumienia.</h2>
+        <h2>Od pliku do ćwiczeń</h2><p>Opracowanie wymaga połączenia uprawnionego planu ChatGPT. Samo wgranie niczego nie wysyła do AI — analizę uruchomisz w następnym kroku.</p>
         <ol class="workflow-list">
             <li>
                 <span>1</span>

@@ -9,13 +9,15 @@ from pathlib import Path
 from xml.etree import ElementTree
 
 MAX_BYTES = 10 * 1024 * 1024
-EXTENSIONS = {".pdf", ".docx", ".txt", ".md"}
+EXTENSIONS = {".pdf", ".docx", ".txt", ".md", ".png", ".jpg", ".jpeg", ".webp"}
 
 
 def validate_file(filename, data):
     suffix = Path(filename).suffix.lower()
     if suffix not in EXTENSIONS:
-        raise ValueError("Wybierz PDF, DOCX, TXT lub MD.")
+        raise ValueError(
+            "Wybierz PDF, DOCX, TXT, MD lub zdjęcie PNG/JPG/WebP. Slajdy PPTX wyeksportuj do PDF."
+        )
     if not data or len(data) > MAX_BYTES:
         raise ValueError("Plik musi mieć od 1 bajtu do 10 MB.")
     try:
@@ -41,6 +43,14 @@ def validate_file(filename, data):
 def inspect_file(suffix, data):
     if not data or len(data) > MAX_BYTES:
         raise ValueError("Plik musi mieć od 1 bajtu do 10 MB.")
+    if suffix in {".png", ".jpg", ".jpeg", ".webp"}:
+        from PIL import Image
+
+        with Image.open(io.BytesIO(data), formats=("PNG", "JPEG", "WEBP")) as image:
+            if image.width * image.height > 16_000_000:
+                raise ValueError("Zdjęcie może mieć do 16 megapikseli.")
+            image.load()
+            return {"width": image.width, "height": image.height}
     if suffix == ".pdf":
         from pypdf import PdfReader
 
@@ -73,7 +83,9 @@ def inspect_file(suffix, data):
                 raise ValueError("Nieprawidłowy dokument DOCX.")
         return {}
     if suffix not in {".txt", ".md"}:
-        raise ValueError("Wybierz PDF, DOCX, TXT lub MD.")
+        raise ValueError(
+            "Wybierz PDF, DOCX, TXT, MD lub zdjęcie PNG/JPG/WebP. Slajdy PPTX wyeksportuj do PDF."
+        )
     try:
         text = data.decode("utf-8-sig")
     except UnicodeDecodeError:

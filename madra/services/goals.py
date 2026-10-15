@@ -25,7 +25,7 @@ def scope_topics(goal):
     rows = (
         get_db()
         .execute(
-            "SELECT t.*,COALESCE(gt.priority,1) priority FROM topics t LEFT JOIN goal_topics gt ON gt.topic_id=t.id AND gt.goal_id=? WHERE t.workspace_id=? AND (? OR gt.topic_id IS NOT NULL) ORDER BY priority DESC,t.name",
+            "SELECT t.*,COALESCE(gt.priority,1) priority FROM topics t LEFT JOIN goal_topics gt ON gt.topic_id=t.id AND gt.goal_id=? WHERE t.workspace_id=? AND NOT EXISTS (SELECT 1 FROM content_states cs WHERE cs.kind='topic' AND cs.content_id=t.id) AND (? OR gt.topic_id IS NOT NULL) ORDER BY priority DESC,t.name",
             (goal["id"], goal["workspace_id"], int(settings["all_topics"])),
         )
         .fetchall()
@@ -156,6 +156,13 @@ def enrich_goal(goal):
         settings=settings,
         available_days=available,
         today_available=today.weekday() in settings["weekdays"],
+        requirements=[
+            dict(r)
+            for r in get_db().execute(
+                "SELECT r.*,t.name topic_name FROM goal_requirements r LEFT JOIN topics t ON t.id=r.topic_id WHERE r.goal_id=? ORDER BY r.created_at,r.id",
+                (goal["id"],),
+            )
+        ],
     )
     return goal
 
@@ -164,8 +171,10 @@ def nearest_goal(uid):
     return (
         get_db()
         .execute(
-            "SELECT * FROM goals WHERE user_id=? AND completed=0 ORDER BY target_date,created_at LIMIT 1",
-            (uid,),
+            """SELECT * FROM goals WHERE user_id=? AND completed=0 AND target_date>=?
+            AND NOT EXISTS (SELECT 1 FROM content_states cs WHERE cs.kind='workspace' AND cs.content_id=goals.workspace_id)
+            ORDER BY target_date,created_at LIMIT 1""",
+            (uid, today_date().isoformat()),
         )
         .fetchone()
     )

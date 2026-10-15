@@ -35,7 +35,7 @@
                 </a>
                 <p class="sidebar-caption">Twoja przestrzeń nauki</p>
                 <nav aria-label="Nawigacja główna">
-                    {% for key,label,symbol,endpoint in [('today','Dzisiaj','sun','planning.today'),('library','Biblioteka','book','library.index'),('goals','Cele','target','planning.goals'),('progress','Postępy','chart','planning.progress'),('ai','Połączenie AI','spark','ai.settings')] %}
+                    {% for key,label,symbol,endpoint in [('today','Dzisiaj','sun','planning.today'),('library','Biblioteka','book','library.index'),('goals','Cele','target','planning.goals'),('progress','Postępy','chart','planning.progress')] %}
                         <a href="{{ url_for(endpoint) }}"
                            class="nav-link {% if nav==key %}active{% endif %}"
                            {% if nav==key %}aria-current="page"{% endif %}>
@@ -50,7 +50,7 @@
                         <br>
                         <strong>Wiedza, która zostaje.</strong>
                     </div>
-                    <a class="export-link" href="{{ url_for('planning.export') }}">{{ icon('download', 17) }} Eksportuj swoje dane</a>
+
                     <div class="account">
                         {{ account_avatar(g.user) }}
                         <div>
@@ -96,7 +96,7 @@
                                 <strong>{{ 'Konto demonstracyjne' if g.user.is_demo else g.user.username }}</strong>
                                 <a href="{{ url_for('account.settings') }}">Ustawienia konta</a>
                                 <a href="{{ url_for('ai.settings') }}">ChatGPT / AI</a>
-                            <a href="{{ url_for('planning.export') }}">Eksportuj dane</a>
+
                                 <form action="{{ url_for('auth.logout') }}" method="post">
                                     {{ csrf() }}
                                     <button class="text-button">Wyloguj się</button>

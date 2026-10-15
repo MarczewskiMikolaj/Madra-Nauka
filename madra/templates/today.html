@@ -1,181 +1,23 @@
-{% extends "base.html" %}
-{% from 'macros.html' import icon,csrf,start,goal_card %}
-{% block title %}
-    Dzisiaj · Mądra Nauka
-{% endblock %}
+{% extends 'base.html' %}{% from 'macros.html' import csrf,icon %}
+{% block title %}Dzisiaj · Mądra Nauka{% endblock %}
 {% block content %}
-    <div class="page-heading">
-        <div>
-            <p class="date-label">{{ date_label }}</p>
-            <h1>Dobry dzień na mały krok.</h1>
-            <p>Trochę zrozumienia. Trochę praktyki. Wiedza, do której wracasz.</p>
-        </div>
-        <a class="button secondary"
-           href="{{ url_for('library.workspace_form') }}">{{ icon('plus', 18) }} Dodaj przedmiot</a>
-    </div>
-    <section class="daily-hero">
-        <div class="hero-copy">
-            <span class="hero-tag">
-                {% if active %}
-                    Twoja sesja czeka
-                {% elif due %}
-                    Wróć do tego, co ważne
-                {% else %}
-                    Znajdź swój rytm
-                {% endif %}
-            </span>
-            <h2>
-                {% if active %}
-                    Dokończ to, co zacząłeś.
-                {% elif activities %}
-                    Masz chwilę? Zróbmy postęp.
-                {% else %}
-                    Każda nauka zaczyna się
-                    <br>
-                    od ciekawości.
-                {% endif %}
-            </h2>
-            <p>
-                {% if activities %}
-                    Połącz pytania, zadania i powtórki w jedną krótką sesję.
-                {% else %}
-                    Dodaj przedmiot, pierwszy temat i ćwiczenie. Ułożymy z nich Twój plan.
-                {% endif %}
-            </p>
-            {% if active %}
-                <a class="button light"
-                   href="{{ url_for('study.session_page',sid=active.id) }}">Wznów sesję {{ icon('arrow', 18) }}</a>
-            {% elif activities %}
-                <form action="{{ url_for('study.start') }}"
-                      method="post"
-                      class="hero-start">
-                    {{ csrf() }}
-                    <label class="sr-only" for="budget">Czas sesji</label>
-                    <select name="budget" id="budget">
-                        <option value="5">Mam 5 minut</option>
-                        <option value="10" selected>Mam 10 minut</option>
-                        <option value="20">Mam 20 minut</option>
-                    </select>
-                    <button class="button light">Rozpocznij naukę {{ icon('arrow', 18) }}</button>
-                </form>
-            {% else %}
-                <a class="button light" href="{{ url_for('library.workspace_form') }}">
-                    Dodaj pierwszy przedmiot {{ icon('plus', 18) }}
-                </a>
-            {% endif %}
-        </div>
-        <div class="hero-art" aria-hidden="true">
-            <div class="orbit orbit-one"></div>
-            <div class="orbit orbit-two"></div>
-            <div class="art-sheet sheet-back"></div>
-            <div class="art-sheet sheet-front">
-                <span class="art-check">{{ icon('check', 27) }}</span>
-                <span class="art-line"></span>
-                <span class="art-line short"></span>
-                <div class="art-dots">
-                    <i>
-                    </i>
-                    <i>
-                    </i>
-                    <i>
-                    </i>
-                    <i>
-                    </i>
-                </div>
-                <span class="art-line"></span>
-            </div>
-            <span class="art-spark">{{ icon('spark', 35) }}</span>
-        </div>
-    </section>
-    <section class="learning-actions panel"><h2>Wybierz następny krok</h2><p>{{ weak }} ćwiczeń sprawia trudność.{% if nearest %} Domyślny plan uwzględnia cel „{{ nearest.title }}” i jego zakres.{% endif %}</p><div class="actions"><a class="button primary" href="{{ url_for('study.prepare',mode='difficult') }}">Przećwicz trudności</a><a class="button secondary" href="{{ url_for('study.prepare',mode='exam') }}">Próbny sprawdzian</a><a class="button quiet" href="{{ url_for('study.prepare') }}">Dobierz czas i metody</a></div><p class="small muted">Wracasz po przerwie? Wybierz 5 lub 10 minut i wykonaj małą porcję. Pozostałe zaległości pozostaną w kolejce.</p></section>
-    {% if paused %}<section class="panel"><h2>Zapisane przerwy</h2>{% for study in paused %}<p><a href="{{ url_for('study.session_page',sid=study.id) }}">{{ study.title }} — wznów zachowaną sesję</a></p>{% endfor %}</section>{% endif %}
-    <div class="overview-strip">
-        <div>
-            <strong>{{ due }}</strong>
-            <span>ćwiczeń do powtórki</span>
-        </div>
-        <div>
-            <strong>{{ new }}</strong>
-            <span>nowych ćwiczeń</span>
-        </div>
-        <div>
-            <strong>{{ spaces|length }}</strong>
-            <span>przedmiotów w bibliotece</span>
-        </div>
-    </div>
-    <div class="today-columns">
-        <section>
-            <div class="section-heading">
-                <h2>Propozycja na 10 minut</h2>
-                <span class="muted small">
-                    {% if plan %}
-                        około {{ estimate }} min
-                    {% endif %}
-                </span>
-            </div>
-            {% if plan %}
-                <div class="plan-list">
-                    {% for activity in plan %}
-                        <a class="plan-row"
-                           href="{{ url_for('library.topic',tid=activity.topic_id) }}">
-                            <span class="type-icon {{ activity.kind }}">
-                                {{ {'flashcard':'↔','open':'?','quiz':'✓','exercise':'⌘','cloze':'…'}[activity.kind] }}
-                            </span>
-                            <div class="plan-content">
-                                <span class="small muted">{{ activity.workspace_name }} / {{ activity.topic_name }}</span>
-                                <h3>{{ activity.prompt|truncate(95) }}</h3>
-                                <span class="small">
-                                    <span class="kind-label">{{ kinds[activity.kind] }}</span>
-                                    <span class="muted">{{ activity.reason }}</span>
-                                </span>
-                            </div>
-                            <span class="row-time">{{ activity.minutes }} min</span>
-                        </a>
-                    {% endfor %}
-                </div>
-                <p class="small muted">
-                    Najpierw powtórki, potem nowe ćwiczenia. Jeśli wszystko jest aktualne, możesz dodatkowo utrwalić wiedzę.
-                </p>
-            {% else %}
-                <div class="empty-state">
-                    {{ icon('book', 32) }}
-                    <h3>Tu pojawi się Twój plan.</h3>
-                    <p>Dodaj ćwiczenia w bibliotece. Możesz zacząć od pytania otwartego albo krótkiego zadania.</p>
-                    <a href="{{ url_for('library.index') }}">Otwórz bibliotekę</a>
-                </div>
-            {% endif %}
-        </section>
-        <aside>
-            <div class="section-heading">
-                <h2>Twój kierunek</h2>
-                <a href="{{ url_for('planning.goals') }}">Cele {{ icon('arrow', 16) }}</a>
-            </div>
-            {% for goal in goals %}
-                {{ goal_card(goal) }}
-            {% else %}
-                <div class="goal-empty">
-                    {{ icon('target', 30) }}
-                    <h3>Do czego dążysz?</h3>
-                    <p>Egzamin, nowa umiejętność, lepsze zrozumienie. Nadaj swojej nauce kierunek.</p>
-                    <a class="button secondary" href="{{ url_for('planning.goals') }}">Ustal pierwszy cel</a>
-                </div>
-            {% endfor %}
-        </aside>
-    </div>
-    {% if spaces %}
-        <div class="section-heading">
-            <h2>Wróć do materiałów</h2>
-            <a href="{{ url_for('library.index') }}">Cała biblioteka {{ icon('arrow', 16) }}</a>
-        </div>
-        <div class="subject-grid compact">
-            {% for space in spaces[:3] %}
-                <a class="subject-card {{ space.color }}"
-                   href="{{ url_for('library.workspace',wid=space.id) }}">
-                    <span class="subject-symbol">{{ icon('book', 22) }}</span>
-                    <h3>{{ space.name }}</h3>
-                    <p>{{ space.description|truncate(100) }}</p>
-                </a>
-            {% endfor %}
-        </div>
-    {% endif %}
+<div class="page-heading"><div><p class="date-label">{{ date_label }}</p><h1>Twój plan na dziś</h1><p>{{ allowance }} min łącznie · {{ spent }} min przećwiczonych według szacunków pytań.</p></div><a class="button secondary" href="{{ url_for('uploads.upload') }}">Opracuj materiały z AI</a></div>
+{% if expired %}<section class="notice"><strong>Sprawdź terminy celów</strong>{% for goal in expired %}<p>„{{ goal.title }}” jest po terminie. <a href="{{ url_for('planning.edit_goal',gid=goal.id) }}">Zmień termin</a> lub <a href="{{ url_for('planning.goals',_anchor='goal-'+goal.id) }}">zakończ cel</a>. Materiały pozostają dostępne w bibliotece.</p>{% endfor %}</section>{% endif %}
+{% if active %}<section class="resume-strip"><div><strong>{{ active.title }}</strong><p>Wróć do rozpoczętej sesji.</p></div><a class="button primary" href="{{ url_for('study.session_page',sid=active.id) }}">Wznów sesję</a></section>{% endif %}
+{% if paused %}<section class="panel"><h2>Zapisane przerwy</h2>{% for study in paused %}<p><a href="{{ url_for('study.session_page',sid=study.id) }}">{{ study.title }} — wznów</a></p>{% endfor %}</section>{% endif %}
+{% if activities %}
+{% if active %}<details class="panel"><summary>Przejrzyj plan i inne możliwości</summary>{% endif %}<section class="daily-workspace panel"><div class="section-heading"><h2>{% if budget %}Porcja: {{ budget }} min{% else %}Dzisiejsza porcja wykonana{% endif %}</h2><a href="{{ url_for('study.prepare') }}">Zmień zakres i metody</a></div>
+<form method="get" class="actions budget-preview"><label>Dostępny czas teraz (min)<input name="budget" type="number" min="1" max="180" value="{{ budget or 10 }}" required></label><button class="button secondary">Pokaż plan</button></form>
+{% if plan %}<form action="{{ url_for('study.start') }}" method="post">{{ csrf() }}<input type="hidden" name="budget" value="{{ budget }}"><button class="button primary">Ucz się · około {{ planned.minutes }} min</button></form>{% endif %}
+{% if planned.allocations %}<div class="allocation-list">{% for title,minutes in planned.allocations.items() %}<p><strong>{{ title }}</strong><span>{{ minutes }} min</span></p>{% endfor %}</div>{% endif %}
+{% if planned.overflow %}<p class="notice">Najkrótsza wybrana porcja wymaga {{ planned.minutes }} min i przekracza ten czas. Możesz ją rozpocząć świadomie lub wybrać inny zakres.</p>{% endif %}
+{% if plan %}<div class="plan-list">{% for activity in plan %}<a class="plan-row" href="{{ url_for('library.topic',tid=activity.topic_id) }}"><span class="type-icon {{ activity.kind }}">{{ {'flashcard':'↔','open':'?','quiz':'✓','exercise':'⌘','cloze':'…'}[activity.kind] }}</span><div class="plan-content"><span class="small muted">{{ activity.workspace_name }} / {{ activity.topic_name }}</span><h3>{{ activity.prompt|truncate(95) }}</h3><span class="small muted">{{ activity.reason }}</span></div><span class="row-time">{{ activity.minutes }} min</span></a>{% endfor %}</div>
+
+{% else %}<p>{% if not budget %}Możesz odpocząć lub wybrać czas dodatkowej sesji.{% else %}Cele nie mają dziś zaplanowanej pracy lub brakuje im ćwiczeń. Opracuj kolejny materiał z AI albo wybierz dowolny przedmiot.{% endif %}</p><a href="{{ url_for('study.prepare',all=1) }}">Wybierz własny zakres</a>{% endif %}
+<div class="actions next-actions"><a class="button secondary" href="{{ url_for('study.prepare',mode='difficult',all=1) }}">Przećwicz trudności · {{ weak }} we wszystkich przedmiotach</a><a class="button quiet" href="{{ url_for('study.prepare',mode='exam',all=1) }}">Sprawdź się</a></div>
+</section>{% if active %}</details>{% endif %}
+{% else %}<section class="panel first-steps"><h2>Z materiałów do gotowej nauki</h2><p>Wgraj pliki lub zdjęcia. AI przygotuje notatki i ćwiczenia, które sprawdzisz przed zapisaniem.</p><div class="actions"><a class="button primary" href="{{ url_for('uploads.upload') }}">Opracuj materiały z AI</a></div></section>{% endif %}
+
+<details class="panel"><summary>Plan tygodnia i dzienny czas</summary><p>Wspólny budżet dla wszystkich celów. To szacunek najbliższych prób, bez przewidywania przyszłych wyników.</p><form method="post" action="{{ url_for('planning.save_daily_budget') }}" class="actions">{{ csrf() }}<label>Łączny czas dziennie (min)<input name="budget" type="number" value="{{ allowance }}" min="5" max="180" required></label><button class="button secondary">Zapisz czas</button></form><div class="week-allocation">{% for day in week_plan %}<div><strong>{{ day.date }} · {{ day.minutes }} min</strong>{% for title,minutes in day.allocations.items() %}<p>{{ title }}: {{ minutes }} min</p>{% else %}<p class="muted">Bez zaplanowanej porcji</p>{% endfor %}</div>{% endfor %}</div><a href="{{ url_for('planning.reminder') }}">Pobierz przypomnienie na 7 dni, od jutra o 18:00 (czas polski)</a></details>
+<div class="section-heading"><h2>Twoje materiały</h2><a href="{{ url_for('library.index') }}">Biblioteka</a></div><div class="subject-grid compact">{% for space in spaces[:3] %}<a class="subject-card {{ space.color }}" href="{{ url_for('library.workspace',wid=space.id) }}"><h3>{{ space.name }}</h3><p>{{ space.description|truncate(100) }}</p></a>{% endfor %}</div>
 {% endblock %}

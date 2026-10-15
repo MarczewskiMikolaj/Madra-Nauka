@@ -8,13 +8,13 @@
         {{ csrf() }}
         <label>Nazwa celu<input name="title" required maxlength="150" value="{{ request.form.get('title',goal.title) }}"></label>
         <label>Termin<input type="date" name="target_date" required value="{{ request.form.get('target_date',goal.target_date) }}"></label>
-        <label>Czas dziennie (min)<input type="number" name="daily_minutes" min="5" max="180" required value="{{ request.form.get('daily_minutes',goal.daily_minutes) }}"></label>
+        <label>Limit tego celu na dzień (min)<input type="number" name="daily_minutes" min="5" max="180" required value="{{ request.form.get('daily_minutes',goal.daily_minutes) }}"></label>
         <input type="hidden" name="schedule_configured" value="1">
-        <fieldset><legend>Dni dostępne na naukę</legend>{% for day in days %}<label class="check-row"><input type="checkbox" name="weekdays" value="{{ loop.index0 }}" {% if (request.method=='POST' and loop.index0|string in request.form.getlist('weekdays')) or (request.method=='GET' and loop.index0 in settings.weekdays) %}checked{% endif %}>{{ day }}</label>{% endfor %}</fieldset>
+        <details open><summary>Dni i zakres</summary><fieldset><legend>Dni dostępne na naukę</legend>{% for day in days %}<label class="check-row"><input type="checkbox" name="weekdays" value="{{ loop.index0 }}" {% if (request.method=='POST' and loop.index0|string in request.form.getlist('weekdays')) or (request.method=='GET' and loop.index0 in settings.weekdays) %}checked{% endif %}>{{ day }}</label>{% endfor %}</fieldset>
         <fieldset><legend>Zakres i ważność tematów</legend><label class="check-row"><input type="checkbox" name="all_topics" value="1" {% if (request.method=='POST' and request.form.get('all_topics')=='1') or (request.method=='GET' and settings.all_topics) %}checked{% endif %}>Cały przedmiot, także przyszłe tematy</label>
         <p class="small muted">Odznacz cały przedmiot, aby wybrać konkretny zakres. Ważność 3 oznacza najwyższy priorytet.</p>
         {% for topic in topics %}<div class="goal-topic-option"><label class="check-row"><input type="checkbox" name="topic_ids" value="{{ topic.id }}" {% if (request.method=='POST' and topic.id in request.form.getlist('topic_ids')) or (request.method=='GET' and topic.selected) %}checked{% endif %}>{{ topic.name }}</label><label>Ważność<select name="priority_{{ topic.id }}">{% for priority in [1,2,3] %}<option value="{{ priority }}" {% if request.form.get('priority_'~topic.id,topic.priority)|int==priority %}selected{% endif %}>{{ priority }}</option>{% endfor %}</select></label></div>{% endfor %}</fieldset>
-        <button class="button primary">Zapisz zmiany</button>
+        </details><p class="small muted">Wspólny budżet celów ustawisz na Dzisiaj.</p><button class="button primary">Zapisz zmiany</button>
         <a href="{{ url_for('planning.goals') }}">Wróć do celów</a>
     </form>
 </section>

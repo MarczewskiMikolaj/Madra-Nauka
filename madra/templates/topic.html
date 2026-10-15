@@ -1,5 +1,7 @@
 {% extends "base.html" %}
-{% from 'macros.html' import icon,csrf,start,result_menu,material_tabs %}
+{% from 'macros.html' import icon,csrf,start,material_tabs,organization %}
+{% from 'exercise_ui.html' import question,solution %}
+{% import 'exercise_ui.html' as exercises with context %}
 {% block title %}
     {{ topic.name }} · Mądra Nauka
 {% endblock %}
@@ -12,17 +14,14 @@
             <p>{{ topic.description }}</p>
         </div>
         <div class="actions">
-            <a class="button secondary" href="{{ url_for('study.prepare',topic_id=topic.id) }}">Tryby nauki / sprawdzian</a>
-            <a class="button secondary" href="{{ url_for('imports.upload',tid=topic.id) }}">Dodaj wiele ćwiczeń</a>
-            <a class="button primary"
-               href="{{ url_for('uploads.upload',topic_id=topic.id) }}">Wgraj plik</a>
-            <a class="button secondary"
-               href="{{ url_for('library.topic_form',tid=topic.id) }}">Edytuj temat</a>
-            {% if activities %}
-                {{ start('topic_id',topic.id) }}
-            {% endif %}
+            <form action="{{ url_for('study.start') }}" method="post">{{ csrf() }}<input type="hidden" name="topic_id" value="{{ topic.id }}"><button class="button primary">Rozpocznij ćwiczenia</button></form>
+            <a class="button secondary" href="{{ url_for('study.prepare',topic_id=topic.id,mode='exam') }}">Sprawdzian</a>
+            <a class="button secondary" href="{{ url_for('uploads.upload',topic_id=topic.id) }}">Wgraj plik</a>
+            <details class="action-menu"><summary class="button quiet">Więcej</summary><div><a href="{{ url_for('imports.upload',tid=topic.id) }}">Dodaj wiele ćwiczeń</a><a href="{{ url_for('library.topic_form',tid=topic.id) }}">Edytuj temat</a><a href="{{ url_for('workflow.export_topic',tid=topic.id) }}">Pobierz zestaw tematu</a></div></details>
         </div>
     </div>
+    {{ organization('topic',topic.id,destination_spaces,destination_topics) }}
+
     <div class="topic-columns topic-organized" data-tab-group>
         {{ material_tabs(materials|length, activities|length) }}
         <section class="result-section" id="result-notes" data-tab-pane>
@@ -59,61 +58,26 @@
                 </div>
             {% endfor %}
         </section>
-        <section id="result-exercises" data-tab-pane>
-            {{ result_menu(activities, 0) }}
-            <div class="section-heading">
-                <h2>
-                    Ćwiczenia
-                    <span class="count-badge">{{ activities|length }}</span>
-                </h2>
-                <a class="button primary"
-                   href="{{ url_for('library.activity_form',tid=topic.id) }}">
-                    {{ icon('plus', 17) }} Dodaj ćwiczenie
-                </a>
-            </div>
-            {% for kind,label in [('open','Pytania otwarte'),('quiz','Quizy'),('exercise','Zadania'),('flashcard','Fiszki'),('cloze','Uzupełnianie luk')] %}
-                {% set group = activities|selectattr('kind','equalto',kind)|list %}
-                {% if group %}<section class="result-section result-group" id="result-{{ kind }}"><div class="result-group-heading"><h3>{{ label }} <span class="count-badge">{{ group|length }}</span></h3></div><div class="result-activity-grid">
-                    {% for activity in group %}
-                        <article class="activity-card">
-                            <div class="between">
-                                <span class="kind-pill {{ activity.kind }}">{{ kinds[activity.kind] }}</span>
-                                <span class="small muted">{{ activity.minutes }} min</span>
-                            </div>
-                            <h3>{{ activity.prompt }}</h3>
-                            {% if activity.upload_id %}<p class="small muted">Źródło: <a href="{{ url_for('uploads.preview',uid=activity.upload_id) }}">{{ activity.source_filename }}</a> · {{ activity.source_label }}</p>{% endif %}
-                            <details>
-                                <summary>Odpowiedź wzorcowa</summary>
-                                <div class="rich-content">{{ activity.answer|rich_text }}</div>
-                            </details>
-                            <div class="activity-footer">
-                                <span class="small muted">
-                                    {{ activity.reason }}
-                                    {% if activity.reviews %}
-                                        · {{ activity.reviews }} prób
-                                    {% endif %}
-                                </span>
-                                <a class="small"
-                                   href="{{ url_for('library.activity_form',aid=activity.id) }}">Edytuj</a>
-                                <form action="{{ url_for('library.archive_activity',aid=activity.id) }}"
-                                      method="post"
-                                      data-confirm="Zarchiwizować ćwiczenie? Historia pozostanie zachowana.">
-                                    {{ csrf() }}
-                                    <button class="text-button muted small">Archiwizuj</button>
-                                </form>
-                            </div>
-                        </article>
-                    {% endfor %}
+        <section id="result-exercises" data-tab-pane data-exercise-browser>
+            <div class="section-heading"><div><h2>Twój zestaw ćwiczeń <span class="count-badge">{{ activities|length }}</span></h2><p>Otwórz pytanie, żeby je przejrzeć lub rozwiązać.</p></div>
+            <details class="action-menu"><summary class="button secondary">Rozbuduj zestaw</summary><div>
+            {% for source in sources %}<a href="{{ url_for('uploads.preview',uid=source.id) }}">Więcej z AI: {{ source.filename }}</a>{% endfor %}
+            <a href="{{ url_for('uploads.upload',topic_id=topic.id) }}">Dodaj materiał do AI</a><a href="{{ url_for('library.activity_form',tid=topic.id) }}">Dodaj własne pytanie</a><a href="{{ url_for('study.prepare',topic_id=topic.id) }}">Ustawienia sesji</a></div></details></div>
+            {{ exercises.filters(True) }}
+            <div class="exercise-list">
+            {% for activity in activities %}
+                <details class="exercise-row" data-exercise-row data-exercise-kind="{{ activity.kind }}" data-exercise-state="{{ 'review' if activity.state=='due' or (activity.reviews and activity.last_grade<2) else activity.state }}">
+                    <summary><span class="exercise-number">{{ loop.index }}</span><div class="exercise-row-title"><div class="rich-content exercise-snippet" data-exercise-search-text>{{ activity.prompt|rich_text }}</div><span class="exercise-meta">{{ kinds[activity.kind] }} · {{ activity.reason }}</span></div><span class="exercise-expand" aria-hidden="true">+</span></summary>
+                    <div class="exercise-row-body">
+                        {{ question(activity) }}
+                        <div class="actions"><form action="{{ url_for('study.start') }}" method="post">{{ csrf() }}<input type="hidden" name="topic_id" value="{{ topic.id }}"><input type="hidden" name="activity_id" value="{{ activity.id }}"><button class="button primary">Rozwiąż to pytanie</button></form><span class="muted small">Około {{ activity.minutes }} min</span></div>
+                        <details class="exercise-answer"><summary>Podejrzyj odpowiedź</summary>{{ solution(activity) }}<p class="small muted">Sam podgląd nie zapisuje oceny ani wykonanej próby.</p></details>
+                        {% if activity.upload_id %}<p class="small muted">Źródło: <a href="{{ url_for('uploads.preview',uid=activity.upload_id) }}">{{ activity.source_filename }}</a> · {{ activity.source_label }}</p>{% endif %}
+                        <details class="exercise-manage"><summary>Zarządzaj pytaniem</summary><div class="actions"><a href="{{ url_for('library.activity_form',aid=activity.id) }}">Edytuj lub przenieś</a><form action="{{ url_for('library.archive_activity',aid=activity.id) }}" method="post">{{ csrf() }}<button class="text-button">Archiwizuj</button></form></div></details>
                     </div>
-                    </section>
-                {% endif %}
-            {% endfor %}
-            {% if not activities %}
-                <div class="empty-state">
-                    <h3>Sprawdź, co już rozumiesz.</h3>
-                    <p>Przygotuj pytanie, fiszkę lub zadanie. Możesz korzystać z kilku metod w jednym temacie.</p>
-                </div>
-            {% endif %}
+                </details>
+            {% else %}<div class="empty-state"><h3>Przygotuj ćwiczenia z materiału</h3><p>AI zaproponuje pytania i zadania, które sprawdzisz przed zapisaniem.</p><a class="button primary" href="{{ url_for('uploads.upload',topic_id=topic.id) }}">Dodaj materiał do AI</a></div>{% endfor %}
+            </div>
     {% if archived %}
         <details class="panel archive-panel">
             <summary>Archiwum ćwiczeń ({{ archived|length }})</summary>
@@ -121,7 +85,7 @@
             {% for activity in archived %}
                 <article class="material">
                     <span class="small muted">{{ kinds[activity.kind] }}</span>
-                    <h3>{{ activity.prompt }}</h3>
+                    <div class="rich-content"><h3>{{ activity.prompt|rich_text }}</h3></div>{% if activity.image_id %}<img class="question-image" src="{{ url_for('workflow.image',asset_id=activity.image_id) }}" alt="Ilustracja do pytania">{% endif %}
                     <form action="{{ url_for('library.restore_activity', aid=activity.id) }}" method="post">
                         {{ csrf() }}<button class="button secondary">Przywróć ćwiczenie</button>
                     </form>

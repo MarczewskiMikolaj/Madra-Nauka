@@ -1,0 +1,31 @@
+{% from 'exercise_ui.html' import question,solution %}
+{% import 'exercise_ui.html' as exercises with context %}
+<section id="result-exercises" data-tab-pane data-exercise-browser>
+    <div class="section-heading"><div><h2>Sprawdź ćwiczenia od AI</h2><p>Otwórz pytanie i sprawdź odpowiedź. Zaznaczenie „Zachowaj” dodaje je do zapisywanego zestawu.</p></div></div>
+    {{ exercises.filters() }}
+    <div class="exercise-selection-bar"><strong data-selected-count>Wybrane ćwiczenia</strong><div class="actions"><button type="button" class="text-button" data-select-visible="all" hidden>Zaznacz widoczne</button><button type="button" class="text-button" data-select-visible="none" hidden>Odznacz widoczne</button></div></div>
+    <div class="exercise-list">
+    {% for activity in draft.activities %}{% set i=loop.index0 %}
+        {% set edited = dict(activity, prompt=request.form.get('prompt_'~i,activity.prompt), answer=request.form.get('answer_'~i,activity.answer), options=request.form.get('options_'~i,activity.get('options',[])|join('\n')).splitlines(), explanation=request.form.get('explanation_'~i,activity.get('explanation','')), rubric=request.form.get('rubric_'~i,activity.get('rubric',''))) %}
+        <article class="draft-exercise" data-exercise-row data-exercise-kind="{{ activity.kind }}" data-preview-url="{{ url_for('uploads.exercise_preview',uid=source.id) }}" data-exercise-index="{{ i }}">
+            <header class="draft-exercise-header"><label class="keep-exercise"><input type="checkbox" name="selected" value="{{ i }}" {% if request.method=='GET' or i|string in request.form.getlist('selected') %}checked{% endif %}>Zachowaj <span class="sr-only">pytanie {{ loop.index }}</span></label><span class="exercise-meta">{{ kinds[activity.kind] }} · około {{ activity.minutes }} min</span></header>
+            <details class="exercise-row">
+                <summary><span class="exercise-number">{{ loop.index }}</span><div class="rich-content exercise-snippet" data-exercise-search-text>{{ edited.prompt|rich_text }}</div><span class="exercise-expand" aria-hidden="true">+</span></summary>
+                <div class="exercise-row-body">
+                    <div data-exercise-preview>{{ question(edited) }}{{ solution(edited) }}</div>
+                    {% if activity.label %}<p class="small muted">Źródło: {{ activity.label }}</p>{% endif %}
+                    {% if activity.get('evidence') %}<details class="exercise-explanation"><summary>Fragment źródła wskazany przez AI</summary><div class="rich-content">{{ activity.evidence|rich_text }}</div></details>{% endif %}
+                    <details class="exercise-edit"><summary>Edytuj to pytanie</summary><div class="exercise-fields">
+                        <label for="prompt-{{ i }}">Polecenie</label><textarea id="prompt-{{ i }}" name="prompt_{{ i }}" rows="3" maxlength="10000">{{ edited.prompt }}</textarea>
+                        {% if activity.kind=='quiz' %}<label for="options-{{ i }}">Warianty odpowiedzi (po jednym w wierszu)</label><textarea id="options-{{ i }}" name="options_{{ i }}" rows="4" maxlength="10000">{{ edited.options|join('\n') }}</textarea>{% endif %}
+                        <label for="answer-{{ i }}">Odpowiedź wzorcowa{% if activity.kind=='quiz' %} — jeden z wariantów{% endif %}</label><textarea id="answer-{{ i }}" name="answer_{{ i }}" rows="3" maxlength="10000">{{ edited.answer }}</textarea>
+                        <label for="explanation-{{ i }}">Wyjaśnienie</label><textarea id="explanation-{{ i }}" name="explanation_{{ i }}" rows="3" maxlength="10000">{{ edited.explanation }}</textarea>
+                        <label for="rubric-{{ i }}">Kryteria samooceny</label><textarea id="rubric-{{ i }}" name="rubric_{{ i }}" rows="2" maxlength="4000">{{ edited.rubric }}</textarea>
+                        <p class="small" role="status" data-preview-status>Zmiany zapiszesz razem z wybranymi ćwiczeniami.</p><button type="button" class="button secondary" data-refresh-preview hidden>Odśwież podgląd</button>
+                    </div></details>
+                </div>
+            </details>
+        </article>
+    {% endfor %}
+    </div>
+</section>

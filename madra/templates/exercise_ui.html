@@ -1,0 +1,19 @@
+{% macro question(activity,variants=True) %}
+<div class="exercise-prompt rich-content">{{ activity.prompt|rich_text }}</div>
+{% if activity.image_id %}<img class="question-image" src="{{ url_for('workflow.image',asset_id=activity.image_id) }}" alt="Ilustracja do pytania">{% endif %}
+{% if variants and activity.kind=='quiz' and activity.options %}<ol class="exercise-variants" aria-label="Warianty odpowiedzi">{% for option in activity.options %}<li><span class="variant-letter" aria-hidden="true">{{ 'ABCDEF'[loop.index0] if loop.index0<6 else loop.index }}</span><div class="rich-content">{{ option|rich_text }}</div></li>{% endfor %}</ol>{% endif %}
+{% endmacro %}
+{% macro solution(activity,heading_level=3) %}
+<div class="exercise-solution"><h{{ heading_level }}>Odpowiedź wzorcowa</h{{ heading_level }}><div class="rich-content">{{ activity.answer|rich_text }}</div></div>
+{% if activity.explanation %}<details class="exercise-explanation"><summary>Wyjaśnienie</summary><div class="rich-content">{{ activity.explanation|rich_text }}</div></details>{% endif %}
+{% if activity.rubric %}<details class="exercise-explanation"><summary>Na co zwrócić uwagę</summary><div class="rich-content">{{ activity.rubric|rich_text }}</div></details>{% endif %}
+{% endmacro %}
+{% macro filters(with_state=False) %}
+<div class="exercise-filters" data-exercise-controls hidden>
+<label>Szukaj pytania<input type="search" data-exercise-search placeholder="Wpisz fragment pytania…"></label>
+<label>Rodzaj<select data-exercise-kind-filter><option value="">Wszystkie rodzaje</option>{% for key,label in kinds.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select></label>
+{% if with_state %}<label>Status<select data-exercise-state-filter><option value="">Wszystkie</option><option value="review">Do powtórki</option><option value="new">Nowe</option><option value="scheduled">Zaplanowane na później</option></select></label>{% endif %}
+<p class="small" role="status" data-exercise-count></p>
+</div>
+<p class="notice" data-exercise-empty hidden>Brak pytań pasujących do filtrów. Zmień rodzaj lub szukaną frazę.</p>
+{% endmacro %}

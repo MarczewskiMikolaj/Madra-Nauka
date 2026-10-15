@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import csrf,icon,result_menu,note_reader,material_tabs %}
+{% from 'macros.html' import csrf,icon,note_reader,material_tabs %}
 {% block title %}Sprawdź materiały · Mądra Nauka{% endblock %}
 {% block content %}
     <div class="review-page">
@@ -24,8 +24,9 @@
                        href="{{ url_for('library.topic',tid=source.topic_id) }}">Przejdź do tematu {{ icon('arrow', 18) }}</a>
                 </div>
             </div>
-            <section class="panel"><h2>Kolejne ćwiczenia do rozdziału</h2><p>Dotychczasowa notatka i pytania pozostaną zachowane. W następnym kroku uruchomisz opracowanie istniejącego oryginału.</p>
-            {% for material in saved_notes %}<form method="post" action="{{ url_for('uploads.expand',uid=source.id) }}" class="form-stack">{{ csrf() }}<input type="hidden" name="material_id" value="{{ material.id }}"><label>Rozdział: {{ material.title }}<select name="chapter">{% for chapter in material.content|note_chapters %}<option value="{{ loop.index }}">{{ chapter.title }}</option>{% endfor %}</select></label><button class="button secondary">Przygotuj kolejne opracowanie</button></form>{% endfor %}</section>
+            <form method="post" action="{{ url_for('workflow.state',kind='upload',cid=source.id) }}">{{ csrf() }}<input type="hidden" name="action" value="trash"><button class="text-button">Przenieś opracowanie do kosza</button><p class="small muted">Plik, notatka i ćwiczenia tego opracowania znikną z aktywnej biblioteki. Możesz je przywrócić.</p></form>
+            {% if saved_notes %}<section class="panel"><h2>Kolejne ćwiczenia do rozdziału</h2><p>Dotychczasowa notatka i pytania pozostaną zachowane. W następnym kroku uruchomisz opracowanie istniejącego oryginału.</p>
+            {% for material in saved_notes %}<form method="post" action="{{ url_for('uploads.expand',uid=source.id) }}" class="form-stack">{{ csrf() }}<input type="hidden" name="material_id" value="{{ material.id }}"><label>Rozdział: {{ material.title }}<select name="chapter">{% for chapter in material.content|note_chapters %}<option value="{{ loop.index }}">{{ chapter.title }}</option>{% endfor %}</select></label><button class="button secondary">Przygotuj kolejne opracowanie</button></form>{% endfor %}</section>{% endif %}
             {% for material in saved_notes %}<section class="note-editor saved-note-preview"><h2>{{ material.title }}</h2>{{ note_reader(material.content, material.id) }}</section>{% endfor %}
         {% else %}
             {% if draft.get("generator") == "ai" %}<div class="notice"><strong>Opracowanie jest gotowe.</strong> <a href="#result-notes">Czytaj notatkę i przejrzyj rozdziały</a></div>{% endif %}
@@ -58,7 +59,7 @@
                 {{ csrf() }}
                 <div class="generation-fields">
                     <div>
-                        <label for="goal">Czego chcesz się nauczyć?</label><textarea id="goal"
+                        <label>Sposób opracowania<select name="preset"><option value="full">Wyjaśnij od podstaw</option><option value="quick">Szybka powtórka</option><option value="tasks">Przygotuj zadania</option></select></label><label for="goal">Czego chcesz się nauczyć?</label><textarea id="goal"
           name="goal"
           rows="2"
           maxlength="1000"
@@ -76,15 +77,15 @@
                     <button class="button primary">{{ icon('spark', 17) }} Przygotuj materiały z AI</button>
                 </div>
             </form>
-        {% elif info.connected %}<div class="workbench-action"><p>GPT-5.6 Terra nie jest dostępny dla tego połączenia ChatGPT. Sprawdź połączenie AI.</p><a class="button secondary" href="{{ url_for('ai.settings') }}">Połączenie AI</a></div>
-{% else %}<div class="workbench-action"><p>Połącz ChatGPT, aby AI przeanalizowało plik i przygotowało notatkę oraz ćwiczenia.</p><a class="button primary" href="{{ url_for('ai.settings') }}">Połącz ChatGPT {{ icon('arrow', 17) }}</a></div>{% endif %}
+        {% elif info.connected %}<div class="workbench-action"><p>GPT-5.6 Terra nie jest dostępny dla tego połączenia ChatGPT. Sprawdź połączenie AI.</p><a class="button secondary" href="{{ url_for('ai.settings',upload=source.id) }}">Połączenie AI</a></div>
+{% else %}<div class="workbench-action"><p>Połącz ChatGPT, aby AI przeanalizowało plik i przygotowało notatkę oraz ćwiczenia.</p><a class="button primary" href="{{ url_for('ai.settings',upload=source.id) }}">Połącz ChatGPT {{ icon('arrow', 17) }}</a></div>{% endif %}
     </section>
     <div class="review-context">
         <span class="review-status">{{ icon('note', 15) }} {{ 'Opracowanie AI z pliku' if draft.get("generator")=='ai' else 'Plik gotowy do analizy AI' }}</span>
         <p>{{ 'Sprawdź opracowanie w oryginale przed zapisaniem. Wskazania źródeł pochodzą od AI.' if draft.get("generator")=='ai' else 'AI przygotuje całą notatkę, odpowiedzi i ćwiczenia. Nie tworzymy automatycznych pytań z wyrwanych fragmentów.' }}</p>
     </div>
     {% if draft.get("generator")=="ai" %}
-        <form method="post" class="review-editor form-stack" data-tab-group>
+        <form method="post" class="review-editor form-stack" data-tab-group data-exercise-selection-form>
             {{ csrf() }}
             {{ material_tabs(1, draft.activities|length) }}
             <section class="note-editor result-section" id="result-notes" data-tab-pane>
@@ -92,6 +93,7 @@
                     <h2>Notatka do nauki</h2>
                     <span>Możesz ją poprawić</span>
                 </div>
+
                 {{ note_reader(request.form.get('guide',draft.guide), 'draft') }}
                 <details class="result-note-edit">
                     <summary>Edytuj tytuł i notatkę</summary>
@@ -102,62 +104,17 @@
        value="{{ request.form.get('title',title) }}"><label for="guide" class="sr-only">Notatka do nauki</label><textarea id="guide" name="guide" rows="10" required maxlength="50000">{{ request.form.get('guide',draft.guide) }}</textarea>
                 </details>
             </section>
-            <section id="result-exercises" data-tab-pane>
-            {{ result_menu(draft.activities, 0) }}
-            <div class="section-heading">
-                <h2>Ćwiczenia <span class="count-badge">{{ draft.activities|length }}</span></h2>
-                <span class="muted small">Zaznacz te, które chcesz zachować</span>
-            </div>
-            {% for kind,label in [('open','Pytania otwarte'),('quiz','Quizy'),('exercise','Zadania'),('flashcard','Fiszki'),('cloze','Uzupełnianie luk')] %}
-                {% set group = draft.activities|selectattr('kind','equalto',kind)|list %}
-                {% if group %}
-                    <section class="result-section result-group" id="result-{{ kind }}">
-                        <div class="result-group-heading">
-                            <h3>{{ label }} <span class="count-badge">{{ group|length }}</span></h3>
-                            <div class="result-selection">
-                                <button type="button" class="text-button small" data-select-group="all">Zaznacz wszystkie</button><button type="button"
-        class="text-button small muted"
-        data-select-group="none">Odznacz</button>
-                            </div>
-                        </div>
-                        <div class="review-exercises">
-                            {% for activity in draft.activities %}
-                                {% set i = loop.index0 %}
-                                {% if activity.kind == kind %}
-                                    <article class="review-exercise"><div class="exercise-selection"><label class="upload-checkbox"><input type="checkbox"
-       name="selected"
-       value="{{ i }}"
-       {% if request.method=='GET' or i|string in request.form.getlist('selected') %}checked{% endif %}><span class="sr-only">Zapisz ćwiczenie {{ loop.index }}</span></label><span class="exercise-index">{{ '%02d'|format(loop.index) }}</span><span class="kind-pill {{ activity.kind }}">{{ kinds[activity.kind] }}</span><span class="exercise-time">{{ activity.minutes }} min</span></div><h3>{{ activity.prompt }}</h3><p class="exercise-source">{{ icon('note', 13) }} {{ activity.label }}</p>
-                                        <details class="exercise-edit">
-                                            <summary>Sprawdź odpowiedź i edytuj {{ icon('arrow', 14) }}</summary>
-                                            <div class="exercise-fields">
-                                                {% if activity.get("evidence") %}<blockquote><span>Wskazanie źródła przez AI — sprawdź w pliku</span>{{ activity.evidence }}</blockquote>{% endif %}
-                                                <label for="prompt-{{ i }}">Polecenie {{ loop.index }}</label><textarea id="prompt-{{ i }}" name="prompt_{{ i }}" rows="3" maxlength="10000">{{ request.form.get('prompt_'~i,activity.prompt) }}</textarea>
-                                                {% if activity.kind=="quiz" %}<label for="options-{{ i }}">Warianty {{ loop.index }} (po jednym w wierszu)</label><textarea id="options-{{ i }}" name="options_{{ i }}" rows="4">{{ request.form.get('options_'~i, activity.options|join('\n')) }}</textarea>{% endif %}
-                                                {% for hint in activity.get('hints',[]) %}<p class="small muted">Podpowiedź {{ loop.index }}: {{ hint }}</p>{% endfor %}
-                                                <label>Wyjaśnienie<textarea name="explanation_{{ i }}" maxlength="10000" rows="3">{{ request.form.get('explanation_'~i,activity.get('explanation','')) }}</textarea></label>
-                                                <label>Kryteria oceny<textarea name="rubric_{{ i }}" maxlength="4000" rows="2">{{ request.form.get('rubric_'~i,activity.get('rubric','')) }}</textarea></label>
-                                                <label for="answer-{{ i }}">Odpowiedź {{ loop.index }}</label><textarea id="answer-{{ i }}" name="answer_{{ i }}" rows="3" maxlength="10000">{{ request.form.get('answer_'~i,activity.answer) }}</textarea>
-                                            </div>
-                                        </details>
-                                    </article>
-                                {% endif %}
-                            {% endfor %}
-                        </div>
-                    </section>
-                {% endif %}
-            {% endfor %}
-            </section>
+            {% include 'upload_exercises.html' %}
             <div class="review-save-bar">
-                <p>Gotowe do nauki?<span>Zapisz notatkę i zaznaczone ćwiczenia.</span></p>
-                <button class="button primary">Zapisz materiały i wybrane ćwiczenia {{ icon('check', 17) }}</button>
+                <div><input type="hidden" name="note_choice" value="1"><label class="check-row"><input type="checkbox" name="save_note" value="1" {% if (request.method=='POST' and request.form.get('save_note')=='1') or (request.method=='GET' and not draft.get('goal','').startswith('[ZADANIA]')) %}checked{% endif %}>Zapisz także notatkę</label></div>
+                <button class="button primary" data-save-selected>Zapisz materiały i wybrane ćwiczenia {{ icon('check', 17) }}</button>
             </div>
         </form>
     {% endif %}
     <form method="post"
-          action="{{ url_for('uploads.discard',uid=source.id) }}"
+          action="{{ url_for('workflow.state',kind='upload',cid=source.id) }}"
           class="upload-discard">
-        {{ csrf() }}<button class="text-button muted">Usuń plik i propozycje</button>
+        {{ csrf() }}<input type="hidden" name="action" value="trash"><button class="text-button muted">Przenieś plik i propozycje do kosza</button>
     </form>
 {% endif %}
 </div>

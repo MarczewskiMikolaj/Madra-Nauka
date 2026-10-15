@@ -10,10 +10,11 @@
             <p>Konkretny cel, spokojne tempo i małe kroki do przodu.</p>
         </div>
     </div>
+    <details class="panel"><summary>Najbliższy tydzień — {{ shared_budget }} min łącznie dziennie</summary><p>Wspólny plan wszystkich aktywnych celów. Dalsze powtórki zależą od nowych odpowiedzi.</p><div class="week-allocation">{% for day in shared_week %}<div><strong>{{ day.date }} · {{ day.minutes }} min</strong>{% for title,minutes in day.allocations.items() %}<p>{{ title }}: {{ minutes }} min</p>{% else %}<p class="muted">Bez zaplanowanej porcji</p>{% endfor %}</div>{% endfor %}</div><a href="{{ url_for('planning.today') }}">Zmień łączny czas na Dzisiaj</a></details>
     <div class="goals-layout">
         <section>
             {% for goal in goals %}
-                <div class="goal-detail">
+                <div class="goal-detail" id="goal-{{ goal.id }}">
                     {{ goal_card(goal) }}
                     <div class="goal-guidance">
                         {% if not goal.total %}
@@ -28,7 +29,7 @@
                                 <strong>{{ goal.estimated_remaining }} min</strong>
                                 na nowe ćwiczenia, trudności i najbliższe powtórki do terminu.
                                 {% if goal.feasible %}
-                                    Ten zakres mieści się w Twoim budżecie.
+                                    Szacunek mieści się w limicie tego celu; sprawdź też łączny plan dnia.
                                 {% else %}
                                     Zakres przekracza dostępny czas. Zwiększ budżet lub ogranicz materiał.
                                 {% endif %}
@@ -37,21 +38,18 @@
                         <p class="small muted">
                             Pokrycie oznacza podjęte ćwiczenia. Nie jest oceną gotowości do egzaminu. Plan szacuje najbliższą próbę każdego ćwiczenia; dalsze powtórki zależą od nowych wyników.
                         </p>
-                        {% if not goal.completed and goal.days >= 0 and goal.total %}
-                            <h3>Najbliższy tydzień</h3>
-                            <div class="goal-week">{% for day in goal.week %}<div><span>{{ day.date }}</span><strong>{{ (day.minutes|string)~' min' if day.available else 'Wolne' }}</strong></div>{% endfor %}</div>
-                            <p class="small muted">Szacunkowa porcja nauki w dostępnych dniach{% if goal.review_minutes %}: obecnie {{ goal.review_minutes }} min zaległych{% endif %}.</p>
-                        {% endif %}
+
                         <p><strong>{{ goal.new }} nowych · {{ goal.weak }} trudnych · tematy bez ćwiczeń: {{ goal.unchecked_topics }}</strong></p>
                         {% if goal.unchecked_topics %}<p class="notice">Część zakresu nie ma jeszcze ćwiczeń. Podjęcie wszystkich dostępnych pytań nie oznacza sprawdzenia całego materiału.</p>{% endif %}
                         <details><summary>Zakres i trudności według tematów</summary>{% for topic in goal.topic_status %}<p><a href="{{ url_for('library.topic',tid=topic.id) }}">{{ topic.name }}</a> · ważność {{ topic.priority }} · {{ topic.total }} ćwiczeń · {{ topic.new }} nowych · {{ topic.weak }} trudnych{% if not topic.total %} · Zakres niesprawdzony{% endif %}</p>{% endfor %}</details>
+                        <details class="requirements"><summary>Wymagania egzaminu · {{ goal.requirements|selectattr('checked')|list|length }} z {{ goal.requirements|length }} samodzielnie sprawdzonych</summary><p>Wpisz wymagania z sylabusa lub listy od prowadzącego. Oznaczenie to Twoja deklaracja po samodzielnej próbie, niezależna od liczby pytań w temacie.</p>
+                        {% for requirement in goal.requirements %}<div class="goal-requirement"><p>{{ requirement.title }}{% if requirement.topic_name %}<br><small>{{ requirement.topic_name }}</small>{% endif %}</p><form method="post" action="{{ url_for('planning.requirement',gid=goal.id) }}">{{ csrf() }}<input type="hidden" name="requirement_id" value="{{ requirement.id }}"><button class="button secondary">{{ 'Cofnij sprawdzenie' if requirement.checked else 'Oznacz jako sprawdzone' }}</button></form><form method="post" action="{{ url_for('planning.requirement',gid=goal.id) }}">{{ csrf() }}<input type="hidden" name="requirement_id" value="{{ requirement.id }}"><button class="text-button" name="action" value="remove">Usuń wymaganie</button></form></div>{% endfor %}
+                        <form method="post" action="{{ url_for('planning.requirement',gid=goal.id) }}" class="form-stack">{{ csrf() }}<label>Dodaj wymagania, po jednym w wierszu<textarea name="titles" rows="3" maxlength="10000" required></textarea></label><label>Powiązany temat (opcjonalnie)<select name="topic_id"><option value="">Bez przypisania</option>{% for topic in goal.topic_status %}<option value="{{ topic.id }}">{{ topic.name }}</option>{% endfor %}</select></label><button class="button secondary">Dodaj wymagania</button></form></details>
                         <div class="actions">
                             <a class="button secondary" href="{{ url_for('study.prepare',goal_id=goal.id) }}">Ucz się tego zakresu / sprawdzian</a>
                             <a class="button secondary" href="{{ url_for('planning.edit_goal',gid=goal.id) }}">Edytuj cel</a>
                             <form action="{{ url_for('planning.delete_goal',gid=goal.id) }}" method="post" data-confirm="Usunąć cel? Materiały i postęp pozostaną.">{{ csrf() }}<button class="button quiet">Usuń cel</button></form>
-                            {% if goal.total %}
-                                {{ start('goal_id',goal.id,'Ucz się do celu') }}
-                            {% endif %}
+
                             <form action="{{ url_for('planning.toggle_goal',gid=goal.id) }}"
                                   method="post">
                                 {{ csrf() }}
@@ -95,7 +93,7 @@
                         <input type="date" name="target_date" required>
                     </label>
                     <label>
-                        Czas dziennie (min)
+                        Limit tego celu na dzień (min)
                         <input type="number"
                                name="daily_minutes"
                                value="20"
@@ -103,6 +101,12 @@
                                max="180"
                                required>
                     </label>
+                    <input type="hidden" name="schedule_configured" value="1">
+                    <details class="goal-scope-editor"><summary>Dni nauki i zakres tematów</summary>
+                    <fieldset><legend>Dni nauki</legend>{% for day in days %}<label class="check-row"><input type="checkbox" name="weekdays" value="{{ loop.index0 }}" checked>{{ day }}</label>{% endfor %}</fieldset>
+                    <label class="check-row"><input type="checkbox" name="all_topics" value="1" checked>Cały przedmiot, także przyszłe tematy</label><p class="small muted">Odznacz, jeśli egzamin obejmuje tylko wybrane tematy. Ważność jest opcjonalna.</p>
+                    {% for topic in all_topics %}<div data-goal-workspace="{{ topic.workspace_id }}"><label class="check-row"><input type="checkbox" name="topic_ids" value="{{ topic.id }}">{{ topic.name }}</label><label>Ważność<select name="priority_{{ topic.id }}"><option value="1">Zwykła</option><option value="2">Ważna</option><option value="3">Najważniejsza</option></select></label></div>{% endfor %}</details>
+                    <p class="small muted">Łączny budżet wszystkich celów ustawisz na Dzisiaj. Ten limit określa maksymalną porcję dla tego celu.</p>
                     <button class="button primary">Dodaj cel {{ icon('plus', 18) }}</button>
                 </form>
             {% else %}

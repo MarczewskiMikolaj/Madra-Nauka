@@ -15,6 +15,7 @@ from flask import (
     request,
     Response,
     url_for,
+    session,
 )
 from .auth import login_required
 from .db import get_db, transaction
@@ -50,6 +51,9 @@ def local_only():
 @bp.get("/konto/ai")
 @login_required
 def settings():
+    if request.args.get("upload"):
+        source = owned_upload(request.args["upload"])
+        session["ai_return_upload"] = source["id"]
     info = connection_info(g.user["id"])
     choices = []
     if info["connected"]:
@@ -148,6 +152,9 @@ def finish_callback(params):
             )
     except ValueError as error:
         flash(str(error), "error")
+    upload_id = session.pop("ai_return_upload", None)
+    if upload_id and connection_info(g.user["id"])["connected"]:
+        return redirect(url_for("uploads.preview", uid=upload_id))
     return redirect(url_for("ai.settings"))
 
 
@@ -169,11 +176,18 @@ def disconnect():
 def run_job(app, job_id, uid, upload_id, model, goal):
     with app.app_context():
         started = time.monotonic()
+        worker = app.extensions.setdefault("ai_workers", {}).setdefault(
+            job_id, {"user_id": uid, "stop": threading.Event()}
+        )
         last_stage = None
 
         def progress(stage, output_chars):
             nonlocal last_stage
             with transaction() as db:
+                if not db.execute(
+                    "SELECT 1 FROM ai_jobs WHERE id=? AND state='running'", (job_id,)
+                ).fetchone():
+                    raise ValueError("Opracowanie anulowane.")
                 db.execute(
                     "UPDATE ai_jobs SET progress_json=? WHERE id=? AND state='running'",
                     (
@@ -240,6 +254,7 @@ def run_job(app, job_id, uid, upload_id, model, goal):
                 model,
                 goal,
                 on_progress=progress,
+                is_cancelled=worker["stop"].is_set,
             )
             draft["model"] = model
             draft["goal"] = goal
@@ -292,12 +307,13 @@ def run_job(app, job_id, uid, upload_id, model, goal):
             )
             with transaction() as db:
                 db.execute(
-                    "UPDATE ai_jobs SET state='failed',error=?,finished_at=? WHERE id=?",
+                    "UPDATE ai_jobs SET state='failed',error=?,finished_at=? WHERE id=? AND state='running'",
                     (message, now_iso(), job_id),
                 )
 
         finally:
             stopped.set()
+            app.extensions.get("ai_workers", {}).pop(job_id, None)
 
 
 @bp.post("/pliki/<uid>/generuj-ai")
@@ -326,7 +342,19 @@ def generate_materials(uid):
             ).strip()[:1000]
             or "Zrozumienie materiału i przygotowanie do sprawdzianu."
         )
+        preset = request.form.get("preset", "full")
+        if preset not in ("full", "quick", "tasks"):
+            raise ValueError("Wybierz sposób opracowania.")
+        prefix = {"quick": "[SZYBKA POWTÓRKA] ", "tasks": "[ZADANIA] ", "full": ""}[
+            preset
+        ]
+        goal = prefix + goal
         jid = uuid4().hex
+        live = current_app.extensions.setdefault("ai_workers", {})
+        if sum(w["user_id"] == g.user["id"] for w in list(live.values())) >= 2:
+            raise ValueError(
+                "Poprzednie opracowania jeszcze pracują lub są zatrzymywane. Spróbuj ponownie za chwilę."
+            )
         with transaction() as db:
             running = db.execute(
                 "SELECT id FROM ai_jobs WHERE upload_id=? AND state='running'", (uid,)
@@ -345,6 +373,7 @@ def generate_materials(uid):
                 "INSERT INTO ai_jobs (id,upload_id,user_id,state,model,goal,error,created_at,finished_at) VALUES (?,?,?,'running',?,?,'',?,NULL)",
                 (jid, uid, g.user["id"], model, goal, now_iso()),
             )
+        live[jid] = {"user_id": g.user["id"], "stop": threading.Event()}
         thread = threading.Thread(
             target=run_job,
             args=(
@@ -357,7 +386,18 @@ def generate_materials(uid):
             ),
             daemon=True,
         )
-        thread.start()
+        try:
+            thread.start()
+        except RuntimeError:
+            live.pop(jid, None)
+            with transaction() as db:
+                db.execute(
+                    "UPDATE ai_jobs SET state='failed',error='Nie udało się uruchomić opracowania. Spróbuj ponownie.',finished_at=? WHERE id=?",
+                    (now_iso(), jid),
+                )
+            raise ValueError(
+                "Nie udało się uruchomić opracowania. Spróbuj ponownie."
+            ) from None
         return redirect(url_for("ai.job", jid=jid))
     except ValueError as error:
         flash(str(error), "error")
@@ -426,3 +466,22 @@ def init_app(app):
             "UPDATE ai_jobs SET state='failed',error='Serwer został uruchomiony ponownie. Spróbuj ponownie.',finished_at=? WHERE state='running'",
             (now_iso(),),
         )
+
+
+@bp.post("/ai/zadania/<jid>/anuluj")
+@login_required
+def cancel(jid):
+    with transaction() as db:
+        row = db.execute(
+            "SELECT * FROM ai_jobs WHERE id=? AND user_id=?", (jid, g.user["id"])
+        ).fetchone()
+        if not row:
+            abort(404)
+        db.execute(
+            "UPDATE ai_jobs SET state='failed',error='Anulowano opracowanie. Wynik nie zastąpi materiałów. Dostawca może jeszcze kończyć rozpoczęte przetwarzanie.',finished_at=? WHERE id=? AND state='running'",
+            (now_iso(), jid),
+        )
+    worker = current_app.extensions.get("ai_workers", {}).get(jid)
+    if worker:
+        worker["stop"].set()
+    return redirect(url_for("uploads.preview", uid=row["upload_id"]))

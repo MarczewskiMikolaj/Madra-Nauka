@@ -25,6 +25,36 @@ from .services.notes import note_chapters
 bp = Blueprint("uploads", __name__)
 
 
+@bp.post("/pliki/<uid>/podglad-cwiczenia")
+@login_required
+def exercise_preview(uid):
+    source = owned_upload(uid)
+    draft = json.loads(source["draft_json"])
+    try:
+        index = int(request.form.get("index", ""))
+        if not 0 <= index < len(draft.get("activities", [])):
+            abort(400)
+    except ValueError:
+        abort(400)
+    activity = dict(draft["activities"][index])
+    for key, limit in (
+        ("prompt", 10000),
+        ("answer", 10000),
+        ("explanation", 10000),
+        ("rubric", 4000),
+    ):
+        value = request.form.get(key, activity.get(key, ""))
+        if len(value) > limit:
+            abort(400)
+        activity[key] = value
+    if activity["kind"] == "quiz":
+        options = request.form.get("options", "\n".join(activity["options"]))
+        if len(options) > 10000:
+            abort(400)
+        activity["options"] = [x.strip() for x in options.splitlines() if x.strip()]
+    return render_template("exercise_preview.html", activity=activity)
+
+
 def owned_upload(uid):
     row = (
         get_db()
@@ -44,17 +74,16 @@ def upload():
     spaces = (
         get_db()
         .execute(
-            "SELECT * FROM workspaces WHERE user_id=? ORDER BY name", (g.user["id"],)
+            "SELECT * FROM workspaces w WHERE user_id=? AND NOT EXISTS (SELECT 1 FROM content_states cs WHERE cs.kind='workspace' AND cs.content_id=w.id) ORDER BY name",
+            (g.user["id"],),
         )
         .fetchall()
     )
     if request.method == "POST":
         try:
-            file = request.files.get("file")
-            if not file or not file.filename:
-                raise ValueError("Wybierz plik do wgrania.")
-            filename = file.filename.replace("\\", "/").rsplit("/", 1)[-1][:200]
-            filename = "".join(c for c in filename if c.isprintable()) or "material.txt"
+            files = [f for f in request.files.getlist("file") if f.filename]
+            if not files or len(files) > 5:
+                raise ValueError("Wybierz od 1 do 5 plików.")
             wid = (
                 topic["workspace_id"]
                 if topic
@@ -62,30 +91,42 @@ def upload():
             )
             if wid:
                 owned_workspace(wid)
-            data = file.read(MAX_BYTES + 1)
-            metadata = validate_file(filename, data)
-            draft = {
-                "guide": "",
-                "activities": [],
-                "generator": "pending",
-                "file_metadata": metadata,
-            }
-            uid = uuid4().hex
-            with transaction() as db:
-                db.execute(
-                    "INSERT INTO uploads VALUES (?,?,?,?,?,?,?,?,NULL)",
-                    (
-                        uid,
-                        g.user["id"],
-                        wid,
-                        tid,
-                        filename,
-                        data,
-                        json.dumps(draft, ensure_ascii=False),
-                        now_iso(),
-                    ),
+            validated = []
+            for file in files:
+                filename = file.filename.replace("\\", "/").rsplit("/", 1)[-1][:200]
+                filename = (
+                    "".join(c for c in filename if c.isprintable()) or "material.txt"
                 )
-            return redirect(url_for("uploads.preview", uid=uid))
+                data = file.read(MAX_BYTES + 1)
+                metadata = validate_file(filename, data)
+                validated.append((uuid4().hex, filename, data, metadata))
+            with transaction() as db:
+                for uid, filename, data, metadata in validated:
+                    draft = {
+                        "guide": "",
+                        "activities": [],
+                        "generator": "pending",
+                        "file_metadata": metadata,
+                    }
+                    db.execute(
+                        "INSERT INTO uploads VALUES (?,?,?,?,?,?,?,?,NULL)",
+                        (
+                            uid,
+                            g.user["id"],
+                            wid,
+                            tid,
+                            filename,
+                            data,
+                            json.dumps(draft, ensure_ascii=False),
+                            now_iso(),
+                        ),
+                    )
+            if len(validated) > 1:
+                flash(
+                    "Zapisano wszystkie pliki. Wybierz plik do opracowania.", "success"
+                )
+                return redirect(url_for("library.index"))
+            return redirect(url_for("uploads.preview", uid=validated[0][0]))
         except ValueError as error:
             flash(str(error), "error")
     return render_template("upload.html", topic=topic, spaces=spaces, nav="library")
@@ -119,6 +160,10 @@ def preview(uid):
                 raise ValueError("Najpierw przygotuj notatkę i ćwiczenia z AI.")
             title = required_text("title", "Nazwa tematu", 150)
             guide = required_text("guide", "Notatka", 50000)
+            save_note = (
+                request.form.get("note_choice") != "1"
+                or request.form.get("save_note") == "1"
+            )
             chosen = set(request.form.getlist("selected"))
             items = []
             for i, item in enumerate(draft["activities"]):
@@ -162,6 +207,8 @@ def preview(uid):
             from .services.exercises import validate_exercise
 
             items = [{**item, **validate_exercise(item)} for item in items]
+            if not save_note and not items:
+                raise ValueError("Wybierz notatkę lub przynajmniej jedno ćwiczenie.")
             with transaction() as db:
                 # Check again under the write lock; repeat submits must not duplicate content.
                 state = db.execute(
@@ -191,7 +238,8 @@ def preview(uid):
                             "INSERT INTO topics VALUES (?,?,?,?,?)",
                             (tid, wid, title, "", now_iso()),
                         )
-                    for name, content in [(title, guide)]:
+                    mid = None
+                    for name, content in ([(title, guide)] if save_note else []):
                         mid = uuid4().hex
                         db.execute(
                             "INSERT INTO materials VALUES (?,?,?,?,?,?,?)",
@@ -217,7 +265,7 @@ def preview(uid):
                                 now_iso(),
                             ),
                         )
-                        save_support(db, aid, item)
+                        save_support(db, aid, item, mid)
                         db.execute(
                             "INSERT INTO upload_activities VALUES (?,?,?)",
                             (uid, aid, item["label"]),
@@ -304,11 +352,22 @@ def discard(uid):
 @login_required
 def view_original(uid):
     source = owned_upload(uid)
-    pdf = source["filename"].lower().endswith(".pdf")
+    suffix = Path(source["filename"]).suffix.lower()
+    pdf = suffix == ".pdf"
+    image_types = {
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".webp": "image/webp",
+    }
     return send_file(
         io.BytesIO(source["file_blob"]),
-        mimetype="application/pdf" if pdf else "application/octet-stream",
-        as_attachment=not pdf,
+        mimetype=(
+            "application/pdf"
+            if pdf
+            else image_types.get(suffix, "application/octet-stream")
+        ),
+        as_attachment=not pdf and suffix not in image_types,
         download_name=source["filename"],
     )
 

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import csrf,icon %}
+{% from 'macros.html' import csrf,icon,organization %}
 {% set names = {"workspace": "przedmiot", "topic": "temat", "material": "materiał", "activity": "ćwiczenie"} %}
 {% macro value(name,default='') -%}
     {{- request.form.get(name,record[name] if record else default) -}}
@@ -29,8 +29,9 @@
                 </p>
             </div>
         </div>
-        <form method="post" class="panel form-stack editor">
+        <form method="post" enctype="multipart/form-data" class="panel form-stack editor" {% if draft_key %}data-autosave="{{ url_for('workflow.save_note_draft') }}"{% endif %}>
             {{ csrf() }}
+            {% if draft_key %}<input type="hidden" name="draft_key" value="{{ draft_key }}"><input type="hidden" name="draft_revision" value="{{ draft_revision }}"><p class="save-status small" role="status" data-save-status>Zmiany będą zapisywane podczas pisania.</p>{% endif %}
             {% if form_type in ("workspace","topic") %}
                 <label>
                     Nazwa
@@ -92,7 +93,7 @@
                               placeholder="Zapisz własną notatkę albo wklej https://…">{{ value('content') }}</textarea>
                 </label>
                 <p class="small muted">
-                    Notatka zachowuje akapity i jest wyświetlana jako tekst. Link musi zaczynać się od http:// lub https://.
+                    Notatka obsługuje akapity, Markdown, tabele i wzory. Link musi zaczynać się od http:// lub https://.
                 </p>
             {% else %}
                 <div class="two-fields">
@@ -133,7 +134,7 @@
                                   rows="5"
                                   placeholder="Jedna opcja w każdym wierszu">{{ request.form.get('options',options) }}</textarea>
                     </label>
-                    <p class="small muted">Dodaj 2–6 różnych opcji. Poprawna odpowiedź poniżej musi dokładnie odpowiadać jednej z nich.</p>
+                    <p class="small muted">Dodaj 2–6 różnych opcji, po jednej w wierszu. Zaznacz poprawną odpowiedź poniżej.</p><div data-correct-options></div>
                 </div>
                 <label>
                     Odpowiedź wzorcowa
@@ -143,6 +144,8 @@
                               maxlength="10000"
                               placeholder="Odpowiedź, rozwiązanie lub wyjaśnienie, z którym porównasz swoją próbę.">{{ value('answer') }}</textarea>
                 </label>
+                <label>Ilustracja do pytania (PNG, JPG lub WebP, do 5 MB)<input type="file" name="question_image" accept="image/png,image/jpeg,image/webp"></label>
+                {% if image_id %}<img class="question-image" src="{{ url_for('workflow.image',asset_id=image_id) }}" alt="Obecna ilustracja"><label class="check-row"><input type="checkbox" name="remove_image" value="1">Usuń ilustrację z przyszłych sesji</label>{% endif %}
                 {% if record %}
                     <p class="small muted">Edycja zachowuje historię ćwiczenia. Trwająca sesja korzysta z wcześniejszej wersji treści.</p>
                 {% endif %}
@@ -154,7 +157,7 @@
                 <label>Dlaczego odpowiedź jest poprawna?<textarea name="explanation" maxlength="10000" rows="4">{{ request.form.get('explanation',support.get('explanation','')) }}</textarea></label>
                 <label>Kryteria samooceny<textarea name="rubric" maxlength="4000" rows="3" placeholder="Co musi zawierać pełna odpowiedź? Jak rozpoznać odpowiedź częściową?">{{ request.form.get('rubric',support.get('rubric','')) }}</textarea></label>
                 <label>Notatka lub link źródłowy<select name="material_id"><option value="">Bez dodatkowego źródła</option>{% for material in materials %}<option value="{{ material.id }}" {% if request.form.get('material_id',support.get('material_id'))==material.id %}selected{% endif %}>{{ material.title }}</option>{% endfor %}</select></label>
-                <label>Numer rozdziału notatki (0 = cała notatka)<input type="number" name="source_chapter" min="0" max="100" value="{{ request.form.get('source_chapter',support.get('source_chapter',0)) }}"></label>
+                <label>Rozdział źródła<select name="source_chapter" data-source-chapters><option value="0">Cała notatka</option>{% for material in materials %}{% for chapter in material.content|note_chapters %}<option data-material="{{ material.id }}" value="{{ loop.index }}" {% if material.id==request.form.get('material_id',support.get('material_id')) and loop.index==request.form.get('source_chapter',support.get('source_chapter',0))|int %}selected{% endif %}>{{ chapter.title }}</option>{% endfor %}{% endfor %}</select></label>
                 </details>
             {% endif %}
             <p class="small muted">Treść obsługuje Markdown, tabele, bloki kodu oraz wzory $...$ i $$...$$.</p>
@@ -165,5 +168,6 @@
                 </a>
             </div>
         </form>
+        {% if record and record.id and form_type in ['topic','material','activity'] %}{% if form_type=='activity' %}<details class="panel"><summary>Przenieś ćwiczenie</summary><form method="post" action="{{ url_for('workflow.move',kind='activity',cid=record.id) }}">{{ csrf() }}<label>Temat<select name="destination">{% for item in destination_topics %}<option value="{{ item.id }}">{{ item.workspace_name }} / {{ item.name }}</option>{% endfor %}</select></label><button class="button secondary">Przenieś</button></form></details>{% else %}{{ organization(form_type,record.id,destination_spaces,destination_topics) }}{% endif %}{% endif %}
     </div>
 {% endblock %}

@@ -81,7 +81,7 @@ def upload(tid):
     if request.method == "POST":
         try:
             format = request.form.get("format", "tsv")
-            if format not in ("json", "csv", "tsv"):
+            if format not in ("json", "csv", "tsv", "auto"):
                 raise ValueError("Wybierz JSON, CSV lub TSV.")
             text = request.form.get("text", "")
             file = request.files.get("file")
@@ -93,6 +93,12 @@ def upload(tid):
                     text = data.decode("utf-8-sig")
                 except UnicodeDecodeError:
                     raise ValueError("Zapisz plik w UTF-8.") from None
+            if format == "auto":
+                format = (
+                    "json"
+                    if text.lstrip().startswith("[")
+                    else "tsv" if "\t" in text else "csv"
+                )
             items = parse_import(text, format)
             iid = uuid4().hex
             with transaction() as db:

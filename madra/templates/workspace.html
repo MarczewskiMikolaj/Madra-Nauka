@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import icon,start,scores as render_scores %}
+{% from 'macros.html' import icon,start,scores as render_scores,organization %}
 {% block title %}
     {{ space.name }} · Mądra Nauka
 {% endblock %}
@@ -11,14 +11,13 @@
             <h1>{{ space.name }}</h1>
             <p>{{ space.description }}</p>
         </div>
-        <div class="actions"><a class="button secondary" href="{{ url_for('study.prepare',workspace_id=space.id) }}">Tryby nauki / sprawdzian</a>
+        <div class="actions"><a class="button primary" href="{{ url_for('study.prepare',workspace_id=space.id) }}">Ucz się / sprawdź się</a>
             <a class="button secondary"
                href="{{ url_for('library.workspace_form',wid=space.id) }}">Edytuj</a>
-            {% if activities %}
-                {{ start('workspace_id',space.id) }}
-            {% endif %}
+
         </div>
     </div>
+    {{ organization('workspace',space.id) }}
     {{ render_scores(scores) }}
     <div class="section-heading">
         <h2>Tematy</h2>

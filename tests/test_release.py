@@ -378,7 +378,7 @@ class ReleaseTests(unittest.TestCase):
             self.assertEqual(
                 restored.execute("SELECT COUNT(*) FROM activities").fetchone()[0], 1
             )
-            self.assertEqual(restored.execute("PRAGMA user_version").fetchone()[0], 8)
+            self.assertEqual(restored.execute("PRAGMA user_version").fetchone()[0], 9)
 
 
 class CloudReleaseTests(unittest.TestCase):

@@ -91,16 +91,26 @@ def index():
     spaces = (
         get_db()
         .execute(
-            """SELECT w.*,(SELECT COUNT(*) FROM topics t WHERE t.workspace_id=w.id) topic_count,
+            """SELECT w.*,(SELECT COUNT(*) FROM topics t WHERE t.workspace_id=w.id AND NOT EXISTS (SELECT 1 FROM content_states cs WHERE cs.kind='topic' AND cs.content_id=t.id)) topic_count,
                    (SELECT COUNT(*) FROM activities a JOIN topics t ON t.id=a.topic_id
-                    WHERE t.workspace_id=w.id AND a.archived=0) activity_count,
+                    WHERE t.workspace_id=w.id AND a.archived=0 AND NOT EXISTS (SELECT 1 FROM content_states cs WHERE cs.kind='topic' AND cs.content_id=t.id)) activity_count,
                    (SELECT COUNT(*) FROM materials m JOIN topics t ON t.id=m.topic_id
-                    WHERE t.workspace_id=w.id) material_count
-                   FROM workspaces w WHERE user_id=? ORDER BY created_at DESC""",
+                    WHERE t.workspace_id=w.id AND NOT EXISTS (SELECT 1 FROM content_states cs WHERE cs.content_id IN (t.id,m.id) AND cs.kind IN ('topic','material')) AND NOT EXISTS (SELECT 1 FROM upload_materials um JOIN content_states cu ON cu.kind='upload' AND cu.content_id=um.upload_id WHERE um.material_id=m.id)) material_count
+                   FROM workspaces w WHERE user_id=? AND NOT EXISTS (SELECT 1 FROM content_states cs WHERE cs.kind='workspace' AND cs.content_id=w.id) ORDER BY created_at DESC""",
             (g.user["id"],),
         )
         .fetchall()
     )
+    visible_activities = activities_for(g.user["id"])
+    spaces = [
+        {
+            **dict(w),
+            "activity_count": sum(
+                a["workspace_id"] == w["id"] for a in visible_activities
+            ),
+        }
+        for w in spaces
+    ]
     if query:
         spaces = [
             w
@@ -115,25 +125,31 @@ def index():
                 "Temat",
                 "library.topic",
                 "tid",
-                "SELECT t.id,t.name title,t.description body,w.name context FROM topics t JOIN workspaces w ON w.id=t.workspace_id WHERE w.user_id=?",
+                "SELECT t.id,t.name title,t.description body,w.name context FROM topics t JOIN workspaces w ON w.id=t.workspace_id WHERE w.user_id=? AND NOT EXISTS (SELECT 1 FROM content_states cs WHERE cs.content_id IN (w.id,t.id) AND cs.kind IN ('workspace','topic'))",
             ),
             (
                 "Materiał",
                 "library.material",
                 "mid",
-                "SELECT m.id,m.title,m.content body,w.name || ' / ' || t.name context FROM materials m JOIN topics t ON t.id=m.topic_id JOIN workspaces w ON w.id=t.workspace_id WHERE w.user_id=?",
+                "SELECT m.id,m.title,m.content body,w.name || ' / ' || t.name context FROM materials m JOIN topics t ON t.id=m.topic_id JOIN workspaces w ON w.id=t.workspace_id WHERE w.user_id=? AND NOT EXISTS (SELECT 1 FROM upload_materials um JOIN content_states cu ON cu.kind='upload' AND cu.content_id=um.upload_id WHERE um.material_id=m.id) AND NOT EXISTS (SELECT 1 FROM content_states cs WHERE cs.content_id IN (w.id,t.id) AND cs.kind IN ('workspace','topic'))",
             ),
             (
                 "Ćwiczenie",
                 "library.activity_form",
                 "aid",
-                "SELECT a.id,a.prompt title,a.answer body,w.name || ' / ' || t.name context FROM activities a JOIN topics t ON t.id=a.topic_id JOIN workspaces w ON w.id=t.workspace_id WHERE w.user_id=? AND a.archived=0",
+                "SELECT a.id,a.prompt title,a.answer body,w.name || ' / ' || t.name context FROM activities a JOIN topics t ON t.id=a.topic_id JOIN workspaces w ON w.id=t.workspace_id WHERE w.user_id=? AND a.archived=0 AND NOT EXISTS (SELECT 1 FROM content_states cs WHERE cs.content_id IN (w.id,t.id) AND cs.kind IN ('workspace','topic')) AND NOT EXISTS (SELECT 1 FROM activity_support s JOIN content_states cs ON cs.kind='material' AND cs.content_id=s.material_id WHERE s.activity_id=a.id) AND NOT EXISTS (SELECT 1 FROM upload_activities ua JOIN content_states cs ON cs.kind='upload' AND cs.content_id=ua.upload_id WHERE ua.activity_id=a.id)",
             ),
         ]
         for label, endpoint, parameter, sql in queries:
             for row in get_db().execute(sql, (g.user["id"],)):
                 if (
-                    needle
+                    not get_db()
+                    .execute(
+                        "SELECT 1 FROM content_states WHERE kind='material' AND content_id=?",
+                        (row["id"],),
+                    )
+                    .fetchone()
+                    and needle
                     in (
                         row["title"] + " " + row["body"] + " " + row["context"]
                     ).casefold()
@@ -158,8 +174,8 @@ def index():
         nav="library",
         uploads=get_db()
         .execute(
-            "SELECT u.id,u.filename,u.imported_at,json_extract(u.draft_json,'$.generator') AS generator,(SELECT state FROM ai_jobs j WHERE j.upload_id=u.id ORDER BY created_at DESC LIMIT 1) AS ai_state FROM uploads u WHERE u.user_id=? ORDER BY u.created_at DESC",
-            (g.user["id"],),
+            "SELECT u.id,u.filename,u.imported_at,json_extract(u.draft_json,'$.generator') AS generator,(SELECT state FROM ai_jobs j WHERE j.upload_id=u.id ORDER BY created_at DESC LIMIT 1) AS ai_state FROM uploads u WHERE u.user_id=? AND NOT EXISTS (SELECT 1 FROM content_states cs WHERE cs.content_id IN (u.id,u.topic_id,u.workspace_id)) AND (?='' OR instr(lower(u.filename),lower(?))>0) ORDER BY u.created_at DESC",
+            (g.user["id"], query, query),
         )
         .fetchall(),
     )
@@ -205,14 +221,18 @@ def workspace(wid):
     topics = (
         get_db()
         .execute(
-            """SELECT t.*,(SELECT COUNT(*) FROM materials m WHERE m.topic_id=t.id) material_count,
+            """SELECT t.*,(SELECT COUNT(*) FROM materials m WHERE m.topic_id=t.id AND NOT EXISTS (SELECT 1 FROM content_states cs WHERE cs.kind='material' AND cs.content_id=m.id) AND NOT EXISTS (SELECT 1 FROM upload_materials um JOIN content_states cu ON cu.kind='upload' AND cu.content_id=um.upload_id WHERE um.material_id=m.id)) material_count,
                               (SELECT COUNT(*) FROM activities a WHERE a.topic_id=t.id AND a.archived=0) activity_count
-                              FROM topics t WHERE workspace_id=? ORDER BY created_at""",
+                              FROM topics t WHERE workspace_id=? AND NOT EXISTS (SELECT 1 FROM content_states cs WHERE cs.kind='topic' AND cs.content_id=t.id) ORDER BY created_at""",
             (wid,),
         )
         .fetchall()
     )
     activities = activities_for(g.user["id"], workspace_id=wid)
+    topics = [
+        {**dict(t), "activity_count": sum(a["topic_id"] == t["id"] for a in activities)}
+        for t in topics
+    ]
     return render_template(
         "workspace.html",
         space=space,
@@ -260,17 +280,20 @@ def topic(tid):
     materials = (
         get_db()
         .execute(
-            "SELECT * FROM materials WHERE topic_id=? ORDER BY created_at DESC", (tid,)
+            "SELECT * FROM materials m WHERE topic_id=? AND NOT EXISTS (SELECT 1 FROM content_states cs WHERE cs.kind='material' AND cs.content_id=m.id) AND NOT EXISTS (SELECT 1 FROM upload_materials um JOIN content_states cu ON cu.kind='upload' AND cu.content_id=um.upload_id WHERE um.material_id=m.id) ORDER BY created_at DESC",
+            (tid,),
         )
         .fetchall()
     )
     activities = activities_for(g.user["id"], topic_id=tid)
+    for activity in activities:
+        activity["options"] = json.loads(activity["options_json"])
     return render_template(
         "topic.html",
         topic=topic,
         sources=get_db()
         .execute(
-            "SELECT id,filename FROM uploads WHERE topic_id=? AND user_id=? AND imported_at IS NOT NULL",
+            "SELECT id,filename FROM uploads u WHERE topic_id=? AND user_id=? AND imported_at IS NOT NULL AND NOT EXISTS (SELECT 1 FROM content_states cs WHERE cs.kind='upload' AND cs.content_id=u.id)",
             (tid, g.user["id"]),
         )
         .fetchall(),
@@ -292,7 +315,28 @@ def topic(tid):
 def material(mid):
     record = owned_content("materials", mid)
     topic = owned_topic(record["topic_id"])
-    return render_template("material.html", material=record, topic=topic, nav="library")
+    progress = (
+        get_db()
+        .execute(
+            "SELECT * FROM reading_progress WHERE material_id=? AND user_id=? ORDER BY updated_at DESC LIMIT 1",
+            (mid, g.user["id"]),
+        )
+        .fetchone()
+    )
+    return render_template(
+        "material.html",
+        material=record,
+        topic=topic,
+        reading=progress,
+        reading_done=[
+            r[0]
+            for r in get_db().execute(
+                "SELECT chapter FROM reading_progress WHERE material_id=? AND user_id=? AND completed=1",
+                (mid, g.user["id"]),
+            )
+        ],
+        nav="library",
+    )
 
 
 @bp.route("/tematy/<tid>/materialy/nowy", methods=["GET", "POST"])
@@ -301,6 +345,10 @@ def material(mid):
 def material_form(tid=None, mid=None):
     record = owned_content("materials", mid) if mid else None
     topic = owned_topic(record["topic_id"] if record else tid)
+    from .workflow import form_draft, check_form_revision
+
+    key = "note:" + mid if mid else "newnote:" + tid
+    draft = form_draft(key)
     if request.method == "POST":
         try:
             title = required_text("title", "Tytuł", 200)
@@ -320,6 +368,7 @@ def material_form(tid=None, mid=None):
                         "Wpisz pełny link zaczynający się od https:// lub http://."
                     )
             with transaction() as db:
+                check_form_revision(key)
                 if mid:
                     db.execute(
                         "UPDATE materials SET title=?,kind=?,content=?,updated_at=? WHERE id=?",
@@ -331,12 +380,27 @@ def material_form(tid=None, mid=None):
                         "INSERT INTO materials VALUES (?,?,?,?,?,?,?)",
                         (mid, topic["id"], kind, title, content, now_iso(), now_iso()),
                     )
+                db.execute(
+                    "DELETE FROM form_drafts WHERE user_id=? AND draft_key=?",
+                    (g.user["id"], key),
+                )
             flash("Materiał został zapisany.", "success")
             return redirect(url_for("library.topic", tid=topic["id"]))
         except ValueError as e:
             flash(str(e), "error")
+    if request.method == "GET" and draft["revision"]:
+        record = {
+            **(dict(record) if record else {}),
+            **json.loads(draft["payload_json"]),
+        }
     return render_template(
-        "form.html", form_type="material", record=record, topic=topic, nav="library"
+        "form.html",
+        form_type="material",
+        record=record,
+        topic=topic,
+        draft_key=key,
+        draft_revision=draft["revision"],
+        nav="library",
     )
 
 
@@ -352,7 +416,24 @@ def activity_form(tid=None, aid=None):
             if kind not in KINDS:
                 raise ValueError("Wybierz typ ćwiczenia.")
             prompt = required_text("prompt", "Polecenie", 10000)
-            answer = required_text("answer", "Odpowiedź wzorcowa", 10000)
+            answer = request.form.get("answer", "").strip()
+            if kind == "quiz" and request.form.get("correct_option") is not None:
+                try:
+                    raw_options = request.form.get("options", "").splitlines()
+                    correct_index = int(request.form["correct_option"])
+                    if not 0 <= correct_index < len(raw_options):
+                        raise ValueError("Wybierz poprawny wariant quizu.")
+                    answer = raw_options[correct_index].strip()
+                except (ValueError, IndexError):
+                    raise ValueError("Wybierz poprawny wariant quizu.") from None
+            if not answer or len(answer) > 10000:
+                raise ValueError("Wpisz odpowiedź wzorcową.")
+            image = request.files.get("question_image")
+            image_data = None
+            if image and image.filename:
+                from .workflow import clean_image
+
+                image_data = clean_image(image.read(5 * 1024 * 1024 + 1))
             try:
                 minutes = int(request.form.get("minutes", 2))
             except ValueError:
@@ -441,6 +522,20 @@ def activity_form(tid=None, aid=None):
                         ),
                     )
                 save_support(db, aid, help_data, material_id, chapter)
+                if request.form.get("remove_image") == "1":
+                    db.execute(
+                        "DELETE FROM activity_images WHERE activity_id=?", (aid,)
+                    )
+                if image_data:
+                    image_id = uuid4().hex
+                    db.execute(
+                        "INSERT INTO image_assets VALUES (?,?,?,?)",
+                        (image_id, g.user["id"], image_data, now_iso()),
+                    )
+                    db.execute(
+                        "INSERT INTO activity_images VALUES (?,?) ON CONFLICT(activity_id) DO UPDATE SET asset_id=excluded.asset_id",
+                        (aid, image_id),
+                    )
             flash("Ćwiczenie zostało zapisane.", "success")
             return redirect(url_for("library.topic", tid=topic["id"]))
         except ValueError as e:
@@ -455,6 +550,24 @@ def activity_form(tid=None, aid=None):
     )
     support = dict(support) if support else {}
     support["hints"] = json.loads(support.get("hints_json") or "[]")
+    if not aid and request.args.get("material_id"):
+        source = owned_content("materials", request.args["material_id"])
+        if source["topic_id"] != topic["id"]:
+            abort(400)
+        support["material_id"] = source["id"]
+        try:
+            support["source_chapter"] = int(request.args.get("chapter", 0))
+        except ValueError:
+            abort(400)
+        if not 0 <= support["source_chapter"] <= len(note_chapters(source["content"])):
+            abort(400)
+    image = (
+        get_db()
+        .execute("SELECT asset_id FROM activity_images WHERE activity_id=?", (aid,))
+        .fetchone()
+        if aid
+        else None
+    )
     materials = (
         get_db()
         .execute(
@@ -470,6 +583,7 @@ def activity_form(tid=None, aid=None):
         record=record,
         topic=topic,
         options=options,
+        image_id=image["asset_id"] if image else None,
         nav="library",
     )
 
