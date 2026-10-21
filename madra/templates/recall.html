@@ -1,4 +1,5 @@
-{% extends 'base.html' %}{% from 'macros.html' import csrf %}
+{% extends 'base.html' %}
+{% set ui_view = 'recall' %}{% from 'macros.html' import csrf %}
 {% block title %}Nauka z notatki · Mądra Nauka{% endblock %}
 {% block content %}<div class="study-wrapper"><a href="{{ url_for('library.material',mid=material.id) }}#{{ material.id }}-chapter-{{ chapter }}">Wróć do notatki</a><h1>{{ entry.title }}</h1><p>Rozdział {{ chapter }} z {{ total }} · {% if stage=='read' %}Przeczytaj{% elif stage=='recall' %}Odtwórz z pamięci{% else %}Porównaj{% endif %}</p>
 {% if stage=='read' %}<section class="panel rich-content">{{ entry.content|rich_text }}</section><a class="button primary" href="{{ url_for('workflow.recall',mid=material.id,chapter=chapter,stage='recall') }}">Ukryj notatkę i spróbuj samodzielnie</a>

@@ -1,0 +1,21 @@
+<div class="section-heading notes-heading"><div><h2>Notatki i źródła</h2><p>Otwórz dokument, aby przejść do czytania.</p></div><a class="button secondary" href="{{ url_for('library.material_form',tid=topic.id) }}">{{ icon('plus',17) }} Dodaj notatkę lub link</a></div>
+{% if materials %}
+<div class="document-list">
+{% for material in materials %}
+    <article class="document-row">
+        <span class="document-icon" aria-hidden="true">{{ icon(material.kind,22) }}</span>
+        <div class="document-copy">
+            <span class="document-type">{{ 'Notatka' if material.kind=='note' else 'Link do źródła' }}{% if material.kind=='note' %} · Rozdziały: {{ material.content|note_chapters|length }}{% endif %}</span>
+            <h3><a href="{{ url_for('library.material',mid=material.id) }}">{{ material.title }}</a></h3>
+            {% if material.kind=='note' %}<p>{{ (material.content|note_chapters)[0].content|rich_text|striptags|truncate(160) }}</p>{% else %}<p class="document-url">{{ material.content }}</p>{% endif %}
+        </div>
+        <a class="button quiet" href="{{ url_for('library.material_form',mid=material.id) }}" aria-label="Edytuj: {{ material.title }}">Edytuj</a>
+    </article>
+{% endfor %}
+</div>
+{% else %}<div class="empty-state"><h3>Dodaj pierwszą notatkę</h3><p>Zapisz własne materiały lub link do źródła.</p></div>{% endif %}
+{% if sources %}
+<details class="source-files"><summary>Oryginalne pliki <span class="count-badge">{{ sources|length }}</span></summary>
+    {% for source in sources %}<div class="source-file-row"><span aria-hidden="true">{{ icon('upload',18) }}</span><a href="{{ url_for('uploads.preview',uid=source.id) }}">{{ source.filename }}</a><a class="button quiet" href="{{ url_for('uploads.download',uid=source.id) }}" aria-label="Pobierz: {{ source.filename }}">{{ icon('download',18) }} Pobierz</a></div>{% endfor %}
+</details>
+{% endif %}

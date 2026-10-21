@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% set ui_view = 'topic' %}
 {% from 'macros.html' import icon,csrf,start,material_tabs,organization %}
 {% from 'exercise_ui.html' import question,solution %}
 {% import 'exercise_ui.html' as exercises with context %}
@@ -7,77 +8,27 @@
 {% endblock %}
 {% block content %}
     <a class="breadcrumb"
-       href="{{ url_for('library.workspace',wid=topic.workspace_id) }}">Biblioteka / {{ topic.workspace_name }}</a>
-    <div class="page-heading">
+       href="{{ url_for('library.index',_anchor='subject-'+topic.workspace_id) }}">Materiały / {{ topic.workspace_name }}</a>
+    <div class="page-heading topic-heading">
         <div>
             <h1>{{ topic.name }}</h1>
             <p>{{ topic.description }}</p>
         </div>
-        <div class="actions">
+        <div class="actions page-actions">
             <form action="{{ url_for('study.start') }}" method="post">{{ csrf() }}<input type="hidden" name="topic_id" value="{{ topic.id }}"><button class="button primary">Rozpocznij ćwiczenia</button></form>
-            <a class="button secondary" href="{{ url_for('study.prepare',topic_id=topic.id,mode='exam') }}">Sprawdzian</a>
             <a class="button secondary" href="{{ url_for('uploads.upload',topic_id=topic.id) }}">Wgraj plik</a>
-            <details class="action-menu"><summary class="button quiet">Więcej</summary><div><a href="{{ url_for('imports.upload',tid=topic.id) }}">Dodaj wiele ćwiczeń</a><a href="{{ url_for('library.topic_form',tid=topic.id) }}">Edytuj temat</a><a href="{{ url_for('workflow.export_topic',tid=topic.id) }}">Pobierz zestaw tematu</a></div></details>
+            <details class="action-menu"><summary class="button secondary">Więcej</summary><div><a href="{{ url_for('study.prepare',topic_id=topic.id,mode='exam') }}">Sprawdzian</a><a href="{{ url_for('imports.upload',tid=topic.id) }}">Dodaj wiele ćwiczeń</a><a href="{{ url_for('library.topic_form',tid=topic.id) }}">Edytuj temat</a><a href="{{ url_for('workflow.export_topic',tid=topic.id) }}">Pobierz zestaw tematu</a></div></details>
         </div>
     </div>
-    {{ organization('topic',topic.id,destination_spaces,destination_topics) }}
+
 
     <div class="topic-columns topic-organized" data-tab-group>
         {{ material_tabs(materials|length, activities|length) }}
-        <section class="result-section" id="result-notes" data-tab-pane>
-            {% if sources %}
-                <section class="material"><h2>Pliki źródłowe</h2>{% for source in sources %}<p><a href="{{ url_for('uploads.preview',uid=source.id) }}">{{ source.filename }}</a> · <a href="{{ url_for('uploads.download',uid=source.id) }}">Pobierz</a></p>{% endfor %}</section>
-            {% endif %}
-            <div class="section-heading">
-                <h2>Notatki i źródła</h2>
-                <a class="button secondary"
-                   href="{{ url_for('library.material_form',tid=topic.id) }}">{{ icon('plus', 17) }} Dodaj materiał</a>
-            </div>
-            {% for material in materials %}
-                <article class="material">
-                    <div class="between">
-                        <span class="small muted">{{ icon(material.kind,16) }} {{ 'Notatka' if material.kind=='note' else 'Link' }}</span>
-                        <a class="small"
-                           href="{{ url_for('library.material_form',mid=material.id) }}">Edytuj</a>
-                    </div>
-                    <h3>{{ material.title }}</h3>
-                    {% if material.kind=="link" %}
-                        <a class="source-link"
-                           href="{{ material.content }}"
-                           target="_blank"
-                           rel="noopener noreferrer">{{ material.content }} {{ icon('arrow', 16) }}</a>
-                    {% else %}
-                        <div class="material-excerpt rich-content">{{ (material.content|note_chapters)[0].content|rich_text }}</div><a class="button secondary"
-   href="{{ url_for('library.material',mid=material.id) }}">Czytaj notatkę i rozdziały</a>
-                    {% endif %}
-                </article>
-            {% else %}
-                <div class="empty-state">
-                    <h3>Zacznij od materiału.</h3>
-                    <p>Zapisz własną notatkę albo dodaj link do źródła.</p>
-                </div>
-            {% endfor %}
+        <section class="result-section notes-workspace" id="result-notes" data-tab-pane>
+            {% include 'note_catalog.html' %}
         </section>
-        <section id="result-exercises" data-tab-pane data-exercise-browser>
-            <div class="section-heading"><div><h2>Twój zestaw ćwiczeń <span class="count-badge">{{ activities|length }}</span></h2><p>Otwórz pytanie, żeby je przejrzeć lub rozwiązać.</p></div>
-            <details class="action-menu"><summary class="button secondary">Rozbuduj zestaw</summary><div>
-            {% for source in sources %}<a href="{{ url_for('uploads.preview',uid=source.id) }}">Więcej z AI: {{ source.filename }}</a>{% endfor %}
-            <a href="{{ url_for('uploads.upload',topic_id=topic.id) }}">Dodaj materiał do AI</a><a href="{{ url_for('library.activity_form',tid=topic.id) }}">Dodaj własne pytanie</a><a href="{{ url_for('study.prepare',topic_id=topic.id) }}">Ustawienia sesji</a></div></details></div>
-            {{ exercises.filters(True) }}
-            <div class="exercise-list">
-            {% for activity in activities %}
-                <details class="exercise-row" data-exercise-row data-exercise-kind="{{ activity.kind }}" data-exercise-state="{{ 'review' if activity.state=='due' or (activity.reviews and activity.last_grade<2) else activity.state }}">
-                    <summary><span class="exercise-number">{{ loop.index }}</span><div class="exercise-row-title"><div class="rich-content exercise-snippet" data-exercise-search-text>{{ activity.prompt|rich_text }}</div><span class="exercise-meta">{{ kinds[activity.kind] }} · {{ activity.reason }}</span></div><span class="exercise-expand" aria-hidden="true">+</span></summary>
-                    <div class="exercise-row-body">
-                        {{ question(activity) }}
-                        <div class="actions"><form action="{{ url_for('study.start') }}" method="post">{{ csrf() }}<input type="hidden" name="topic_id" value="{{ topic.id }}"><input type="hidden" name="activity_id" value="{{ activity.id }}"><button class="button primary">Rozwiąż to pytanie</button></form><span class="muted small">Około {{ activity.minutes }} min</span></div>
-                        <details class="exercise-answer"><summary>Podejrzyj odpowiedź</summary>{{ solution(activity) }}<p class="small muted">Sam podgląd nie zapisuje oceny ani wykonanej próby.</p></details>
-                        {% if activity.upload_id %}<p class="small muted">Źródło: <a href="{{ url_for('uploads.preview',uid=activity.upload_id) }}">{{ activity.source_filename }}</a> · {{ activity.source_label }}</p>{% endif %}
-                        <details class="exercise-manage"><summary>Zarządzaj pytaniem</summary><div class="actions"><a href="{{ url_for('library.activity_form',aid=activity.id) }}">Edytuj lub przenieś</a><form action="{{ url_for('library.archive_activity',aid=activity.id) }}" method="post">{{ csrf() }}<button class="text-button">Archiwizuj</button></form></div></details>
-                    </div>
-                </details>
-            {% else %}<div class="empty-state"><h3>Przygotuj ćwiczenia z materiału</h3><p>AI zaproponuje pytania i zadania, które sprawdzisz przed zapisaniem.</p><a class="button primary" href="{{ url_for('uploads.upload',topic_id=topic.id) }}">Dodaj materiał do AI</a></div>{% endfor %}
-            </div>
+        <section class="exercise-workbench" id="result-exercises" data-tab-pane data-exercise-workbench>
+            {% include 'exercise_catalog.html' %}
     {% if archived %}
         <details class="panel archive-panel">
             <summary>Archiwum ćwiczeń ({{ archived|length }})</summary>
@@ -95,4 +46,5 @@
     {% endif %}
         </section>
     </div>
+    {{ organization('topic',topic.id,destination_spaces,destination_topics) }}
 {% endblock %}

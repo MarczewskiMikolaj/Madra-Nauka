@@ -995,7 +995,7 @@ details {
 summary {
   cursor: pointer;
 }
-details[open] summary {
+details[open] > summary {
   margin-bottom: 12px;
 }
 details .note-content {

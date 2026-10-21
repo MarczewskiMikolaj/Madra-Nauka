@@ -1,18 +1,19 @@
 {% extends "base.html" %}
-{% from 'macros.html' import icon %}
+{% set ui_view = 'library' %}
+{% from 'macros.html' import icon,csrf %}
 {% block title %}
-    Biblioteka · Mądra Nauka
+    Materiały · Mądra Nauka
 {% endblock %}
 {% block content %}
+<div class="materials-page">
     <div class="page-heading">
         <div>
-            <h1>Twoja biblioteka.</h1>
-            <p>Materiały, które pomagają Ci zrozumieć więcej.</p>
+            <h1>Twoje materiały</h1>
+            <p>Otwórz temat, żeby czytać notatki lub ćwiczyć.</p>
         </div>
-        <div class="actions"><a class="button primary" href="{{ url_for('uploads.upload') }}">Opracuj materiały z AI</a><details class="action-menu"><summary class="button quiet">Dodaj inaczej</summary><div><a href="{{ url_for('workflow.import_topic') }}">Dodaj gotowy zestaw</a><a href="{{ url_for('library.workspace_form') }}">Dodaj przedmiot</a></div></details></div>
+
     </div>
-    <p><a href="{{ url_for('workflow.organize') }}">Archiwum i kosz</a></p>
-    {% if uploads %}<section class="material"><h2>Twoje pliki</h2>{% for upload in uploads %}<p><a href="{{ url_for('uploads.preview',uid=upload.id) }}">{{ upload.filename }}</a> <span class="small muted">· {% if upload.imported_at %}Zapisano materiały{% elif upload.ai_state=="running" %}AI pracuje — otwórz postęp{% elif upload.ai_state=="failed" %}Błąd opracowania — otwórz szczegóły{% elif upload.generator=="ai" %}Opracowanie AI do sprawdzenia{% else %}Czeka na analizę AI{% endif %}</span></p>{% endfor %}</section>{% endif %}
+    <div class="library-toolbar">
     <form class="search-form" method="get">
         {{ icon('search', 20) }}
         <label class="sr-only" for="search">Szukaj w bibliotece</label>
@@ -21,7 +22,8 @@
                placeholder="Szukaj przedmiotów, tematów i treści…"
                value="{{ query }}">
         <button class="button quiet">Szukaj</button>
-    </form>
+    </form>        <div class="actions"><a class="button primary" href="{{ url_for('uploads.upload') }}">Dodaj materiały</a><details class="action-menu"><summary class="button secondary">Więcej</summary><div><a href="{{ url_for('workflow.organize') }}">Archiwum i kosz</a><a href="{{ url_for('workflow.import_topic') }}">Dodaj gotowy zestaw</a><a href="{{ url_for('library.workspace_form') }}">Dodaj przedmiot</a></div></details></div>
+    </div>
     {% if query %}
         <section class="panel search-results" aria-label="Wyniki wyszukiwania treści">
             <h2>Tematy, materiały i ćwiczenia</h2>
@@ -31,22 +33,28 @@
             {% if results|length == 50 %}<p class="small muted">Pokazujemy pierwsze 50 wyników. Doprecyzuj wyszukiwanie.</p>{% endif %}
         </section>
     {% endif %}
-    <div class="subject-grid">
+    {% if uploads %}<details class="panel library-files"><summary>Pliki i opracowania AI ({{ uploads|length }})</summary>{% for upload in uploads %}<p><a href="{{ url_for('uploads.preview',uid=upload.id) }}">{{ upload.filename }}</a> <span class="small muted">· {% if upload.imported_at %}Zapisano materiały{% elif upload.ai_state=="running" %}AI pracuje — otwórz postęp{% elif upload.ai_state=="failed" %}Błąd opracowania — otwórz szczegóły{% elif upload.generator=="ai" %}Opracowanie AI do sprawdzenia{% else %}Czeka na analizę AI{% endif %}</span></p>{% endfor %}</details>{% endif %}
+    <div class="subject-list">
         {% for space in spaces %}
-            <a class="subject-card {{ space.color }}"
-               href="{{ url_for('library.workspace',wid=space.id) }}">
-                <div class="between">
-                    <span class="subject-symbol">{{ icon('book', 25) }}</span>
-                    {{ icon('arrow', 19) }}
+            <section class="subject-section" id="subject-{{ space.id }}">
+                <div class="section-heading">
+                    <div><h2>{{ space.name }}</h2>{% if space.description %}<p class="muted">{{ space.description }}</p>{% endif %}</div>
+                    <details class="action-menu"><summary class="button secondary">Opcje</summary><div>
+                        <a href="{{ url_for('study.prepare',workspace_id=space.id) }}">Ucz się całego przedmiotu</a>
+                        <a href="{{ url_for('library.topic_form',wid=space.id) }}">Dodaj temat</a>
+                        <a href="{{ url_for('library.workspace_form',wid=space.id) }}">Edytuj przedmiot</a>
+                        <form method="post" action="{{ url_for('workflow.state',kind='workspace',cid=space.id) }}">{{ csrf() }}<input type="hidden" name="action" value="archive"><button class="menu-action">Archiwizuj przedmiot</button></form>
+                    </div></details>
                 </div>
-                <h2>{{ space.name }}</h2>
-                <p>{{ space.description or 'Miejsce na Twoje tematy, materiały i ćwiczenia.' }}</p>
-                <div class="subject-meta">
-                    <span>{{ space.topic_count }} tematów</span>
-                    <span>{{ space.material_count }} materiałów</span>
-                    <span>{{ space.activity_count }} ćwiczeń</span>
+                <div class="subject-topics">
+                    {% for topic in topics_by_workspace.get(space.id, []) %}
+                    <a class="topic-list-row" href="{{ url_for('library.topic',tid=topic.id) }}">
+                        <span><strong>{{ topic.name }}</strong>{% if topic.description %}<small>{{ topic.description|truncate(110) }}</small>{% endif %}</span>
+                        <span class="small muted">Ćwiczenia: {{ topic.activity_count }} {{ icon('arrow',18) }}</span>
+                    </a>
+                    {% else %}<p>Dodaj pierwszy temat, żeby zebrać notatki i ćwiczenia.</p><a class="button secondary" href="{{ url_for('library.topic_form',wid=space.id) }}">Dodaj temat</a>{% endfor %}
                 </div>
-            </a>
+            </section>
         {% else %}
             {% if not query or not results %}
             <div class="empty-state full-width">
@@ -55,9 +63,10 @@
                 <p>
                     {{ 'Spróbuj innej nazwy lub wyczyść wyszukiwanie.' if query else 'Wgraj materiały z zajęć. AI przygotuje notatki i ćwiczenia, a Ty sprawdzisz je przed zapisaniem do biblioteki.' }}
                 </p>
-                {% if query %}<a class="button secondary" href="{{ url_for('library.index') }}">Wyczyść wyszukiwanie</a>{% else %}<a class="button primary" href="{{ url_for('uploads.upload') }}">Opracuj materiały z AI</a>{% endif %}
+                {% if query %}<a class="button secondary" href="{{ url_for('library.index') }}">Wyczyść wyszukiwanie</a>{% else %}<a class="button primary" href="{{ url_for('uploads.upload') }}">Dodaj materiały</a>{% endif %}
             </div>
             {% endif %}
         {% endfor %}
     </div>
+</div>
 {% endblock %}

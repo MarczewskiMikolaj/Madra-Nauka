@@ -181,7 +181,7 @@ document.querySelectorAll('[data-tab-group]').forEach((group) => {
 document.querySelectorAll('.chapter-reader').forEach((reader) => {
   const first = reader.querySelector('.note-chapter');
   if (first) selectNoteChapter(reader, first);
-  reader.querySelectorAll('.chapter-toc a').forEach((link) => {
+  reader.querySelectorAll('.chapter-toc a, [data-chapter-link]').forEach((link) => {
     link.addEventListener('click', () => {
       const chapter = document.getElementById(link.hash.slice(1));
       if (chapter) selectNoteChapter(reader, chapter);
@@ -345,7 +345,10 @@ const reading = document.querySelector('[data-reading-url]');
 if (reading) {
   const links = reading.querySelectorAll('.chapter-toc a');
   if (!location.hash && Number(reading.dataset.lastChapter) > 0) links[Number(reading.dataset.lastChapter) - 1]?.click();
-  links.forEach((link, index) => link.addEventListener('click', () => {
+  const chapters = [...reading.querySelectorAll('.note-chapter')];
+  reading.querySelectorAll('.chapter-toc a, [data-chapter-link]').forEach((link) => link.addEventListener('click', () => {
+    const index = chapters.indexOf(document.getElementById(link.hash.slice(1)));
+    if (index < 0) return;
     const data = new FormData();
     data.set('chapter', index + 1); data.set('csrf_token', reading.querySelector('[name="csrf_token"]').value);
     fetch(reading.dataset.readingUrl, { method: 'POST', body: data, credentials: 'same-origin' }).catch(() => {});
@@ -472,4 +475,75 @@ document.querySelectorAll('[data-response-mode]').forEach((select) => {
     if (instruction) instruction.hidden = select.value === 'text';
   };
   select.addEventListener('change', update); update();
+});
+
+// Legacy links can target goals nested inside the learning page.
+function revealLinkedSection() {
+  let id;
+  try { id = decodeURIComponent(location.hash.slice(1)); } catch { return; }
+  const target = document.getElementById(id);
+  if (!target) return;
+  for (let element = target; element; element = element.parentElement) {
+    if (element.tagName === 'DETAILS') element.open = true;
+  }
+  target.scrollIntoView({block: 'start'});
+}
+window.addEventListener('hashchange', revealLinkedSection);
+revealLinkedSection();
+
+// Question browser: selection and filters share one detail panel on desktop.
+document.querySelectorAll('[data-exercise-workbench]').forEach((workbench) => {
+  const panels = [...workbench.querySelectorAll('[data-catalog-panel]')];
+  if (!panels.length) return;
+  const items = [...workbench.querySelectorAll('[data-select-exercise]')];
+  const search = workbench.querySelector('[data-catalog-search]');
+  const status = workbench.querySelector('[data-catalog-status]');
+  const chips = [...workbench.querySelectorAll('[data-catalog-kind]')];
+  const layout = workbench.querySelector('[data-catalog-layout]');
+  const normalize = (text) => text.toLocaleLowerCase('pl').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  let selected = panels[0].dataset.catalogPanel;
+  let kind = '';
+  let matches = panels;
+  const select = (id, fromUser = false) => {
+    selected = id;
+    panels.forEach((panel) => { panel.hidden = panel.dataset.catalogPanel !== id; });
+    items.forEach((item) => item.setAttribute('aria-pressed', String(item.dataset.selectExercise === id)));
+    if (fromUser && window.matchMedia('(max-width: 900px)').matches) {
+      layout.dataset.mobileDetail = 'true';
+      const panel = panels.find((entry) => entry.dataset.catalogPanel === id);
+      panel.focus({preventScroll: true});
+      panel.scrollIntoView({block: 'start'});
+    }
+  };
+  const filter = () => {
+    const query = normalize(search.value.trim());
+    matches = panels.filter((panel) => (!kind || panel.dataset.exerciseKind === kind) && (!status.value || panel.dataset.exerciseState === status.value) && (!query || normalize(panel.querySelector('[data-catalog-question]').textContent).includes(query)));
+    const ids = new Set(matches.map((panel) => panel.dataset.catalogPanel));
+    items.forEach((item) => { item.hidden = !ids.has(item.dataset.selectExercise); });
+    if (!ids.has(selected)) selected = matches[0]?.dataset.catalogPanel;
+    select(selected);
+    layout.hidden = matches.length === 0;
+    workbench.querySelector('[data-catalog-empty]').hidden = matches.length !== 0;
+    workbench.querySelector('[data-catalog-count]').textContent = matches.length + ' z ' + panels.length + ' pytań';
+    layout.dataset.mobileDetail = 'false';
+  };
+  items.forEach((item) => item.addEventListener('click', () => select(item.dataset.selectExercise, true)));
+  chips.forEach((chip) => chip.addEventListener('click', () => {
+    kind = chip.dataset.catalogKind;
+    chips.forEach((entry) => entry.setAttribute('aria-pressed', String(entry === chip)));
+    filter();
+  }));
+  search.addEventListener('input', filter);
+  status.addEventListener('change', filter);
+  workbench.querySelectorAll('[data-catalog-back]').forEach((button) => {
+    button.hidden = false;
+    button.addEventListener('click', () => {
+      layout.dataset.mobileDetail = 'false';
+      items.find((item) => item.dataset.selectExercise === selected)?.focus();
+    });
+  });
+  workbench.querySelector('[data-catalog-controls]').hidden = false;
+  workbench.querySelector('[data-catalog-index]').hidden = false;
+  workbench.dataset.workbenchReady = 'true';
+  filter();
 });

@@ -169,7 +169,7 @@ class StudentTests(unittest.TestCase):
             self.assertEqual(goal["weak"], 1)
             self.assertGreater(goal["estimated_remaining"], 0)
             self.assertGreater(sum(day["minutes"] for day in goal["week"]), 0)
-        html = self.client.get("/cele").get_data(as_text=True)
+        html = self.client.get("/cele", follow_redirects=True).get_data(as_text=True)
         self.assertIn("Zakres niesprawdzony", html)
 
     def test_goal_scope_and_weekdays_control_plan(self):
@@ -256,8 +256,8 @@ class StudentTests(unittest.TestCase):
                         now_iso(),
                     ),
                 )
-        first = self.client.get("/postepy").get_data(as_text=True)
-        second = self.client.get("/postepy?page=2").get_data(as_text=True)
+        first = self.client.get("/postepy", follow_redirects=True).get_data(as_text=True)
+        second = self.client.get("/postepy?page=2", follow_redirects=True).get_data(as_text=True)
         self.assertIn("Starsze sesje", first)
         self.assertNotIn("Historical 0", first)
         self.assertIn("Historical 0", second)

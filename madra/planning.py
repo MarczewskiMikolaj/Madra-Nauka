@@ -31,7 +31,6 @@ from .services.daily_plan import daily_budget, day_plan, week_plan, studied_minu
 from .services.goals import (
     enrich_goal,
     save_goal_settings,
-    nearest_goal,
     DAYS,
     settings_for,
 )
@@ -63,7 +62,6 @@ def landing():
 @login_required
 def today():
     activities = activities_for(g.user["id"])
-    nearest = nearest_goal(g.user["id"])
     allowance = daily_budget(g.user["id"])
     spent = studied_minutes(g.user["id"])
     budget = request.args.get("budget", max(0, allowance - spent), type=int)
@@ -79,14 +77,6 @@ def today():
         )
         .fetchone()
     )
-    spaces = (
-        get_db()
-        .execute(
-            "SELECT * FROM workspaces WHERE user_id=? AND NOT EXISTS (SELECT 1 FROM content_states cs WHERE cs.kind='workspace' AND cs.content_id=workspaces.id) ORDER BY created_at DESC",
-            (g.user["id"],),
-        )
-        .fetchall()
-    )
     weekday = [
         "poniedziałek",
         "wtorek",
@@ -99,7 +89,6 @@ def today():
     return render_template(
         "today.html",
         activities=activities,
-        nearest=nearest,
         budget=budget,
         allowance=allowance,
         spent=spent,
@@ -120,12 +109,10 @@ def today():
         .fetchall(),
         plan=chosen,
         active=active,
-        spaces=spaces,
-        due=sum(a["state"] == "due" for a in activities),
-        new=sum(a["state"] == "new" for a in activities),
-        date_label=f'{weekday}, {today_date().strftime("%d.%m.%Y")}',
-        estimate=sum(a["minutes"] for a in chosen),
-        goals=goal_details(g.user["id"])[:3],
+        date_label=f"{weekday}, {today_date().strftime('%d.%m.%Y')}",
+        goal_data=goals_context(),
+        progress_data=progress_context(activities),
+        expanded=request.args.get("section", ""),
         nav="today",
     )
 
@@ -133,6 +120,10 @@ def today():
 @bp.get("/cele")
 @login_required
 def goals():
+    return redirect(url_for("planning.today", section="goals", _anchor="goals"))
+
+
+def goals_context():
     spaces = (
         get_db()
         .execute(
@@ -141,12 +132,9 @@ def goals():
         )
         .fetchall()
     )
-    return render_template(
-        "goals.html",
+    return dict(
         goals=goal_details(g.user["id"]),
         spaces=spaces,
-        shared_week=week_plan(g.user["id"]),
-        shared_budget=daily_budget(g.user["id"]),
         all_topics=get_db()
         .execute(
             "SELECT t.* FROM topics t JOIN workspaces w ON w.id=t.workspace_id WHERE w.user_id=? AND NOT EXISTS (SELECT 1 FROM content_states cs WHERE cs.content_id IN (w.id,t.id)) ORDER BY t.name",
@@ -203,7 +191,7 @@ def add_goal():
             ),
             "error",
         )
-    return redirect(url_for("planning.goals"))
+    return redirect(url_for("planning.today", section="goals", _anchor="goals"))
 
 
 @bp.post("/cele/<gid>/status")
@@ -218,7 +206,7 @@ def toggle_goal(gid):
         db.execute(
             "UPDATE goals SET completed=? WHERE id=?", (int(not goal["completed"]), gid)
         )
-    return redirect(url_for("planning.goals"))
+    return redirect(url_for("planning.today", section="goals", _anchor="goals"))
 
 
 def owned_goal(gid):
@@ -253,7 +241,7 @@ def edit_goal(gid):
                 )
                 save_goal_settings(db, goal)
             flash("Cel zaktualizowany. Rozpiska czasu została przeliczona.", "success")
-            return redirect(url_for("planning.goals"))
+            return redirect(url_for("planning.today", section="goals", _anchor="goals"))
         except (ValueError, TypeError) as error:
             flash(
                 (
@@ -301,13 +289,21 @@ def delete_goal(gid):
     with transaction() as db:
         db.execute("DELETE FROM goals WHERE id=? AND user_id=?", (gid, g.user["id"]))
     flash("Cel usunięty. Materiały i historia nauki pozostały zachowane.", "success")
-    return redirect(url_for("planning.goals"))
+    return redirect(url_for("planning.today", section="goals", _anchor="goals"))
 
 
 @bp.get("/postepy")
 @login_required
 def progress():
-    activities = activities_for(g.user["id"])
+    page = request.args.get("page", 1, type=int)
+    if not 1 <= page <= 100000:
+        abort(400)
+    return redirect(
+        url_for("planning.today", section="history", page=page, _anchor="history")
+    )
+
+
+def progress_context(activities):
     reviews = (
         get_db()
         .execute(
@@ -393,8 +389,7 @@ def progress():
                 "weak": sum(bool(a["reviews"]) and a["last_grade"] < 2 for a in group),
             }
         )
-    return render_template(
-        "progress.html",
+    return dict(
         page=page,
         has_more=page * 10 < history_total,
         weak=weak,
@@ -640,7 +635,7 @@ def requirement(gid):
                     "INSERT INTO goal_requirements VALUES (?,?,?,?,0,?)",
                     (uuid4().hex, gid, title, tid, now_iso()),
                 )
-    return redirect(url_for("planning.goals", _anchor="goal-" + gid))
+    return redirect(url_for("planning.today", section="goals", _anchor="goal-" + gid))
 
 
 def owned_topic_for_requirement(tid):

@@ -1,8 +1,9 @@
 {% extends 'base.html' %}
+{% set ui_view = 'goal_edit' %}
 {% from 'macros.html' import csrf %}
 {% block title %}Edytuj cel · Mądra Nauka{% endblock %}
 {% block content %}
-<section class="panel auth-panel">
+<section class="panel form-page">
     <h1>Edytuj cel</h1>
     <form method="post" class="form-stack">
         {{ csrf() }}
@@ -14,8 +15,8 @@
         <fieldset><legend>Zakres i ważność tematów</legend><label class="check-row"><input type="checkbox" name="all_topics" value="1" {% if (request.method=='POST' and request.form.get('all_topics')=='1') or (request.method=='GET' and settings.all_topics) %}checked{% endif %}>Cały przedmiot, także przyszłe tematy</label>
         <p class="small muted">Odznacz cały przedmiot, aby wybrać konkretny zakres. Ważność 3 oznacza najwyższy priorytet.</p>
         {% for topic in topics %}<div class="goal-topic-option"><label class="check-row"><input type="checkbox" name="topic_ids" value="{{ topic.id }}" {% if (request.method=='POST' and topic.id in request.form.getlist('topic_ids')) or (request.method=='GET' and topic.selected) %}checked{% endif %}>{{ topic.name }}</label><label>Ważność<select name="priority_{{ topic.id }}">{% for priority in [1,2,3] %}<option value="{{ priority }}" {% if request.form.get('priority_'~topic.id,topic.priority)|int==priority %}selected{% endif %}>{{ priority }}</option>{% endfor %}</select></label></div>{% endfor %}</fieldset>
-        </details><p class="small muted">Wspólny budżet celów ustawisz na Dzisiaj.</p><button class="button primary">Zapisz zmiany</button>
-        <a href="{{ url_for('planning.goals') }}">Wróć do celów</a>
+        </details><p class="small muted">Wspólny budżet celów ustawisz w sekcji Nauka.</p><div class="form-actions"><button class="button primary">Zapisz zmiany</button>
+        <a class="button quiet" href="{{ url_for('planning.today',section='goals',_anchor='goals') }}">Wróć do celów</a></div>
     </form>
 </section>
 {% endblock %}

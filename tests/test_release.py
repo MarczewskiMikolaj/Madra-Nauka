@@ -146,7 +146,7 @@ class ReleaseTests(unittest.TestCase):
         )
         with self.app.app_context():
             gid = get_db().execute("SELECT id FROM goals").fetchone()[0]
-        response = self.client.get("/cele")
+        response = self.client.get("/cele", follow_redirects=True)
         self.assertIn("Najbliższy tydzień".encode(), response.data)
         self.assertEqual(
             self.post(

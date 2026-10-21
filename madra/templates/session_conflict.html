@@ -1,4 +1,5 @@
-{% extends 'base.html' %}{% from 'macros.html' import csrf %}
+{% extends 'base.html' %}
+{% set ui_view = 'session_conflict' %}{% from 'macros.html' import csrf %}
 {% block title %}Zmiana sesji · Mądra Nauka{% endblock %}
 {% block content %}<section class="panel form-page"><h1>Masz rozpoczętą sesję</h1>
 <p>Trwa „{{ active.title }}”. Wybrany nowy zakres to „{{ title }}”.</p><p>Zapisanie przerwy zachowa kolejność, odpowiedzi i postęp poprzedniej sesji.</p>

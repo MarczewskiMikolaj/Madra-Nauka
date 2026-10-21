@@ -1,4 +1,5 @@
-{% extends 'base.html' %}{% from 'macros.html' import csrf %}
+{% extends 'base.html' %}
+{% set ui_view = 'import_exercises' %}{% from 'macros.html' import csrf %}
 {% block title %}Dodaj wiele ćwiczeń · Mądra Nauka{% endblock %}
 {% block content %}<section class="panel form-page"><h1>Dodaj wiele ćwiczeń</h1><p>{{ topic.name }} · do 200 ćwiczeń i 1 MB, UTF-8.</p>
 <form method="post" enctype="multipart/form-data" class="form-stack">{{ csrf() }}

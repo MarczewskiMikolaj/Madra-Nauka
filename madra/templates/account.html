@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% set ui_view = 'account' %}
 {% from 'macros.html' import csrf, icon, account_avatar %}
 {% block title %}Ustawienia konta · Mądra Nauka{% endblock %}
 {% block content %}
@@ -41,8 +42,7 @@
                     {% endif %}
                     <form action="{{ url_for('account.profile') }}" method="post" class="form-stack profile-name-form">
                         {{ csrf() }}
-                        <label for="profile-username">Nazwa użytkownika</label>
-                        <input id="profile-username" name="username" required minlength="3" maxlength="40" autocomplete="username" value="{{ request.form.get('username', g.user.username) }}" aria-describedby="username-help">
+                        <div class="field"><label for="profile-username">Nazwa użytkownika</label><input id="profile-username" name="username" required minlength="3" maxlength="40" autocomplete="username" value="{{ request.form.get('username', g.user.username) }}" aria-describedby="username-help"></div>
                         <p id="username-help" class="small muted">3–40 znaków: litery, cyfry, spacje, kropki, myślniki i podkreślenia. Tą nazwą logujesz się do aplikacji.</p>
                         <button class="button primary">Zapisz nazwę</button>
                     </form>
@@ -58,13 +58,10 @@
                         <form action="{{ url_for('account.password') }}" method="post" class="form-stack">
                             {{ csrf() }}
                             <input type="hidden" name="username" value="{{ g.user.username }}" autocomplete="username">
-                            <label for="current-password">Obecne hasło</label>
-                            <input id="current-password" type="password" name="current_password" required maxlength="256" autocomplete="current-password">
-                            <label for="new-password">Nowe hasło</label>
-                            <input id="new-password" type="password" name="new_password" required minlength="8" maxlength="256" autocomplete="new-password" aria-describedby="password-help">
+                            <div class="field"><label for="current-password">Obecne hasło</label><input id="current-password" type="password" name="current_password" required maxlength="256" autocomplete="current-password"></div>
+                            <div class="field"><label for="new-password">Nowe hasło</label><input id="new-password" type="password" name="new_password" required minlength="8" maxlength="256" autocomplete="new-password" aria-describedby="password-help"></div>
                             <p id="password-help" class="small muted">Od 8 do 256 znaków. Wybierz hasło inne niż obecne.</p>
-                            <label for="confirm-password">Powtórz nowe hasło</label>
-                            <input id="confirm-password" type="password" name="confirm_password" required minlength="8" maxlength="256" autocomplete="new-password">
+                            <div class="field"><label for="confirm-password">Powtórz nowe hasło</label><input id="confirm-password" type="password" name="confirm_password" required minlength="8" maxlength="256" autocomplete="new-password"></div>
                             <button class="button primary">Zmień hasło</button>
                         </form>
                     </section>
@@ -80,7 +77,7 @@
                             {{ csrf() }}
                             <label>Obecne hasło<input type="password" name="current_password" required maxlength="256" autocomplete="current-password"></label>
                             <label>Wpisz nazwę {{ g.user.username }}<input name="confirm_username" required maxlength="40" autocomplete="off"></label>
-                            <button class="button secondary">Trwale usuń konto</button>
+                            <button class="button danger">Trwale usuń konto</button>
                         </form>
                     </details>
                 </div>

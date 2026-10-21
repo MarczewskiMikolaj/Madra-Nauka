@@ -1,15 +1,16 @@
 {% extends 'base.html' %}
+{% set ui_view = 'study' %}
 {% from 'macros.html' import icon,csrf %}
 {% from 'exercise_ui.html' import question,solution %}
 {% block title %}Ćwiczenie {{ item.position+1 }} z {{ total }} · Mądra Nauka{% endblock %}
 {% block content %}
 <div class="study-wrapper practice-workspace">
     <header class="practice-header"><div><p class="small muted">{{ activity.topic_name }}</p><h1>Ćwiczenie {{ item.position+1 }} z {{ total }}</h1></div>
-    {% if not item.revealed %}<button form="response-form" formaction="{{ url_for('study.pause',sid=study.id) }}" formnovalidate class="button quiet">Zapisz przerwę</button>{% elif study.status=='active' %}<form action="{{ url_for('study.pause',sid=study.id) }}" method="post">{{ csrf() }}<button class="button quiet">Zapisz przerwę</button></form>{% endif %}</header>
+    {% if not item.revealed %}<button form="response-form" formaction="{{ url_for('study.pause',sid=study.id) }}" formnovalidate class="button secondary">Zapisz przerwę</button>{% elif study.status=='active' %}<form action="{{ url_for('study.pause',sid=study.id) }}" method="post">{{ csrf() }}<button class="button secondary">Zapisz przerwę</button></form>{% endif %}</header>
     <div class="meter study-meter" role="progressbar" aria-label="Postęp sesji" aria-valuemin="0" aria-valuemax="{{ total }}" aria-valuenow="{{ item.position+(1 if feedback else 0) }}"><span style="width:{{ ((item.position+(1 if feedback else 0))/total*100)|round }}%"></span></div>
     <section class="study-card practice-card">
-        <p class="practice-instruction">{{ {'quiz':'Wybierz jedną odpowiedź','flashcard':'Przypomnij sobie odpowiedź','cloze':'Uzupełnij brakujący fragment','open':'Odpowiedz własnymi słowami','exercise':'Rozwiąż zadanie'}[activity.kind] }}</p>
-        {{ question(activity,False) }}
+        <header class="practice-question"><p class="practice-instruction">{{ {'quiz':'Wybierz jedną odpowiedź','flashcard':'Przypomnij sobie odpowiedź','cloze':'Uzupełnij brakujący fragment','open':'Odpowiedz własnymi słowami','exercise':'Rozwiąż zadanie'}[activity.kind] }}</p>
+        {{ question(activity,False) }}</header>
         {% if not item.revealed %}
         <form action="{{ url_for('study.reveal',sid=study.id) }}" method="post" class="form-stack practice-response" id="response-form" data-autosave="{{ url_for('study.save_draft',sid=study.id) }}">
             {{ csrf() }}<input type="hidden" name="item_id" value="{{ item.id }}"><input type="hidden" name="revision" value="{{ draft.revision }}"><input type="hidden" name="used_help" value="{{ '1' if draft.used_help else '0' }}">
@@ -20,8 +21,9 @@
                 <label data-text-response>{{ 'Brakujący fragment' if activity.kind=='cloze' else 'Twoja odpowiedź' }}<textarea name="response" rows="{{ 2 if activity.kind=='cloze' else 5 }}" maxlength="10000" placeholder="{{ 'Wpisz słowo lub wyrażenie…' if activity.kind=='cloze' else 'Zapisz odpowiedź lub tok rozwiązania…' }}">{{ draft.response }}</textarea></label>
                 <p class="small muted" data-response-instruction hidden>Odpowiedz samodzielnie, a potem porównaj swoje rozwiązanie z odpowiedzią wzorcową.</p>
             {% endif %}
-            <div class="practice-action"><button class="button primary">{{ 'Sprawdź' if activity.kind=='quiz' else 'Pokaż odpowiedź' if activity.kind=='flashcard' else 'Porównaj odpowiedź' }}</button>{% if activity.kind not in ['quiz','flashcard'] %}<button class="button quiet" name="skip" value="1" formnovalidate>Nie wiem — pokaż rozwiązanie</button>{% endif %}</div>
-            <p class="save-status small muted" role="status" data-save-status>Szkic zapisuje się automatycznie.</p>
+            {% if activity.kind!='flashcard' %}<p class="save-status small muted" role="status" data-save-status>Szkic zapisuje się automatycznie.</p>{% endif %}
+            <div class="practice-action"><button class="button primary">{{ 'Sprawdź' if activity.kind=='quiz' else 'Pokaż odpowiedź' if activity.kind=='flashcard' else 'Porównaj odpowiedź' }}</button>{% if activity.kind not in ['quiz','flashcard'] %}<button class="button secondary" name="skip" value="1" formnovalidate>Nie wiem — pokaż rozwiązanie</button>{% endif %}</div>
+
         </form>
         {% if activity.get('hints',[]) or activity.material_id or activity.upload_id %}<details class="practice-help"><summary>Podpowiedzi i źródło</summary>{% for hint in activity.get('hints',[]) %}<details class="study-hint" data-study-hint><summary>Podpowiedź {{ loop.index }}</summary><div class="rich-content">{{ hint|rich_text }}</div></details>{% endfor %}{% include 'learning_help.html' %}</details>{% endif %}
         {% else %}
@@ -31,13 +33,15 @@
                 {% if activity.explanation %}<details class="exercise-explanation"><summary>Dlaczego taka odpowiedź?</summary><div class="rich-content">{{ activity.explanation|rich_text }}</div></details>{% endif %}
                 {% if feedback %}<div class="practice-action"><a class="button primary" href="{{ url_for('study.session_page',sid=study.id) }}">{{ 'Zobacz podsumowanie' if study.status=='completed' else 'Następne pytanie' }}</a><span class="small muted">Wynik uwzględniony w powtórkach.</span></div>{% else %}<form action="{{ url_for('study.grade',sid=study.id) }}" method="post" class="practice-action">{{ csrf() }}<input type="hidden" name="item_id" value="{{ item.id }}"><button class="button primary">Zapisz wynik i przejdź dalej</button></form>{% endif %}
             {% else %}
+                <div class="answer-comparison {% if item.response and not skipped %}has-response{% endif %}">
                 {% if item.response and not skipped %}<section class="response-block"><h2>Twoja odpowiedź</h2><div class="rich-content">{{ item.response|rich_text }}</div></section>{% endif %}
-                {{ solution(activity,2) }}
+                <section class="model-response">{{ solution(activity,2) }}</section>
+                </div>
                 <form action="{{ url_for('study.grade',sid=study.id) }}" method="post" class="form-stack practice-grading">{{ csrf() }}<input type="hidden" name="item_id" value="{{ item.id }}">
-                    {% if skipped %}<p>To pytanie wróci do powtórki. Teraz możesz zapoznać się z rozwiązaniem.</p><button class="button primary" name="grade" value="0">Zapisz do powtórki i przejdź dalej</button>{% else %}
-                    <h2>Jak Ci poszło?</h2><p class="small muted">To Twoja samoocena. Wybór zapisze wynik i otworzy następne pytanie.</p>
+                    {% if skipped %}{% include 'review_fields.html' %}<p>To pytanie wróci do powtórki. Teraz możesz zapoznać się z rozwiązaniem.</p><button class="button primary" name="grade" value="0">Zapisz do powtórki i przejdź dalej</button>{% else %}
+                    <h2>Jak Ci poszło?</h2><p class="small muted">To Twoja samoocena. Wybór zapisze wynik i otworzy następne pytanie.</p>{% include 'review_fields.html' %}
                     <div class="grade-buttons"><button name="grade" value="0" class="grade again"><strong>Jeszcze nie</strong><small>Nie udało mi się odpowiedzieć</small></button><button name="grade" value="1" class="grade hard"><strong>Częściowo</strong><small>Braki lub potrzebna pomoc</small></button><button name="grade" value="2" class="grade good"><strong>Samodzielnie</strong><small>Poprawna odpowiedź</small></button><button name="grade" value="3" class="grade easy"><strong>Bez trudu</strong><small>Poprawnie i bez wahania</small></button></div>{% endif %}
-                    {% include 'review_fields.html' %}
+
                 </form>
             {% endif %}
             {% if activity.material_id or activity.upload_id %}<details class="practice-help"><summary>Zobacz źródło</summary>{% include 'learning_help.html' %}</details>{% endif %}

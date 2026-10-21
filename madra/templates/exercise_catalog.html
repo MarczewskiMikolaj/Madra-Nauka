@@ -1,0 +1,51 @@
+<div class="catalog-heading">
+    <div><h2>Ćwiczenia <span class="count-badge">{{ activities|length }}</span></h2><p class="muted">Wybierz pytanie z listy, żeby je przejrzeć lub rozwiązać.</p></div>
+    <div class="actions">
+        <a class="button secondary" href="{{ url_for('library.activity_form',tid=topic.id) }}">{{ icon('plus',17) }} Dodaj pytanie</a>
+        <details class="action-menu"><summary class="button secondary">Z materiału</summary><div>
+            <a href="{{ url_for('uploads.upload',topic_id=topic.id) }}">Wgraj nowy materiał</a>
+            {% for source in sources %}<a href="{{ url_for('uploads.preview',uid=source.id) }}"><span>Więcej pytań z pliku<strong class="menu-filename">{{ source.filename }}</strong></span></a>{% endfor %}
+        </div></details>
+    </div>
+</div>
+{% if activities %}
+<div class="catalog-controls" data-catalog-controls hidden>
+    <div class="catalog-search">{{ icon('search',18) }}<label class="sr-only" for="catalog-search">Szukaj pytania</label><input id="catalog-search" type="search" data-catalog-search placeholder="Szukaj w pytaniach…"></div>
+    <label class="catalog-status">Status<select data-catalog-status><option value="">Wszystkie</option><option value="review">Do powtórki</option><option value="new">Nowe</option><option value="scheduled">Zaplanowane</option></select></label>
+    <div class="catalog-kinds" role="group" aria-label="Rodzaj ćwiczenia">
+        <button type="button" class="filter-chip" data-catalog-kind="" aria-pressed="true">Wszystkie</button>
+        {% for key,label in kinds.items() %}{% if activities|selectattr('kind','equalto',key)|list %}<button type="button" class="filter-chip" data-catalog-kind="{{ key }}" aria-pressed="false">{{ label }}</button>{% endif %}{% endfor %}
+    </div>
+    <p class="catalog-count small muted" data-catalog-count role="status"></p>
+</div>
+<p class="empty-state" data-catalog-empty hidden>Nie ma pytań pasujących do filtrów. Zmień rodzaj, status lub szukaną frazę.</p>
+<div class="catalog-layout" data-catalog-layout>
+    <nav class="catalog-index" aria-label="Lista ćwiczeń" data-catalog-index hidden>
+        {% for activity in activities %}
+        <button type="button" class="catalog-item" data-select-exercise="{{ activity.id }}" aria-controls="exercise-panel-{{ activity.id }}" aria-pressed="false">
+            <span class="catalog-item-number">{{ loop.index }}</span>
+            <span class="catalog-item-copy"><span class="catalog-item-title">{{ activity.prompt|rich_text|striptags }}</span><span class="catalog-item-meta">{{ kinds[activity.kind] }} · {{ activity.minutes }} min</span></span>
+            {{ icon('arrow',16) }}
+        </button>
+        {% endfor %}
+    </nav>
+    <div class="catalog-detail">
+        {% for activity in activities %}
+        <article class="catalog-panel" id="exercise-panel-{{ activity.id }}" data-catalog-panel="{{ activity.id }}" data-exercise-kind="{{ activity.kind }}" data-exercise-state="{{ 'review' if activity.state=='due' or (activity.reviews and activity.last_grade<2) else activity.state }}" aria-label="Ćwiczenie {{ loop.index }}" tabindex="-1">
+            <button type="button" class="button quiet catalog-back" data-catalog-back hidden>← Wróć do listy pytań</button>
+            <header class="catalog-panel-heading"><span>{{ kinds[activity.kind] }}</span><span>{{ activity.reason }} · {{ activity.minutes }} min</span></header>
+            <div data-catalog-question>{{ question(activity) }}</div>
+            <div class="catalog-panel-actions">
+                <form action="{{ url_for('study.start') }}" method="post">{{ csrf() }}<input type="hidden" name="topic_id" value="{{ topic.id }}"><input type="hidden" name="activity_id" value="{{ activity.id }}"><button class="button primary">Rozwiąż pytanie</button></form>
+                <a class="button secondary" href="{{ url_for('library.activity_form',aid=activity.id) }}">Edytuj</a>
+                <details class="action-menu"><summary class="button quiet">Opcje</summary><div><form action="{{ url_for('library.archive_activity',aid=activity.id) }}" method="post">{{ csrf() }}<button class="menu-action">Archiwizuj pytanie</button></form></div></details>
+            </div>
+            <details class="catalog-answer"><summary>Pokaż odpowiedź wzorcową</summary>{{ solution(activity) }}<p class="small muted">Podgląd nie zapisuje oceny. Użyj „Rozwiąż pytanie”, aby wykonać ćwiczenie.</p></details>
+            {% if activity.upload_id %}<footer class="catalog-source"><span class="small muted">Źródło</span><a href="{{ url_for('uploads.preview',uid=activity.upload_id) }}">{{ activity.source_filename }}</a>{% if activity.source_label %}<span class="small muted">{{ activity.source_label }}</span>{% endif %}</footer>{% endif %}
+        </article>
+        {% endfor %}
+    </div>
+</div>
+{% else %}
+<div class="empty-state"><h3>Dodaj pierwsze ćwiczenie</h3><p>Utwórz własne pytanie lub przygotuj zestaw z materiału.</p><a class="button primary" href="{{ url_for('library.activity_form',tid=topic.id) }}">Dodaj pytanie</a></div>
+{% endif %}

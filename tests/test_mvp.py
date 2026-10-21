@@ -162,7 +162,7 @@ class MVPTests(unittest.TestCase):
             self.assertEqual(
                 get_db().execute("SELECT COUNT(*) FROM reviews").fetchone()[0], 2
             )
-        self.assertEqual(self.client.get("/postepy").status_code, 200)
+        self.assertEqual(self.client.get("/postepy", follow_redirects=True).status_code, 200)
 
     def test_csrf_blocks_mutation(self):
         self.assertEqual(
@@ -485,7 +485,7 @@ class MVPTests(unittest.TestCase):
         guest.get("/")
         self.post("/demo", client=guest, follow=True)
         for route in ("/dzisiaj", "/biblioteka", "/cele", "/postepy"):
-            self.assertEqual(guest.get(route).status_code, 200)
+            self.assertEqual(guest.get(route, follow_redirects=True).status_code, 200)
         export = json.loads(guest.get("/konto/eksport").data)
         self.assertEqual(len(export["workspaces"]), 3)
         self.assertFalse(any(x["id"] == self.wid for x in export["workspaces"]))

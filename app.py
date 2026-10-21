@@ -19,6 +19,9 @@ class PrivateRequestHandler(WSGIRequestHandler):
 app = create_app()
 
 if __name__ == "__main__":
+    # Local development must not keep stale templates after UI edits.
+    app.config["TEMPLATES_AUTO_RELOAD"] = True
+    app.jinja_env.auto_reload = True
     port = int(os.environ.get("PORT", 8080))
     app.run(
         host="127.0.0.1", port=port, debug=False, request_handler=PrivateRequestHandler

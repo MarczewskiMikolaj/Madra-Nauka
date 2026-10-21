@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% set ui_view = 'ai_callback' %}
 {% from 'macros.html' import csrf %}
 {% block title %}Kończenie połączenia · Mądra Nauka{% endblock %}
 {% block content %}<section class="connection-card"><h1>Kończenie połączenia ChatGPT</h1><p id="callback-status" role="status">Potwierdzamy logowanie. Nie zamykaj tej strony.</p><form method="post" id="cloud-oauth-callback">{{ csrf() }}<input type="hidden" name="code"><input type="hidden" name="state"><input type="hidden" name="client_id"><input type="hidden" name="error"><noscript>Włącz JavaScript, aby dokończyć bezpieczne przekazanie logowania.</noscript></form></section>{% endblock %}

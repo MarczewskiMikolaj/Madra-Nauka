@@ -2,6 +2,8 @@
 
 Osobiste centrum nauki po polsku: przedmioty, tematy, notatki, linki i różne metody ćwiczenia. Plan dnia łączy pytania otwarte, zadania, quizy, luki i fiszki w jedną sesję.
 
+Nawigacja została uproszczona do **Nauka** i **Materiały**. Cele i historia rozwijają się na ekranie nauki, a tematy otwierasz bezpośrednio z materiałów. [Opis uproszczenia](docs/SIMPLIFIED_NAVIGATION.md).
+
 Aktualny przebieg studenta: [plan wdrożenia](docs/STUDENT_UX_IMPLEMENTATION_PLAN.md) i [wyniki weryfikacji](docs/STUDENT_UX_VERIFICATION.md). Aktualizacja z 15 października 2026 rozszerza opisane niżej pierwsze MVP. Przebudowę list, podglądu AI i rozwiązywania opisuje [wdrożenie sekcji ćwiczeń](docs/EXERCISES_UX_IMPLEMENTATION.md).
 
 Plan pierwszego stabilnego wydania i audyt braków: [docs/RELEASE_PLAN.md](docs/RELEASE_PLAN.md). Instrukcja publikacji i kopii: [docs/RELEASE.md](docs/RELEASE.md).

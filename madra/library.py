@@ -166,8 +166,27 @@ def index():
                         break
             if len(results) == 50:
                 break
+    topics_by_workspace = {}
+    for topic in get_db().execute(
+        """SELECT t.* FROM topics t JOIN workspaces w ON w.id=t.workspace_id
+           WHERE w.user_id=? AND NOT EXISTS (
+               SELECT 1 FROM content_states cs
+               WHERE (cs.kind='workspace' AND cs.content_id=w.id)
+                  OR (cs.kind='topic' AND cs.content_id=t.id))
+           ORDER BY t.created_at""",
+        (g.user["id"],),
+    ):
+        topics_by_workspace.setdefault(topic["workspace_id"], []).append(
+            {
+                **dict(topic),
+                "activity_count": sum(
+                    a["topic_id"] == topic["id"] for a in visible_activities
+                ),
+            }
+        )
     return render_template(
         "library.html",
+        topics_by_workspace=topics_by_workspace,
         spaces=spaces,
         query=query,
         results=results,
@@ -217,30 +236,8 @@ def workspace_form(wid=None):
 @bp.get("/przedmioty/<wid>")
 @login_required
 def workspace(wid):
-    space = owned_workspace(wid)
-    topics = (
-        get_db()
-        .execute(
-            """SELECT t.*,(SELECT COUNT(*) FROM materials m WHERE m.topic_id=t.id AND NOT EXISTS (SELECT 1 FROM content_states cs WHERE cs.kind='material' AND cs.content_id=m.id) AND NOT EXISTS (SELECT 1 FROM upload_materials um JOIN content_states cu ON cu.kind='upload' AND cu.content_id=um.upload_id WHERE um.material_id=m.id)) material_count,
-                              (SELECT COUNT(*) FROM activities a WHERE a.topic_id=t.id AND a.archived=0) activity_count
-                              FROM topics t WHERE workspace_id=? AND NOT EXISTS (SELECT 1 FROM content_states cs WHERE cs.kind='topic' AND cs.content_id=t.id) ORDER BY created_at""",
-            (wid,),
-        )
-        .fetchall()
-    )
-    activities = activities_for(g.user["id"], workspace_id=wid)
-    topics = [
-        {**dict(t), "activity_count": sum(a["topic_id"] == t["id"] for a in activities)}
-        for t in topics
-    ]
-    return render_template(
-        "workspace.html",
-        space=space,
-        topics=topics,
-        activities=activities,
-        scores=dimension_scores(activities),
-        nav="library",
-    )
+    owned_workspace(wid)
+    return redirect(url_for("library.index", _anchor="subject-" + wid))
 
 
 @bp.route("/przedmioty/<wid>/tematy/nowy", methods=["GET", "POST"])

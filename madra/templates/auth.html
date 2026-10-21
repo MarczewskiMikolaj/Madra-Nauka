@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% set ui_view = 'auth' %}
 {% from 'macros.html' import csrf,icon %}
 {% block title %}
     {{ 'Załóż konto' if register else 'Logowanie' }} · Mądra Nauka

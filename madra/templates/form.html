@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% set ui_view = 'form' %}
 {% from 'macros.html' import csrf,icon,organization %}
 {% set names = {"workspace": "przedmiot", "topic": "temat", "material": "materiał", "activity": "ćwiczenie"} %}
 {% macro value(name,default='') -%}
@@ -150,7 +151,6 @@
                     <p class="small muted">Edycja zachowuje historię ćwiczenia. Trwająca sesja korzysta z wcześniejszej wersji treści.</p>
                 {% endif %}
             {% endif %}
-            <div class="form-actions">
                 {% if form_type=='activity' %}
                 <details class="learning-support-editor"><summary>Podpowiedzi, wyjaśnienie i źródło</summary>
                 {% for i in range(3) %}<label>Podpowiedź {{ i+1 }} (opcjonalnie)<textarea name="hints" maxlength="2000" rows="2">{{ request.form.getlist('hints')[i] if request.form.getlist('hints')|length>i else support.hints[i] if support.hints|length>i else '' }}</textarea></label>{% endfor %}
@@ -161,6 +161,7 @@
                 </details>
             {% endif %}
             <p class="small muted">Treść obsługuje Markdown, tabele, bloki kodu oraz wzory $...$ i $$...$$.</p>
+            <div class="form-actions">
             <button class="button primary">Zapisz {{ names[form_type] }} {{ icon('check', 18) }}</button>
                 <a class="button quiet"
                    href="{% if topic %}{{ url_for('library.topic',tid=topic.id) }}{% elif space %}{{ url_for('library.workspace',wid=space.id) }}{% else %}{{ url_for('library.index') }}{% endif %}">
@@ -168,6 +169,6 @@
                 </a>
             </div>
         </form>
-        {% if record and record.id and form_type in ['topic','material','activity'] %}{% if form_type=='activity' %}<details class="panel"><summary>Przenieś ćwiczenie</summary><form method="post" action="{{ url_for('workflow.move',kind='activity',cid=record.id) }}">{{ csrf() }}<label>Temat<select name="destination">{% for item in destination_topics %}<option value="{{ item.id }}">{{ item.workspace_name }} / {{ item.name }}</option>{% endfor %}</select></label><button class="button secondary">Przenieś</button></form></details>{% else %}{{ organization(form_type,record.id,destination_spaces,destination_topics) }}{% endif %}{% endif %}
+        {% if record and record.id and form_type in ['topic','material','activity'] %}{% if form_type=='activity' %}<details class="panel"><summary>Przenieś ćwiczenie</summary><form class="form-stack" method="post" action="{{ url_for('workflow.move',kind='activity',cid=record.id) }}">{{ csrf() }}<label>Temat<select name="destination">{% for item in destination_topics %}<option value="{{ item.id }}">{{ item.workspace_name }} / {{ item.name }}</option>{% endfor %}</select></label><button class="button secondary">Przenieś</button></form></details>{% else %}{{ organization(form_type,record.id,destination_spaces,destination_topics) }}{% endif %}{% endif %}
     </div>
 {% endblock %}

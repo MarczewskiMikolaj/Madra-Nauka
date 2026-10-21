@@ -283,7 +283,7 @@ class WorkflowTests(WorkflowFixture):
             self.assertEqual(nearest_goal(self.uid)["id"], first)
             self.assertTrue(all(d["minutes"] <= 5 for d in week_plan(self.uid)))
         page = self.client.get("/dzisiaj").get_data(as_text=True)
-        self.assertIn("Porcja: 5 min", page)
+        self.assertIn('name="budget" type="number" min="1" max="180" value="5"', page)
         self.assertIn("Old exam", page)
         response = self.post("/nauka/start", {"budget": 5})
         sid = response.location.rsplit("/", 1)[-1]
@@ -721,7 +721,8 @@ class WorkflowEdgeTests(WorkflowFixture):
         self.grade(sid, item)
         self.post("/plan/czas", {"budget": 5})
         self.assertIn(
-            "Porcja: 3 min", self.client.get("/dzisiaj").get_data(as_text=True)
+            'name="budget" type="number" min="1" max="180" value="3"',
+            self.client.get("/dzisiaj").get_data(as_text=True),
         )
 
     def test_recall_draft_is_owned_and_does_not_complete_reading(self):

@@ -133,16 +133,32 @@
 {% endmacro %}
 {% macro note_reader(content, prefix='note', topic_id='', completed=[]) %}
     {% set chapters = content|note_chapters %}
-    <div class="chapter-reader">
-        <nav class="chapter-toc learning-plan" aria-label="Spis treści notatki"><h2>Rozdziały</h2><p>Wybierz rozdział, który chcesz przeczytać.</p><ol>{% for chapter in chapters %}<li><a href="#{{ prefix }}-chapter-{{ loop.index }}">{{ chapter.title }}{% if loop.index in completed %} ✓{% endif %}</a></li>{% endfor %}</ol></nav>
-        <div class="chapter-list">{% for chapter in chapters %}<section class="note-chapter"
-         id="{{ prefix }}-chapter-{{ loop.index }}" tabindex="-1"><header class="chapter-heading"><span class="chapter-number">{{ loop.index }}</span><h3>{{ chapter.title }}</h3></header><div class="rich-content chapter-content">{{ chapter.content|rich_text }}</div>{% if topic_id %}<div class="actions chapter-actions"><a class="button primary" href="{{ url_for('workflow.recall',mid=prefix,chapter=loop.index) }}">Przećwicz ten rozdział</a><a class="button secondary" href="{{ url_for('library.activity_form',tid=topic_id,material_id=prefix,chapter=loop.index) }}">Utwórz pytanie</a></div>{% endif %}</section>{% endfor %}</div>
+    <div class="chapter-reader {% if topic_id %}document-reader{% endif %}">
+        <nav class="chapter-toc learning-plan" aria-label="Spis treści notatki">
+            <h2>{{ 'W tej notatce' if topic_id else 'Rozdziały' }}</h2>
+            <ol>{% for chapter in chapters %}<li><a href="#{{ prefix }}-chapter-{{ loop.index }}">{{ chapter.title }}{% if loop.index in completed %} ✓{% endif %}</a></li>{% endfor %}</ol>
+        </nav>
+        <div class="chapter-list">{% for chapter in chapters %}
+            <section class="note-chapter" id="{{ prefix }}-chapter-{{ loop.index }}" tabindex="-1">
+                <header class="chapter-heading"><span class="chapter-number">{{ loop.index }} / {{ chapters|length }}</span><h3>{{ chapter.title }}</h3></header>
+                <div class="rich-content chapter-content">{{ chapter.content|rich_text }}</div>
+                {% if topic_id %}
+                <footer class="reading-footer">
+                    <div class="reading-study-actions"><a class="button primary" href="{{ url_for('workflow.recall',mid=prefix,chapter=loop.index) }}">Przećwicz ten rozdział</a><a class="button secondary" href="{{ url_for('library.activity_form',tid=topic_id,material_id=prefix,chapter=loop.index) }}">Utwórz pytanie</a></div>
+                    {% if chapters|length>1 %}<nav class="chapter-pagination" aria-label="Przejdź do rozdziału">
+                        {% if not loop.first %}<a class="button quiet" data-chapter-link href="#{{ prefix }}-chapter-{{ loop.index-1 }}">← Poprzedni rozdział</a>{% else %}<span></span>{% endif %}
+                        {% if not loop.last %}<a class="button quiet" data-chapter-link href="#{{ prefix }}-chapter-{{ loop.index+1 }}">Następny rozdział →</a>{% endif %}
+                    </nav>{% endif %}
+                </footer>
+                {% endif %}
+            </section>
+        {% endfor %}</div>
     </div>
 {% endmacro %}
 
 {% macro organization(kind,cid,spaces=[],topics=[]) %}
-<details class="panel organization"><summary>Porządkowanie</summary><div class="actions">
+<details class="panel organization"><summary>Porządkowanie</summary><div class="organization-actions">
 <form method="post" action="{{ url_for('workflow.state',kind=kind,cid=cid) }}">{{ csrf() }}<input type="hidden" name="action" value="{{ 'trash' if kind in ['material','upload'] else 'archive' }}"><button class="button secondary">{{ 'Przenieś do kosza' if kind in ['material','upload'] else 'Archiwizuj' }}</button></form>
-{% if kind in ['topic','material','activity'] %}<form method="post" action="{{ url_for('workflow.move',kind=kind,cid=cid) }}" class="actions">{{ csrf() }}<label>Przenieś do<select name="destination">{% if kind=='topic' %}{% for space in spaces %}<option value="{{ space.id }}">{{ space.name }}</option>{% endfor %}{% else %}{% for topic in topics %}<option value="{{ topic.id }}">{{ topic.workspace_name }} / {{ topic.name }}</option>{% endfor %}{% endif %}</select></label><button class="button secondary">Przenieś</button></form>{% endif %}
-<a href="{{ url_for('workflow.organize') }}">Archiwum i kosz</a></div></details>
+{% if kind in ['topic','material','activity'] %}<form method="post" action="{{ url_for('workflow.move',kind=kind,cid=cid) }}" class="move-form">{{ csrf() }}<label>Przenieś do<select name="destination">{% if kind=='topic' %}{% for space in spaces %}<option value="{{ space.id }}">{{ space.name }}</option>{% endfor %}{% else %}{% for topic in topics %}<option value="{{ topic.id }}">{{ topic.workspace_name }} / {{ topic.name }}</option>{% endfor %}{% endif %}</select></label><button class="button secondary">Przenieś</button></form>{% endif %}
+<a class="button quiet" href="{{ url_for('workflow.organize') }}">Archiwum i kosz</a></div></details>
 {% endmacro %}

@@ -1,10 +1,11 @@
-{% extends 'base.html' %}{% from 'macros.html' import csrf,icon %}
+{% extends 'base.html' %}
+{% set ui_view = 'summary' %}{% from 'macros.html' import csrf,icon %}
 {% block title %}Podsumowanie · Mądra Nauka{% endblock %}
 {% block content %}<section class="summary-panel"><h1>{{ 'Wyniki sprawdzianu' if settings.mode=='exam' else 'Twoja sesja i odpowiedzi' }}</h1><p>{{ study.title }}</p>
 <div class="summary-numbers"><div><strong>{{ items|length }}</strong><span>odpowiedzi z {{ total }}</span></div><div><strong>{{ success }}</strong><span>poprawnych ocen</span></div><div><strong>{{ reviewed|length-success }}</strong><span>do utrwalenia</span></div></div>
 {% if settings.mode=='exam' and items|length<total %}<p class="notice">Sprawdzian zakończony wcześniej: pytania bez odpowiedzi: {{ total-items|length }}.</p>{% endif %}
 <p class="small muted">Quizy są oceniane automatycznie. Pozostałe wyniki są samooceną. {% if settings.mode=='exam' %}{{ items|length-reviewed|length }} odpowiedzi czeka na samoocenę.{% endif %} Nie jest to prognoza wyniku egzaminu.</p>
-<div class="actions centered"><a class="button primary" href="{{ url_for('study.prepare',mode='difficult',**study_scope) }}">Przećwicz trudności</a><a class="button secondary" href="{{ url_for('planning.today') }}">Wróć do planu</a></div>
+<div class="actions"><a class="button primary" href="{{ url_for('study.prepare',mode='difficult',**study_scope) }}">Przećwicz trudności</a><a class="button secondary" href="{{ url_for('planning.today') }}">Wróć do planu</a></div>
 {% if reviewed and settings.mode!='exam' %}<form class="undo-summary" method="post" action="{{ url_for('study.undo',sid=study.id) }}">{{ csrf() }}<input type="hidden" name="review_id" value="{{ reviewed[-1].review_id }}"><button class="text-button">Popraw ostatnią ocenę</button></form>{% endif %}</section>
 <section class="panel"><h2>Wyniki według tematów</h2><div class="table-scroll"><table><thead><tr><th>Temat</th><th>Poprawne quizy</th><th>Samooceny</th><th>Czeka na ocenę</th></tr></thead><tbody>{% for name,result in topic_results.items() %}<tr><td>{{ name }}</td><td>{{ result.correct }} / {{ result.objective }}</td><td>{{ result.self }}</td><td>{{ result.pending }}</td></tr>{% endfor %}</tbody></table></div></section>
 <section class="answer-history"><h2>Przegląd odpowiedzi</h2>{% for row in items %}{% set activity=row.activity %}<article class="panel review-answer"><p class="small muted">{{ activity.topic_name }} · {{ kinds[activity.kind] }} · {{ 'Ocena aplikacji' if activity.kind=='quiz' else 'Samoocena' }}</p>

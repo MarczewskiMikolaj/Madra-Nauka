@@ -1,3 +1,4 @@
-{% extends 'base.html' %}{% from 'macros.html' import csrf %}
+{% extends 'base.html' %}
+{% set ui_view = 'exam_finish' %}{% from 'macros.html' import csrf %}
 {% block title %}Zakończ sprawdzian · Mądra Nauka{% endblock %}
 {% block content %}<section class="panel form-page"><h1>Zakończyć sprawdzian?</h1><p>{{ study.title }}</p><p>Zapisano <strong>{{ answered }} z {{ total }}</strong> odpowiedzi. Do powrotu oznaczono {{ flagged }} pytań.</p>{% if answered<total %}<p class="notice">Pytania bez wyniku: {{ total-answered }}. Sam szkic nie jest wysłaną odpowiedzią.</p>{% endif %}<p>Po zakończeniu zobaczysz wzorce i wyniki quizów. Pozostałe odpowiedzi ocenisz samodzielnie.</p><form method="post" action="{{ url_for('study.end',sid=study.id) }}" class="actions">{{ csrf() }}<button class="button primary">Zakończ i pokaż wyniki</button><a class="button secondary" href="{{ url_for('study.session_page',sid=study.id) }}">Wróć do pytań</a></form></section>{% endblock %}

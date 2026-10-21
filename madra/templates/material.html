@@ -1,8 +1,20 @@
-{% extends 'base.html' %}{% from 'macros.html' import note_reader,csrf,organization %}
+{% extends 'base.html' %}
+{% set ui_view = 'material' %}
+{% from 'macros.html' import note_reader,csrf,organization %}
 {% block title %}{{ material.title }} · Mądra Nauka{% endblock %}
-{% block content %}<a class="breadcrumb" href="{{ url_for('library.topic',tid=topic.id) }}">Biblioteka / {{ topic.name }}</a>
-<div class="page-heading"><h1>{{ material.title }}</h1><a class="button secondary" href="{{ url_for('library.material_form',mid=material.id) }}">Edytuj</a></div>
-{% if material.kind=='note' %}<div class="actions"><a class="button primary" href="{{ url_for('workflow.recall',mid=material.id,chapter=reading.chapter if reading else 1) }}">Ucz się z notatki</a><a class="button secondary" href="{{ url_for('library.activity_form',tid=topic.id,material_id=material.id) }}">Utwórz pytanie do tej notatki</a><a href="{{ url_for('workflow.download_note',mid=material.id) }}">Pobierz do czytania offline</a></div><p class="small muted">Pobrana notatka działa bez sieci. Wzory w pliku offline są zapisane w notacji TeX.</p>
+{% block content %}
+<a class="breadcrumb" href="{{ url_for('library.topic',tid=topic.id) }}">Materiały / {{ topic.name }}</a>
+<header class="reading-heading">
+    <div><p class="small muted">{{ 'Notatka' if material.kind=='note' else 'Link do źródła' }}{% if material.kind=='note' %} · Rozdziały: {{ material.content|note_chapters|length }}{% endif %}</p><h1>{{ material.title }}</h1></div>
+    <div class="actions">
+        <a class="button secondary" href="{{ url_for('library.material_form',mid=material.id) }}">Edytuj</a>
+        {% if material.kind=='note' %}<details class="action-menu"><summary class="button secondary">Więcej</summary><div><a href="{{ url_for('workflow.download_note',mid=material.id) }}">Pobierz do czytania offline</a><a href="{{ url_for('library.activity_form',tid=topic.id,material_id=material.id) }}">Utwórz pytanie z notatki</a></div></details>{% endif %}
+    </div>
+</header>
+{% if material.kind=='note' %}
 <div data-reading-url="{{ url_for('workflow.reading_position',mid=material.id) }}" data-last-chapter="{{ reading.chapter if reading else 0 }}">{{ csrf() }}{{ note_reader(material.content,material.id,topic.id,reading_done) }}</div>
-{% else %}<a href="{{ material.content }}" target="_blank" rel="noopener noreferrer">Otwórz źródło</a>{% endif %}
-{{ organization('material',material.id,destination_spaces,destination_topics) }}{% endblock %}
+{% else %}
+<section class="panel linked-source"><h2>Źródło notatki</h2><p>{{ material.content }}</p><a class="button primary" href="{{ material.content }}" target="_blank" rel="noopener noreferrer">Otwórz źródło</a></section>
+{% endif %}
+{{ organization('material',material.id,destination_spaces,destination_topics) }}
+{% endblock %}
