@@ -14,7 +14,7 @@
                 <div class="exercise-row-body">
                     <div data-exercise-preview>{{ question(edited) }}{{ solution(edited) }}</div>
                     {% if activity.label %}<p class="small muted">Źródło: {{ activity.label }}</p>{% endif %}
-                    {% if activity.get('evidence') %}<details class="exercise-explanation"><summary>Fragment źródła wskazany przez AI</summary><div class="rich-content">{{ activity.evidence|rich_text }}</div></details>{% endif %}
+                    {% if activity.get('evidence') %}<details class="exercise-explanation"><summary>{{ 'Uzasadnienie z notatki AI' if from_topic else 'Fragment źródła wskazany przez AI' }}</summary><div class="rich-content">{{ activity.evidence|rich_text }}</div></details>{% endif %}
                     <details class="exercise-edit"><summary>Edytuj to pytanie</summary><div class="exercise-fields">
                         <label for="prompt-{{ i }}">Polecenie</label><textarea id="prompt-{{ i }}" name="prompt_{{ i }}" rows="3" maxlength="10000">{{ edited.prompt }}</textarea>
                         {% if activity.kind=='quiz' %}<label for="options-{{ i }}">Warianty odpowiedzi (po jednym w wierszu)</label><textarea id="options-{{ i }}" name="options_{{ i }}" rows="4" maxlength="10000">{{ edited.options|join('\n') }}</textarea>{% endif %}

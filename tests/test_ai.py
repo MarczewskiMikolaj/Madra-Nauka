@@ -55,6 +55,186 @@ class AITests(unittest.TestCase):
     post = test_mvp.MVPTests.post
     count = test_mvp.MVPTests.count
 
+    def test_topic_creation_validation_and_owner(self):
+        fields = {
+            "source_mode": "topic",
+            "subject": "SQL",
+            "goal": "Pisać zapytania",
+            "language": "en",
+            "style": "technical",
+            "workspace_id": self.wid,
+        }
+        for override in (
+            {"subject": ""},
+            {"goal": ""},
+            {"language": "xx"},
+            {"style": "unknown"},
+        ):
+            response = self.post("/materialy/wgraj", {**fields, **override})
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(self.count("uploads"), 0)
+        with self.app.app_context():
+            self.connection()
+        with (
+            patch("madra.ai.chatgpt.models", return_value=[{"id": "gpt-5.6-terra"}]),
+            patch("madra.ai.threading.Thread.start"),
+        ):
+            response = self.post("/materialy/wgraj", fields)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/ai/zadania/", response.location)
+        with self.app.app_context():
+            row = get_db().execute("SELECT * FROM uploads").fetchone()
+            metadata = json.loads(row["draft_json"])
+            self.assertEqual(metadata["source_mode"], "topic")
+            self.assertEqual(metadata["style"], "technical")
+            self.assertEqual(row["workspace_id"], self.wid)
+        page = self.client.get("/pliki/" + row["id"]).get_data(as_text=True)
+        self.assertNotIn('name="language"', page)
+        self.assertIn("Zobacz postęp", page)
+        with self.app.app_context(), transaction() as db:
+            db.execute(
+                "UPDATE ai_jobs SET state='failed' WHERE upload_id=?", (row["id"],)
+            )
+        page = self.client.get("/pliki/" + row["id"]).get_data(as_text=True)
+        self.assertNotIn('name="goal"', page)
+        self.assertIn("Wróć do formularza i wygeneruj plan", page)
+        retry = self.client.get("/materialy/wgraj?draft_id=" + row["id"]).get_data(
+            as_text=True
+        )
+        self.assertIn('value="SQL"', retry)
+        self.assertIn('value="en" selected', retry)
+        self.assertIn('value="technical" selected', retry)
+        with self.app.app_context(), transaction() as db:
+            db.execute(
+                "INSERT INTO users VALUES ('other','Other',?,0,'now')",
+                (self.password_hash,),
+            )
+        self.authenticate(self.client, "other")
+        self.assertEqual(self.client.get(response.location).status_code, 404)
+        self.assertEqual(self.client.get("/pliki/" + row["id"]).status_code, 404)
+        self.assertEqual(self.post("/materialy/wgraj", fields).status_code, 404)
+
+    def test_topic_requires_connection_without_losing_form(self):
+        response = self.post(
+            "/materialy/wgraj",
+            {
+                "source_mode": "topic",
+                "subject": "SQL",
+                "goal": "Pisać zapytania",
+                "language": "en",
+                "style": "technical",
+            },
+        )
+        page = response.get_data(as_text=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Połącz ChatGPT przed przygotowaniem materiałów", page)
+        self.assertIn('value="SQL"', page)
+        self.assertIn("Pisać zapytania", page)
+        self.assertEqual(self.count("uploads"), 0)
+        self.assertEqual(self.count("ai_jobs"), 0)
+
+    def test_topic_stream_uses_text_and_selected_preferences(self):
+        from madra.services.ai_materials import generate_topic
+
+        value = draft()
+        del value["guide"]
+        value["chapters"] = [
+            {"title": "SQL queries", "content": "Use SELECT to read rows."}
+        ]
+        events = [
+            {"type": "response.output_text.delta", "delta": json.dumps(value)},
+            {"type": "response.completed"},
+        ]
+        response = io.BytesIO(
+            b"".join(b"data: " + json.dumps(e).encode() + b"\n\n" for e in events)
+        )
+        with (
+            patch("madra.services.ai_materials.access_token", return_value="synthetic"),
+            patch(
+                "madra.services.ai_materials.urlopen", return_value=response
+            ) as opened,
+        ):
+            result = generate_topic(
+                self.uid,
+                "SQL",
+                "model",
+                "Learn SELECT",
+                language="en",
+                style="technical",
+            )
+        payload = json.loads(opened.call_args.args[0].data)
+        content = payload["input"][0]["content"]
+        self.assertEqual([c["type"] for c in content], ["input_text"])
+        self.assertIn("SQL", content[0]["text"])
+        self.assertIn("angielski", payload["instructions"])
+        self.assertIn("Technicznie", payload["instructions"])
+        self.assertIn("Nie ma załączonego źródła", payload["instructions"])
+        self.assertIn("SQL queries", result["guide"])
+        self.assertEqual(result["source_mode"], "topic")
+
+    def test_topic_job_preserves_preferences_and_saves_to_library(self):
+        with self.app.app_context():
+            self.connection()
+
+        class ImmediateThread:
+            def __init__(self, target, args, daemon):
+                self.target, self.args = target, args
+
+            def start(self):
+                self.target(*self.args)
+
+        result = {**validate_draft(draft()), "source_mode": "topic"}
+        with (
+            patch(
+                "madra.ai.chatgpt.models",
+                return_value=[{"id": "gpt-5.6-terra", "name": "Terra"}],
+            ),
+            patch("madra.ai.generate_topic", return_value=result) as generator,
+            patch("madra.ai.generate") as file_generator,
+            patch("madra.ai.threading.Thread", ImmediateThread),
+        ):
+            response = self.post(
+                "/materialy/wgraj",
+                {
+                    "source_mode": "topic",
+                    "subject": "Fotosynteza",
+                    "goal": "Zrozumieć proces",
+                    "language": "en",
+                    "style": "technical",
+                    "topic_id": self.tid,
+                },
+            )
+        self.assertIn("/ai/zadania/", response.location)
+        with self.app.app_context():
+            uid = get_db().execute("SELECT upload_id FROM ai_jobs").fetchone()[0]
+        file_generator.assert_not_called()
+        self.assertEqual(generator.call_args.args[1], "Fotosynteza")
+        self.assertEqual(generator.call_args.kwargs["language"], "en")
+        self.assertEqual(generator.call_args.kwargs["style"], "technical")
+        with self.app.app_context():
+            metadata = json.loads(
+                get_db()
+                .execute("SELECT draft_json FROM uploads WHERE id=?", (uid,))
+                .fetchone()[0]
+            )
+        self.assertEqual(metadata["source_mode"], "topic")
+        self.assertEqual(metadata["subject"], "Fotosynteza")
+        with patch(
+            "madra.ai.chatgpt.models",
+            return_value=[{"id": "gpt-5.6-terra", "name": "Terra"}],
+        ):
+            page = self.client.get("/pliki/" + uid).get_data(as_text=True)
+        self.assertIn("Uzasadnienie z notatki AI", page)
+        self.assertNotIn("Fragment źródła wskazany przez AI", page)
+        self.assertNotIn('name="preset"', page)
+        self.assertNotIn('name="language"', page)
+        response = self.post(
+            "/pliki/" + uid, {"title": result["title"], "guide": result["guide"]}
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/tematy/", response.location)
+        self.assertEqual(self.count("materials"), 1)
+
     def test_stream_errors_preserve_codes_in_all_event_shapes(self):
         code = "subscription_sharing_usage_limit_exceeded"
         for event in [

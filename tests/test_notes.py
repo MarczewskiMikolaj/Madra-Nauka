@@ -1,9 +1,42 @@
 import unittest
+from pathlib import Path
+from jinja2 import Environment, FileSystemLoader
 
-from madra.services.notes import chapter_guide, note_chapters
+from madra.services.notes import chapter_guide, note_chapters, chapter_title
 
 
 class NoteChapterTests(unittest.TestCase):
+    def test_reader_does_not_repeat_ai_chapter_numbers(self):
+        env = Environment(
+            loader=FileSystemLoader(Path(__file__).parents[1] / "madra/templates")
+        )
+        env.filters.update(
+            note_chapters=note_chapters,
+            chapter_title=chapter_title,
+            rich_text=lambda text: text,
+            note_text=lambda text: text,
+        )
+        content = (
+            "## 1. Czym jest SQL\n\nTreść.\n\n## 2) Odczytywanie danych\n\nSELECT."
+        )
+        rendered = str(env.get_template("macros.html").module.note_reader(content))
+        self.assertIn(">Czym jest SQL</a>", rendered)
+        self.assertIn(">Odczytywanie danych</a>", rendered)
+        self.assertIn("<h3>Czym jest SQL</h3>", rendered)
+        self.assertNotIn(">1. Czym jest SQL", rendered)
+        self.assertEqual(note_chapters(content)[0]["title"], "1. Czym jest SQL")
+
+    def test_chapter_titles_preserve_numbers_that_belong_to_the_topic(self):
+        for title in (
+            "SQL",
+            "3.14 i liczby zmiennoprzecinkowe",
+            "2026 — zmiany",
+            "SQL: 3 przykłady",
+        ):
+            with self.subTest(title=title):
+                self.assertEqual(chapter_title(title), title)
+        self.assertEqual(chapter_title("1. 1. Czym jest SQL"), "Czym jest SQL")
+
     def test_learning_plan_and_chapters_share_one_order(self):
         chapters = [
             {"title": "Procesy", "content": "Procesy wykonują pracę."},

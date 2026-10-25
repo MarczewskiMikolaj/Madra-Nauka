@@ -17,7 +17,7 @@ from .auth import login_required
 from .db import get_db, transaction
 from .library import owned_topic, owned_workspace, required_text
 from .services.files import MAX_BYTES, validate_file
-from .services.ai_materials import FIXED_MODEL
+from .services.ai_materials import FIXED_MODEL, LANGUAGES, response_preferences
 from .services.learning import KIND_DIMENSION, now_iso
 from .services.exercises import save_support
 from .services.notes import note_chapters
@@ -69,6 +69,13 @@ def owned_upload(uid):
 @bp.route("/materialy/wgraj", methods=["GET", "POST"])
 @login_required
 def upload():
+    form_values = request.form
+    if request.method == "GET" and request.args.get("draft_id"):
+        previous = owned_upload(request.args["draft_id"])
+        previous_draft = json.loads(previous["draft_json"])
+        if previous_draft.get("source_mode") != "topic":
+            abort(400)
+        form_values = {**previous_draft, "workspace_id": previous["workspace_id"]}
     tid = request.args.get("topic_id") or request.form.get("topic_id")
     topic = owned_topic(tid) if tid else None
     spaces = (
@@ -81,6 +88,46 @@ def upload():
     )
     if request.method == "POST":
         try:
+            if request.form.get("source_mode") == "topic":
+                subject = required_text("subject", "Temat nauki", 150)
+                goal = required_text("goal", "Cel nauki", 1000)
+                language = request.form.get("language", "pl")
+                style = request.form.get("style", "simple")
+                response_preferences(language, style)
+                wid = (
+                    topic["workspace_id"]
+                    if topic
+                    else request.form.get("workspace_id") or None
+                )
+                if wid:
+                    owned_workspace(wid)
+                uid = uuid4().hex
+                draft = {
+                    "title": subject,
+                    "subject": subject,
+                    "goal": goal,
+                    "source_mode": "topic",
+                    "language": language,
+                    "style": style,
+                    "guide": "",
+                    "activities": [],
+                    "generator": "pending",
+                }
+                from .ai import start_generation
+
+                return start_generation(
+                    {
+                        "id": uid,
+                        "workspace_id": wid,
+                        "topic_id": tid,
+                        "filename": subject + ".txt",
+                        "file_blob": (
+                            "Temat: " + subject + "\nCel nauki: " + goal
+                        ).encode(),
+                        "draft_json": json.dumps(draft, ensure_ascii=False),
+                    },
+                    create_source=True,
+                )
             files = [f for f in request.files.getlist("file") if f.filename]
             if not files or len(files) > 5:
                 raise ValueError("Wybierz od 1 do 5 plików.")
@@ -129,7 +176,14 @@ def upload():
             return redirect(url_for("uploads.preview", uid=validated[0][0]))
         except ValueError as error:
             flash(str(error), "error")
-    return render_template("upload.html", topic=topic, spaces=spaces, nav="library")
+    return render_template(
+        "upload.html",
+        topic=topic,
+        spaces=spaces,
+        languages=LANGUAGES,
+        form_values=form_values,
+        nav="library",
+    )
 
 
 @bp.route("/pliki/<uid>", methods=["GET", "POST"])
@@ -227,7 +281,11 @@ def preview(uid):
                                 wid,
                                 g.user["id"],
                                 title,
-                                "Materiały z wgranego pliku",
+                                (
+                                    "Materiały do nauki"
+                                    if draft.get("source_mode") == "topic"
+                                    else "Materiały z wgranego pliku"
+                                ),
                                 "blue",
                                 now_iso(),
                             ),
@@ -286,7 +344,12 @@ def preview(uid):
 
     info = connection_info(g.user["id"])
     models = []
-    if info["connected"] and not source["imported_at"] and not running:
+    if (
+        info["connected"]
+        and not source["imported_at"]
+        and not running
+        and draft.get("source_mode") != "topic"
+    ):
         try:
             models = [
                 model
@@ -313,6 +376,7 @@ def preview(uid):
             else []
         ),
         draft=draft,
+        languages=LANGUAGES,
         title=draft.get("title") or Path(source["filename"]).stem[:150],
         nav="library",
     )
@@ -396,7 +460,13 @@ def expand(uid):
             raise ValueError("Wybierz poprawny rozdział.")
         focus = chapters[chapter - 1]["title"]
         nid = uuid4().hex
+        original_draft = json.loads(source["draft_json"])
         draft = {
+            **{
+                key: original_draft[key]
+                for key in ("source_mode", "subject", "language", "style")
+                if key in original_draft
+            },
             "guide": "",
             "activities": [],
             "generator": "pending",
@@ -404,7 +474,11 @@ def expand(uid):
             "focus": focus,
             "goal": "Przygotuj dodatkowe ćwiczenia i wyjaśnienia do zagadnienia: "
             + focus
-            + ". Analizuj cały oryginał, skupiając ćwiczenia na tym rozdziale.",
+            + (
+                ". Rozwiń zagadnienie na podstawie wiedzy ogólnej."
+                if original_draft.get("source_mode") == "topic"
+                else ". Analizuj cały oryginał, skupiając ćwiczenia na tym rozdziale."
+            ),
             "file_metadata": json.loads(source["draft_json"]).get("file_metadata", {}),
         }
         with transaction() as db:

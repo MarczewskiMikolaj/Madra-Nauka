@@ -110,12 +110,14 @@ def create_app(test_config=None):
         response.headers["Cache-Control"] = "no-cache"
         return response
 
-    from .services.notes import note_chapters
+    from .services.notes import note_chapters, chapter_title
 
-    from .services.formatting import render_content
+    from .services.formatting import render_content, render_note_content
 
     app.jinja_env.filters["note_chapters"] = note_chapters
+    app.jinja_env.filters["chapter_title"] = chapter_title
     app.jinja_env.filters["rich_text"] = render_content
+    app.jinja_env.filters["note_text"] = render_note_content
 
     @app.context_processor
     def vocabulary():

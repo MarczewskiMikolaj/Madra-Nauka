@@ -1,22 +1,49 @@
 {% extends "base.html" %}
 {% set ui_view = 'upload' %}
 {% from 'macros.html' import csrf,icon %}
-{% block title %}Wgraj materiały · Mądra Nauka{% endblock %}
+{% block title %}Dodaj materiały · Mądra Nauka{% endblock %}
 {% block content %}
     <div class="settings-page">
         <a class="breadcrumb" href="{{ url_for('library.index') }}">Biblioteka / Nowy materiał</a>
         <div class="page-heading">
             <div>
                 <h1>Opracuj materiały z AI</h1>
-                <p>Wgraj pliki lub zdjęcia, z których AI przygotuje notatki i ćwiczenia. Slajdy PowerPoint wyeksportuj najpierw do PDF.</p>
+                <p>Podaj temat i cel nauki albo wgraj własne materiały. AI przygotuje plan, notatki i ćwiczenia.</p>
             </div>
         </div>
         <div class="upload-layout">
+            <form class="upload-card form-stack" method="post">
+                {{ csrf() }}
+                <input type="hidden" name="source_mode" value="topic">
+                <h2>Ucz się nowego tematu</h2>
+                <p>Nie potrzebujesz pliku. Opisz, co chcesz opanować — otrzymasz plan nauki, wyjaśnienia i ćwiczenia.</p>
+                {% if topic %}
+                    <input type="hidden" name="topic_id" value="{{ topic.id }}">
+                    <p>Materiały trafią do tematu: <strong>{{ topic.name }}</strong></p>
+                {% else %}
+                    <div><label for="topic-workspace">Gdzie zapisać materiał?</label>
+                    <select id="topic-workspace" name="workspace_id">
+                        <option value="">Nowy przedmiot z tego tematu</option>
+                        {% for space in spaces %}<option value="{{ space.id }}" {% if form_values.get('workspace_id') == space.id %}selected{% endif %}>{{ space.name }}</option>{% endfor %}
+                    </select></div>
+                {% endif %}
+                <div><label for="subject">Temat nauki</label>
+                <input id="subject" name="subject" maxlength="150" required placeholder="Np. bazy danych Oracle, fotosynteza, podstawy Pythona" value="{{ form_values.get('subject', topic.name if topic else '') }}"></div>
+                <div><label for="topic-goal">Czego chcesz się nauczyć?</label>
+                <textarea id="topic-goal" name="goal" rows="3" maxlength="1000" required placeholder="Np. zaczynam od zera i chcę umieć pisać zapytania SQL oraz rozumieć, jak działa baza">{{ form_values.get('goal', '') }}</textarea></div>
+                {% set response_language = form_values.get('language', 'pl') %}
+                {% set response_style = form_values.get('style', 'simple') %}
+                {% include 'response_preferences.html' %}
+                <button class="button primary">Wygeneruj plan nauki {{ icon('arrow', 18) }}</button>
+                <p class="field-help">AI od razu przygotuje plan, notatkę i ćwiczenia. Gotowe materiały przejrzysz przed zapisaniem. Wymagane połączone konto ChatGPT. <a href="{{ url_for('ai.settings') }}">Połączenie AI</a>.</p>
+            </form>
+            <div class="form-stack">
             <form class="upload-card form-stack"
                   method="post"
                   enctype="multipart/form-data"
                   data-upload-form>
                 {{ csrf() }}
+                <h2>Opracuj własny plik</h2>
             {% if topic %}<input type="hidden" name="topic_id" value="{{ topic.id }}"><div class="destination-note">{{ icon('book', 18) }}<span>Temat<strong>{{ topic.name }}</strong></span></div>
         {% else %}<div><label for="workspace">Gdzie zapisać materiał?</label><select id="workspace" name="workspace_id"><option value="">Nowy przedmiot z tego pliku</option>{% for space in spaces %}<option value="{{ space.id }}">{{ space.name }}</option>{% endfor %}</select></div>{% endif %}
         <div class="file-drop" data-file-drop>
@@ -33,13 +60,13 @@
         <button class="button primary upload-submit">Wgraj i przejrzyj materiał {{ icon('arrow', 18) }}</button>
     </form>
     <aside class="upload-explainer">
-        <h2>Od pliku do ćwiczeń</h2><p>Opracowanie wymaga połączenia uprawnionego planu ChatGPT. Samo wgranie niczego nie wysyła do AI — analizę uruchomisz w następnym kroku.</p>
+        <h2>Od tematu do nauki</h2><p>Opracowanie wymaga połączenia uprawnionego planu ChatGPT. Przycisk „Wygeneruj plan nauki” od razu uruchamia AI. W przypadku plików analizę uruchomisz po wgraniu.</p>
         <ol class="workflow-list">
             <li>
                 <span>1</span>
                 <div>
                     <h3>Dodaj materiał</h3>
-                    <p>Zachowamy cały oryginalny plik do analizy AI.</p>
+                    <p>Wpisz temat i cel lub dodaj własny plik.</p>
                 </div>
             </li>
             <li>
@@ -59,9 +86,10 @@
         </ol>
         <div class="upload-tip">
             {{ icon('spark', 19) }}
-            <p>AI przygotuje notatki, objaśnienia, przykłady, quizy i zadania na podstawie pliku. Połącz ChatGPT, aby rozpocząć analizę.</p>
+            <p>AI przygotuje notatki, objaśnienia, przykłady, quizy i zadania dopasowane do Twojego celu. Połącz ChatGPT, aby rozpocząć analizę.</p>
         </div>
     </aside>
+    </div>
 </div>
 </div>
 {% endblock %}

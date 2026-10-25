@@ -3,15 +3,16 @@
 {% from 'macros.html' import csrf,icon,note_reader,material_tabs %}
 {% block title %}Sprawdź materiały · Mądra Nauka{% endblock %}
 {% block content %}
+{% set from_topic = draft.get("source_mode") == "topic" %}
     <div class="review-page">
         <a class="breadcrumb" href="{{ url_for('library.index') }}">Biblioteka / Opracowanie materiału</a>
         <div class="page-heading">
             <div>
                 <h1>{{ title }}</h1>
-                <p class="file-meta">{{ icon('note', 16) }} {{ source.filename }} <span>{{ draft.activities|length }} ćwiczeń</span></p>
+                <p class="file-meta">{{ icon('note', 16) }} {{ draft.get('subject') if from_topic else source.filename }} <span>{{ draft.activities|length }} ćwiczeń</span></p>
             </div>
-            <a class="button secondary"
-               href="{{ url_for('uploads.download',uid=source.id) }}">{{ icon('download', 16) }} Oryginał</a>
+            {% if not from_topic %}<a class="button secondary"
+               href="{{ url_for('uploads.download',uid=source.id) }}">{{ icon('download', 16) }} Oryginał</a>{% endif %}
         </div>
         {% if source.imported_at %}
             <div class="saved-material-panel">
@@ -26,7 +27,7 @@
                 </div>
             </div>
             <form method="post" action="{{ url_for('workflow.state',kind='upload',cid=source.id) }}">{{ csrf() }}<input type="hidden" name="action" value="trash"><button class="text-button">Przenieś opracowanie do kosza</button><p class="small muted">Plik, notatka i ćwiczenia tego opracowania znikną z aktywnej biblioteki. Możesz je przywrócić.</p></form>
-            {% if saved_notes %}<section class="panel"><h2>Kolejne ćwiczenia do rozdziału</h2><p>Dotychczasowa notatka i pytania pozostaną zachowane. W następnym kroku uruchomisz opracowanie istniejącego oryginału.</p>
+            {% if saved_notes %}<section class="panel"><h2>Kolejne ćwiczenia do rozdziału</h2><p>Dotychczasowa notatka i pytania pozostaną zachowane. {{ 'W następnym kroku przygotujesz kolejne wyjaśnienia na zadany temat.' if from_topic else 'W następnym kroku uruchomisz opracowanie istniejącego oryginału.' }}</p>
             {% for material in saved_notes %}<form method="post" action="{{ url_for('uploads.expand',uid=source.id) }}" class="form-stack">{{ csrf() }}<input type="hidden" name="material_id" value="{{ material.id }}"><label>Rozdział: {{ material.title }}<select name="chapter">{% for chapter in material.content|note_chapters %}<option value="{{ loop.index }}">{{ chapter.title }}</option>{% endfor %}</select></label><button class="button secondary">Przygotuj kolejne opracowanie</button></form>{% endfor %}</section>{% endif %}
             {% for material in saved_notes %}<section class="note-editor saved-note-preview"><h2>{{ material.title }}</h2>{{ note_reader(material.content, material.id) }}</section>{% endfor %}
         {% else %}
@@ -36,14 +37,20 @@
                     <strong>Ostatnie opracowanie nie zostało ukończone.</strong>
                     <p>{{ last_job.error }}</p>
                     {% if "subscription_sharing_usage" in last_job.error %}
-                        <p>Plik pozostaje dostępny. Najpierw sprawdź dostępność użycia planu, potem ponów analizę.</p>
+                        <p>Materiał pozostaje dostępny. Najpierw sprawdź dostępność użycia planu, potem ponów analizę.</p>
                         <a class="button primary"
                            href="https://chatgpt.com/settings/usage"
                            target="_blank"
                            rel="noopener">Sprawdź użycie i limity ChatGPT</a>
-            {% else %}<p>Plik pozostaje dostępny. Możesz ponowić analizę poniżej.</p>{% endif %}
+            {% else %}<p>Materiał pozostaje dostępny. Możesz ponowić analizę poniżej.</p>{% endif %}
                 </div>
             {% endif %}
+            {% if from_topic and running %}
+                <div class="notice"><p>AI pracuje nad tym tematem.</p><a class="button primary" href="{{ url_for('ai.job', jid=running.id) }}">Zobacz postęp</a></div>
+            {% elif from_topic and draft.get("generator") != "ai" %}
+                <div class="notice"><a class="button primary" href="{{ url_for('uploads.upload', draft_id=source.id, topic_id=source.topic_id) }}">Wróć do formularza i wygeneruj plan</a></div>
+            {% endif %}
+            {% if not from_topic %}
             <section class="ai-workbench">
                 <div class="workbench-heading">
                     <span class="integration-symbol">{{ icon('spark', 23) }}</span>
@@ -71,19 +78,23 @@
                         <p><strong>GPT-5.6 Terra</strong></p>
                     </div>
                 </div>
+                {% set response_language = draft.get('language', 'pl') %}
+                {% set response_style = draft.get('style', 'simple') %}
+                {% include 'response_preferences.html' %}
                 <div class="generation-footer">
-                    <p>AI otrzyma cały oryginalny plik i Twój cel. PDF-y analizuje także wizualnie. Nowy wynik zastąpi niezapisane opracowanie. <a href="https://chatgpt.com/settings/usage"
+                    <p>{{ 'AI otrzyma temat i Twój cel. Przygotuje plan nauki, notatkę i ćwiczenia na podstawie wiedzy ogólnej.' if from_topic else 'AI otrzyma cały oryginalny plik i Twój cel. PDF-y analizuje także wizualnie.' }} Nowy wynik zastąpi niezapisane opracowanie. <a href="https://chatgpt.com/settings/usage"
     target="_blank"
     rel="noopener">Sprawdź użycie i limit aplikacji</a>.</p>
                     <button class="button primary">{{ icon('spark', 17) }} Przygotuj materiały z AI</button>
                 </div>
             </form>
         {% elif info.connected %}<div class="workbench-action"><p>GPT-5.6 Terra nie jest dostępny dla tego połączenia ChatGPT. Sprawdź połączenie AI.</p><a class="button secondary" href="{{ url_for('ai.settings',upload=source.id) }}">Połączenie AI</a></div>
-{% else %}<div class="workbench-action"><p>Połącz ChatGPT, aby AI przeanalizowało plik i przygotowało notatkę oraz ćwiczenia.</p><a class="button primary" href="{{ url_for('ai.settings',upload=source.id) }}">Połącz ChatGPT {{ icon('arrow', 17) }}</a></div>{% endif %}
+{% else %}<div class="workbench-action"><p>{{ 'Połącz ChatGPT, aby przygotować plan nauki na wybrany temat.' if from_topic else 'Połącz ChatGPT, aby AI przeanalizowało plik i przygotowało notatkę oraz ćwiczenia.' }}</p><a class="button primary" href="{{ url_for('ai.settings',upload=source.id) }}">Połącz ChatGPT {{ icon('arrow', 17) }}</a></div>{% endif %}
     </section>
+    {% endif %}
     <div class="review-context">
-        <span class="review-status">{{ icon('note', 15) }} {{ 'Opracowanie AI z pliku' if draft.get("generator")=='ai' else 'Plik gotowy do analizy AI' }}</span>
-        <p>{{ 'Sprawdź opracowanie w oryginale przed zapisaniem. Wskazania źródeł pochodzą od AI.' if draft.get("generator")=='ai' else 'AI przygotuje całą notatkę, odpowiedzi i ćwiczenia. Nie tworzymy automatycznych pytań z wyrwanych fragmentów.' }}</p>
+        <span class="review-status">{{ icon('note', 15) }} {{ ('Opracowanie AI na zadany temat' if from_topic else 'Opracowanie AI z pliku') if draft.get("generator")=='ai' else ('Temat gotowy do opracowania z AI' if from_topic else 'Plik gotowy do analizy AI') }}</span>
+        <p>{{ ('Materiał powstał z wiedzy ogólnej AI. Sprawdź poprawność przed zapisaniem; opisy zagadnień nie są cytatami ze źródeł.' if from_topic else 'Sprawdź opracowanie w oryginale przed zapisaniem. Wskazania źródeł pochodzą od AI.') if draft.get("generator")=='ai' else 'AI przygotuje całą notatkę, odpowiedzi i ćwiczenia. Nie tworzymy automatycznych pytań z wyrwanych fragmentów.' }}</p>
     </div>
     {% if draft.get("generator")=="ai" %}
         <form method="post" class="review-editor form-stack" data-tab-group data-exercise-selection-form>
@@ -91,7 +102,7 @@
             {{ material_tabs(1, draft.activities|length) }}
             <section class="note-editor result-section" id="result-notes" data-tab-pane>
                 <div class="editor-section-heading">
-                    <h2>Notatka do nauki</h2>
+                    <h2>{{ 'Plan nauki i notatka' if from_topic else 'Notatka do nauki' }}</h2>
                     <span>Możesz ją poprawić</span>
                 </div>
 
@@ -115,7 +126,7 @@
     <form method="post"
           action="{{ url_for('workflow.state',kind='upload',cid=source.id) }}"
           class="upload-discard">
-        {{ csrf() }}<input type="hidden" name="action" value="trash"><button class="text-button muted">Przenieś plik i propozycje do kosza</button>
+        {{ csrf() }}<input type="hidden" name="action" value="trash"><button class="text-button muted">Przenieś materiał i propozycje do kosza</button>
     </form>
 {% endif %}
 </div>

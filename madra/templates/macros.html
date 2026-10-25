@@ -136,12 +136,12 @@
     <div class="chapter-reader {% if topic_id %}document-reader{% endif %}">
         <nav class="chapter-toc learning-plan" aria-label="Spis treści notatki">
             <h2>{{ 'W tej notatce' if topic_id else 'Rozdziały' }}</h2>
-            <ol>{% for chapter in chapters %}<li><a href="#{{ prefix }}-chapter-{{ loop.index }}">{{ chapter.title }}{% if loop.index in completed %} ✓{% endif %}</a></li>{% endfor %}</ol>
+            <ol>{% for chapter in chapters %}<li><a href="#{{ prefix }}-chapter-{{ loop.index }}">{{ chapter.title|chapter_title }}{% if loop.index in completed %} ✓{% endif %}</a></li>{% endfor %}</ol>
         </nav>
         <div class="chapter-list">{% for chapter in chapters %}
             <section class="note-chapter" id="{{ prefix }}-chapter-{{ loop.index }}" tabindex="-1">
-                <header class="chapter-heading"><span class="chapter-number">{{ loop.index }} / {{ chapters|length }}</span><h3>{{ chapter.title }}</h3></header>
-                <div class="rich-content chapter-content">{{ chapter.content|rich_text }}</div>
+                <header class="chapter-heading"><span class="chapter-number">{{ loop.index }} / {{ chapters|length }}</span><h3>{{ chapter.title|chapter_title }}</h3></header>
+                <div class="rich-content chapter-content">{{ chapter.content|note_text }}</div>
                 {% if topic_id %}
                 <footer class="reading-footer">
                     <div class="reading-study-actions"><a class="button primary" href="{{ url_for('workflow.recall',mid=prefix,chapter=loop.index) }}">Przećwicz ten rozdział</a><a class="button secondary" href="{{ url_for('library.activity_form',tid=topic_id,material_id=prefix,chapter=loop.index) }}">Utwórz pytanie</a></div>

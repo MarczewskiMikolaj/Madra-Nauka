@@ -1,0 +1,11 @@
+<div><label for="language">Język odpowiedzi</label>
+<select id="language" name="language">
+    {% for code, label in languages.items() %}
+        <option value="{{ code }}" {% if response_language == code %}selected{% endif %}>{{ label|capitalize }}</option>
+    {% endfor %}
+</select></div>
+<div><label for="style">Styl wyjaśnień</label>
+<select id="style" name="style">
+    <option value="simple" {% if response_style == 'simple' %}selected{% endif %}>Prosto i zrozumiale — od podstaw, z przykładami</option>
+    <option value="technical" {% if response_style == 'technical' %}selected{% endif %}>Technicznie — precyzyjne pojęcia i szczegóły</option>
+</select></div>

@@ -5,6 +5,11 @@ import re
 from markdown_it import MarkdownIt
 
 
+def chapter_title(title):
+    """Let the reader own chapter numbering without changing stored notes."""
+    return re.sub(r"^\s*(?:[0-9]+[.)]\s+)+(?=\S)", "", title).strip()
+
+
 def _headings(content):
     """Read Markdown headings, excluding examples inside fenced code blocks."""
     offsets = [0]

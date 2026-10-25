@@ -21,7 +21,12 @@ from .auth import login_required
 from .db import get_db, transaction
 from .uploads import owned_upload
 from .services import chatgpt
-from .services.ai_materials import FIXED_MODEL, generate
+from .services.ai_materials import (
+    FIXED_MODEL,
+    generate,
+    generate_topic,
+    response_preferences,
+)
 from .services.learning import now_iso
 
 bp = Blueprint("ai", __name__)
@@ -240,22 +245,32 @@ def run_job(app, job_id, uid, upload_id, model, goal):
             source = (
                 get_db()
                 .execute(
-                    "SELECT filename,file_blob,imported_at FROM uploads WHERE id=? AND user_id=?",
+                    "SELECT filename,file_blob,imported_at,draft_json FROM uploads WHERE id=? AND user_id=?",
                     (upload_id, uid),
                 )
                 .fetchone()
             )
             if not source or source["imported_at"]:
                 raise ValueError("Plik nie jest dostępny do opracowania.")
-            draft = generate(
-                uid,
-                source["filename"],
-                source["file_blob"],
-                model,
-                goal,
-                on_progress=progress,
-                is_cancelled=worker["stop"].is_set,
-            )
+            metadata = json.loads(source["draft_json"])
+            preferences = {
+                key: metadata[key] for key in ("language", "style") if key in metadata
+            }
+            callbacks = {"on_progress": progress, "is_cancelled": worker["stop"].is_set}
+            if metadata.get("source_mode") == "topic":
+                draft = generate_topic(
+                    uid, metadata["subject"], model, goal, **preferences, **callbacks
+                )
+            else:
+                draft = generate(
+                    uid,
+                    source["filename"],
+                    source["file_blob"],
+                    model,
+                    goal,
+                    **preferences,
+                    **callbacks,
+                )
             draft["model"] = model
             draft["goal"] = goal
             with transaction() as db:
@@ -276,7 +291,15 @@ def run_job(app, job_id, uid, upload_id, model, goal):
                         "Plik został już zapisany lub generowanie wygasło. Wynik nie zastąpił materiałów."
                     )
                 metadata = json.loads(source["draft_json"])
-                for key in ("parent_upload_id", "focus", "file_metadata"):
+                for key in (
+                    "parent_upload_id",
+                    "focus",
+                    "file_metadata",
+                    "source_mode",
+                    "subject",
+                    "language",
+                    "style",
+                ):
                     if key in metadata:
                         draft[key] = metadata[key]
                 db.execute(
@@ -327,81 +350,110 @@ def generate_materials(uid):
         )
         return redirect(url_for("uploads.preview", uid=uid))
     try:
-        info = connection_info(g.user["id"])
-        if not info["connected"]:
-            return redirect(url_for("ai.settings"))
-        choices = chatgpt.models(g.user["id"])
-        model = FIXED_MODEL
-        if model not in {m["id"] for m in choices}:
-            raise ValueError(
-                "GPT-5.6 Terra nie jest dostępny dla tego połączenia ChatGPT. Nie uruchomiono generowania."
-            )
-        goal = (
-            request.form.get(
-                "goal", json.loads(source["draft_json"]).get("goal", "")
-            ).strip()[:1000]
-            or "Zrozumienie materiału i przygotowanie do sprawdzianu."
-        )
-        preset = request.form.get("preset", "full")
-        if preset not in ("full", "quick", "tasks"):
-            raise ValueError("Wybierz sposób opracowania.")
-        prefix = {"quick": "[SZYBKA POWTÓRKA] ", "tasks": "[ZADANIA] ", "full": ""}[
-            preset
-        ]
-        goal = prefix + goal
-        jid = uuid4().hex
-        live = current_app.extensions.setdefault("ai_workers", {})
-        if sum(w["user_id"] == g.user["id"] for w in list(live.values())) >= 2:
-            raise ValueError(
-                "Poprzednie opracowania jeszcze pracują lub są zatrzymywane. Spróbuj ponownie za chwilę."
-            )
-        with transaction() as db:
-            running = db.execute(
-                "SELECT id FROM ai_jobs WHERE upload_id=? AND state='running'", (uid,)
-            ).fetchone()
-            if running:
-                return redirect(url_for("ai.job", jid=running["id"]))
-            if (
-                db.execute(
-                    "SELECT COUNT(*) FROM ai_jobs WHERE user_id=? AND state='running'",
-                    (g.user["id"],),
-                ).fetchone()[0]
-                >= 2
-            ):
-                raise ValueError("Poczekaj na ukończenie poprzednich opracowań.")
-            db.execute(
-                "INSERT INTO ai_jobs (id,upload_id,user_id,state,model,goal,error,created_at,finished_at) VALUES (?,?,?,'running',?,?,'',?,NULL)",
-                (jid, uid, g.user["id"], model, goal, now_iso()),
-            )
-        live[jid] = {"user_id": g.user["id"], "stop": threading.Event()}
-        thread = threading.Thread(
-            target=run_job,
-            args=(
-                current_app._get_current_object(),
-                jid,
-                g.user["id"],
-                uid,
-                model,
-                goal,
-            ),
-            daemon=True,
-        )
-        try:
-            thread.start()
-        except RuntimeError:
-            live.pop(jid, None)
-            with transaction() as db:
-                db.execute(
-                    "UPDATE ai_jobs SET state='failed',error='Nie udało się uruchomić opracowania. Spróbuj ponownie.',finished_at=? WHERE id=?",
-                    (now_iso(), jid),
-                )
-            raise ValueError(
-                "Nie udało się uruchomić opracowania. Spróbuj ponownie."
-            ) from None
-        return redirect(url_for("ai.job", jid=jid))
+        if not connection_info(g.user["id"])["connected"]:
+            return redirect(url_for("ai.settings", upload=uid))
+        return start_generation(source)
     except ValueError as error:
         flash(str(error), "error")
         return redirect(url_for("uploads.preview", uid=uid))
+
+
+def start_generation(source, create_source=False):
+    """Start a job from either the initial topic form or an existing material."""
+    uid = source["id"]
+    metadata = json.loads(source["draft_json"])
+    language = request.form.get("language", metadata.get("language", "pl"))
+    style = request.form.get("style", metadata.get("style", "simple"))
+    response_preferences(language, style)
+    info = connection_info(g.user["id"])
+    if not info["connected"]:
+        raise ValueError("Połącz ChatGPT przed przygotowaniem materiałów.")
+    choices = chatgpt.models(g.user["id"])
+    model = FIXED_MODEL
+    if model not in {m["id"] for m in choices}:
+        raise ValueError(
+            "GPT-5.6 Terra nie jest dostępny dla tego połączenia ChatGPT. Nie uruchomiono generowania."
+        )
+    goal = (
+        request.form.get(
+            "goal", json.loads(source["draft_json"]).get("goal", "")
+        ).strip()[:1000]
+        or "Zrozumienie materiału i przygotowanie do sprawdzianu."
+    )
+    preset = request.form.get("preset", "full")
+    if preset not in ("full", "quick", "tasks"):
+        raise ValueError("Wybierz sposób opracowania.")
+    prefix = {"quick": "[SZYBKA POWTÓRKA] ", "tasks": "[ZADANIA] ", "full": ""}[preset]
+    goal = prefix + goal
+    jid = uuid4().hex
+    live = current_app.extensions.setdefault("ai_workers", {})
+    if sum(w["user_id"] == g.user["id"] for w in list(live.values())) >= 2:
+        raise ValueError(
+            "Poprzednie opracowania jeszcze pracują lub są zatrzymywane. Spróbuj ponownie za chwilę."
+        )
+    with transaction() as db:
+        if create_source:
+            db.execute(
+                "INSERT INTO uploads VALUES (?,?,?,?,?,?,?,?,NULL)",
+                (
+                    uid,
+                    g.user["id"],
+                    source["workspace_id"],
+                    source["topic_id"],
+                    source["filename"],
+                    source["file_blob"],
+                    source["draft_json"],
+                    now_iso(),
+                ),
+            )
+        running = db.execute(
+            "SELECT id FROM ai_jobs WHERE upload_id=? AND state='running'", (uid,)
+        ).fetchone()
+        if running:
+            return redirect(url_for("ai.job", jid=running["id"]))
+        if (
+            db.execute(
+                "SELECT COUNT(*) FROM ai_jobs WHERE user_id=? AND state='running'",
+                (g.user["id"],),
+            ).fetchone()[0]
+            >= 2
+        ):
+            raise ValueError("Poczekaj na ukończenie poprzednich opracowań.")
+        metadata.update(language=language, style=style)
+        db.execute(
+            "UPDATE uploads SET draft_json=? WHERE id=?",
+            (json.dumps(metadata, ensure_ascii=False), uid),
+        )
+        db.execute(
+            "INSERT INTO ai_jobs (id,upload_id,user_id,state,model,goal,error,created_at,finished_at) VALUES (?,?,?,'running',?,?,'',?,NULL)",
+            (jid, uid, g.user["id"], model, goal, now_iso()),
+        )
+    live[jid] = {"user_id": g.user["id"], "stop": threading.Event()}
+    thread = threading.Thread(
+        target=run_job,
+        args=(
+            current_app._get_current_object(),
+            jid,
+            g.user["id"],
+            uid,
+            model,
+            goal,
+        ),
+        daemon=True,
+    )
+    try:
+        thread.start()
+    except RuntimeError:
+        live.pop(jid, None)
+        with transaction() as db:
+            db.execute(
+                "UPDATE ai_jobs SET state='failed',error='Nie udało się uruchomić opracowania. Spróbuj ponownie.',finished_at=? WHERE id=?",
+                (now_iso(), jid),
+            )
+        raise ValueError(
+            "Nie udało się uruchomić opracowania. Spróbuj ponownie."
+        ) from None
+    return redirect(url_for("ai.job", jid=jid))
 
 
 @bp.get("/ai/zadania/<jid>")
